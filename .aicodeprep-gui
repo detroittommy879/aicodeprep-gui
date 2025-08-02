@@ -8,8 +8,8 @@
 version=1.0
 
 [window]
-width=1535
-height=1321
+width=1546
+height=1453
 splitter_state=AAAA/wAAAAEAAAACAAADAAAAAPwB/////wEAAAACAA==
 
 [format]
@@ -17,14 +17,10 @@ output_format=markdown
 
 [files]
 .clinerules
-INSTRUCTIONS.md
 pyproject.toml
 README.md
-Z.md
-zzz_brain_mode.md
 aicodeprep_gui\apptheme.py
 aicodeprep_gui\file_processor.py
-aicodeprep_gui\gui_old.py
 aicodeprep_gui\linux_installer.py
 aicodeprep_gui\macos_installer.py
 aicodeprep_gui\main.py
@@ -34,6 +30,7 @@ aicodeprep_gui\windows_registry.py
 aicodeprep_gui\__init__.py
 aicodeprep_gui\data\default_config.toml
 aicodeprep_gui\gui\main_window.py
+aicodeprep_gui\gui\theming.py
 aicodeprep_gui\gui\__init__.py
 aicodeprep_gui\gui\components\dialogs.py
 aicodeprep_gui\gui\components\installer_dialogs.py
@@ -56,4 +53,6 @@ aicodeprep_gui\images\__init__.py
 aicodeprep_gui\pro\patches.py
 aicodeprep_gui\pro\preview_window.py
 aicodeprep_gui\pro\__init__.py
-loca\TODO.md
+aicodeprep_gui\themes\dark.json
+aicodeprep_gui\themes\dracula-pro.json
+aicodeprep_gui\themes\light.json

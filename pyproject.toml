@@ -48,7 +48,7 @@ where = ["."]
 
 [tool.setuptools.package-data]
 # CRITICAL: Changed key to match your actual package name `aicodeprep_gui`
-aicodeprep_gui = ["data/default_config.toml", "images/*.png", "images/*.ico", "data/AICodePrep.workflow.zip"]
+aicodeprep_gui = ["data/default_config.toml", "images/*.png", "images/*.ico", "data/AICodePrep.workflow.zip", "themes/*.json"]
 
 # SUGGESTION: Create optional dependencies for developers/builders
 [project.optional-dependencies]

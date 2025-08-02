@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "name": "Dracula Pro",
+    "version": "1.0",
+    "author": "Zeno Rocha",
+    "pro": true
+  },
+  "fonts": {
+    "primary": {
+      "family": "Fira Code",
+      "source": "google",
+      "size_modifier": 0
+    }
+  },
+  "colors": {
+    "window_bg": "#282a36",
+    "base_bg": "#21222c",
+    "alternate_base_bg": "#343746",
+    "text_color": "#f8f8f2",
+    "disabled_text_color": "#6272a4",
+    "highlight_bg": "#44475a",
+    "highlight_text": "#f8f8f2",
+    "link_color": "#8be9fd",
+    "button_bg": "#44475a",
+    "button_text": "#f8f8f2",
+    "border_color": "#191a21",
+    "accent_color_1": "#50fa7b",
+    "accent_color_2": "#ff79c6",
+    "accent_color_3": "#bd93f9",
+    "error_color": "#ff5555"
+  },
+  "qss_overrides": {
+    "QGroupBox::title": "color: {accent_color_3};",
+    "QPushButton:hover": "background-color: #6272a4;",
+    "QTreeView::item:selected": "background-color: {highlight_bg}; border: 1px solid {accent_color_1};",
+    "FileSelectionGUI #vibe_label": "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #4d324c, stop:1 #2d1d4c); color: #f8f8f2; padding: 0px; border-radius: 8px;"
+  }
+}

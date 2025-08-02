@@ -12,10 +12,10 @@ from aicodeprep_gui import update_checker
 from PySide6.QtCore import QTemporaryDir
 from importlib import resources
 from aicodeprep_gui.apptheme import (
-    system_pref_is_dark, apply_dark_palette, apply_light_palette,
-    get_checkbox_style_dark, get_checkbox_style_light,
-    create_arrow_pixmap, get_groupbox_style
+    system_pref_is_dark,  # Keep for initial theme detection if needed
+    create_arrow_pixmap, get_groupbox_style  # Keep for QGroupBox styling
 )
+from .theming import ThemeManager  # New import
 from typing import List, Tuple
 from aicodeprep_gui import smart_logic
 from aicodeprep_gui.file_processor import process_files
@@ -155,9 +155,13 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.setGeometry(100, 100, int(600 * scale_factor),
                              int(400 * scale_factor))
 
-        self.is_dark_mode = self.ui_settings_manager._load_dark_mode_setting()
-        if self.is_dark_mode:
-            apply_dark_palette(self.app)
+        # Initialize ThemeManager
+        self.theme_manager = ThemeManager(self.app)
+        self.is_dark_mode = self.theme_manager.active_theme_name.lower(
+        ) == "dark"  # Keep for compatibility with other parts for now
+        # The initial theme will be applied by the ThemeManager itself.
+        # We need to connect its theme_changed signal to update UI elements like QGroupBox styles.
+        self.theme_manager.theme_changed.connect(self.on_theme_changed)
 
         central = QtWidgets.QWidget()
         self.setCentralWidget(central)
@@ -217,6 +221,29 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         open_settings_folder_act.triggered.connect(self.open_settings_folder)
         edit_menu.addAction(open_settings_folder_act)
 
+        view_menu = mb.addMenu("&View")
+        themes_menu = view_menu.addMenu("&Themes")
+
+        available_themes = self.theme_manager.get_available_themes()
+        for name, is_pro_theme in available_themes:
+            action = QtGui.QAction(name, self)
+            action.setCheckable(True)
+            if is_pro_theme and not pro.enabled:
+                action.setEnabled(False)
+            action.triggered.connect(
+                lambda checked, n=name: self.on_theme_selected(n))
+            themes_menu.addAction(action)
+            # Set the initial checked state
+            if name == self.theme_manager.active_theme_name:
+                action.setChecked(True)
+
+        if pro.enabled:
+            themes_menu.addSeparator()
+            add_theme_action = QtGui.QAction("Add Custom Theme...", self)
+            add_theme_action.triggered.connect(
+                self.dialog_manager.open_add_theme_dialog)
+            themes_menu.addAction(add_theme_action)
+
         help_menu = mb.addMenu("&Help")
         links_act = QtGui.QAction("Help / Links and Guides", self)
         links_act.triggered.connect(self.open_links_dialog)
@@ -246,25 +273,37 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         output_label = QtWidgets.QLabel("&Output format:")
         output_label.setBuddy(self.format_combo)
 
-        self.dark_mode_box = QtWidgets.QCheckBox("Dark mode")
-        self.dark_mode_box.setChecked(self.is_dark_mode)
-        self.dark_mode_box.stateChanged.connect(self.toggle_dark_mode)
+        self.theme_combo = QtWidgets.QComboBox()
+        # Populate theme combo box
+        available_themes = self.theme_manager.get_available_themes()
+        for name, is_pro_theme in available_themes:
+            self.theme_combo.addItem(name)
+            if is_pro_theme and not pro.enabled:
+                idx = self.theme_combo.findText(name)
+                if idx != -1:
+                    # A more robust way to disable an item:
+                    self.theme_combo.model().item(idx).setEnabled(False)
+
+        current_theme_name = self.theme_manager.active_theme_name
+        idx = self.theme_combo.findText(current_theme_name)
+        if idx != -1:
+            self.theme_combo.setCurrentIndex(idx)
+        self.theme_combo.textActivated.connect(self.on_theme_selected)
 
         self.token_label = QtWidgets.QLabel("Estimated tokens: 0")
         main_layout.addWidget(self.token_label)
         main_layout.addSpacing(8)
 
         self.vibe_label = QtWidgets.QLabel("AI Code Prep GUI")
+        # Set object name for theming
+        self.vibe_label.setObjectName("vibe_label")
         vibe_font = QtGui.QFont(self.default_font)
         vibe_font.setBold(True)
         vibe_font.setPointSize(self.default_font.pointSize() + 8)
         self.vibe_label.setFont(vibe_font)
         self.vibe_label.setAlignment(
             QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
-        self.vibe_label.setStyleSheet(
-            "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #40203f, stop:1 #1f103f); "
-            "color: white; padding: 0px 0px 0px 0px; border-radius: 8px;"
-        )
+        # The stylesheet is now set by the theme manager via QSS overrides
         self.vibe_label.setFixedHeight(44)
 
         banner_wrap = QtWidgets.QWidget()
@@ -341,20 +380,15 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.tree_widget.setHeaderLabels(["File/Folder"])
         self.tree_widget.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
 
-        base_style = """
-            QTreeView, QTreeWidget {
-                outline: 2; /* Remove focus rectangle */
-            }
-            QTreeView::item:selected, QTreeWidget::item:selected {
-                background-color: #8B0000; /* Dark red instead of blue */
-                color: white;
-            }
-        """
-        checkbox_style = get_checkbox_style_dark(
-        ) if self.is_dark_mode else get_checkbox_style_light()
-        self.tree_widget.setStyleSheet(base_style + checkbox_style)
+        # Styling is now handled by the ThemeManager
+        # The initial theme will be applied, which includes QTreeWidget styles.
+        pass
 
         self.splitter.addWidget(self.tree_widget)
+
+        # --- NEW ---
+        # Apply the initial tree widget theme right after it's created
+        self._apply_tree_widget_theme()
 
         prompt_widget = QtWidgets.QWidget()
         prompt_layout = QtWidgets.QVBoxLayout(prompt_widget)
@@ -465,8 +499,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         options_top_row = QtWidgets.QHBoxLayout()
         options_top_row.addWidget(output_label)
         options_top_row.addWidget(self.format_combo)
+        options_top_row.addWidget(self.theme_combo)  # Add theme_combo here
         options_top_row.addStretch()
-        options_top_row.addWidget(self.dark_mode_box)
         options_content_layout.addLayout(options_top_row)
 
         # Remember checkbox with help icon
@@ -661,9 +695,6 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
     def save_prefs(self):
         return self.preferences_manager.save_prefs()
 
-    def toggle_dark_mode(self, state):
-        return self.ui_settings_manager.toggle_dark_mode(state)
-
     def on_item_expanded(self, item):
         return self.tree_manager.on_item_expanded(item)
 
@@ -763,6 +794,86 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         style = get_groupbox_style(
             paths['down'], paths['right'], self.is_dark_mode)
         groupbox.setStyleSheet(style)
+
+    def _apply_tree_widget_theme(self):
+        """
+        Generates and applies a COMPLETE and THEME-AWARE stylesheet directly
+        to the tree widget. This ensures both correct styling and reliable checkbox images.
+        """
+        if not hasattr(self, 'theme_manager'):
+            return
+
+        active_theme_data = self.theme_manager.themes[self.theme_manager.active_theme_name]
+        colors = active_theme_data.get("colors", {})
+        bg_color = QtGui.QColor(colors.get('window_bg', '#FFFFFF'))
+        is_dark = bg_color.lightnessF() < 0.5
+
+        unchecked_filename = "checkbox_unchecked_dark.png" if is_dark else "checkbox_unchecked.png"
+        checked_filename = "checkbox_checked_dark.png" if is_dark else "checkbox_checked.png"
+
+        unchecked_url, checked_url = "", ""
+        try:
+            res_base = resources.files('aicodeprep_gui.images')
+            with resources.as_file(res_base.joinpath(unchecked_filename)) as p:
+                unchecked_url = f'"{str(p).replace(os.sep, "/")}"'
+            with resources.as_file(res_base.joinpath(checked_filename)) as p:
+                checked_url = f'"{str(p).replace(os.sep, "/")}"'
+        except Exception as e:
+            logging.error(
+                f"Could not load checkbox images for tree widget: {e}")
+            return
+
+        # This is now a COMPLETE stylesheet for the tree widget and its header
+        tree_widget_stylesheet = f"""
+            /* Base tree styling */
+            QTreeWidget {{
+                background-color: {colors.get('base_bg')};
+                color: {colors.get('text_color')};
+                alternate-background-color: {colors.get('alternate_base_bg')};
+                border: 1px solid {colors.get('border_color')};
+                outline: 0; /* Hide focus rectangle */
+            }}
+            
+            /* Header styling */
+            QHeaderView::section {{
+                background-color: {colors.get('window_bg')};
+                color: {colors.get('text_color')};
+                padding: 5px;
+                border: 1px solid {colors.get('border_color')};
+                border-bottom: 2px solid {colors.get('accent_color_1')};
+            }}
+
+            /* Selection and Hover states */
+            QTreeWidget::item:selected {{
+                background-color: {colors.get('highlight_bg')};
+                color: {colors.get('highlight_text')};
+                border: 1px solid {colors.get('accent_color_2')};
+            }}
+            QTreeWidget::item:hover:!selected {{
+                background-color: {colors.get('alternate_base_bg')};
+            }}
+
+            /* The working checkbox indicators */
+            QTreeWidget::indicator {{
+                width: 16px;
+                height: 16px;
+                border: none;
+                background: transparent;
+            }}
+            QTreeWidget::indicator:unchecked {{
+                image: url({unchecked_url});
+            }}
+            QTreeWidget::indicator:checked {{
+                image: url({checked_url});
+            }}
+            QTreeWidget::indicator:partially-checked {{
+                background-color: {colors.get('disabled_text_color')};
+                border: 1px solid {colors.get('border_color')};
+                border-radius: 2px;
+            }}
+        """
+
+        self.tree_widget.setStyleSheet(tree_widget_stylesheet)
 
     def _start_update_check(self):
         """Starts the simple, non-blocking update check."""
@@ -898,3 +1009,132 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 self.preview_window.clear_preview()
         else:
             self.preview_window.clear_preview()
+
+    def on_theme_selected(self, theme_name: str):
+        """Handles theme selection from combo box or menu."""
+        if theme_name and theme_name in self.theme_manager.themes:
+            theme_data = self.theme_manager.themes[theme_name]
+            is_pro_theme = theme_data.get("meta", {}).get("pro", False)
+            if is_pro_theme and not pro.enabled:
+                logging.warning(
+                    f"Attempted to select Pro theme '{theme_name}' without Pro mode enabled.")
+                # Revert to the current active theme in the combo box
+                current_idx = self.theme_combo.findText(
+                    self.theme_manager.active_theme_name)
+                if current_idx != -1:
+                    self.theme_combo.setCurrentIndex(current_idx)
+                # Optionally, show a message to the user
+                self.dialog_manager.show_info_message(
+                    "Pro Feature", f"The '{theme_name}' theme is a Pro feature. Please enable Pro mode to use it.")
+                return
+
+            self.theme_manager.apply_theme(theme_name)
+            # Update the checked state in the View menu
+            mb = self.menuBar()
+            view_menu = mb.findChild(QtWidgets.QMenu, "&View")
+            if view_menu:
+                themes_menu = view_menu.findChild(QtWidgets.QMenu, "&Themes")
+                if themes_menu:
+                    for action in themes_menu.actions():
+                        if action.text() == theme_name:
+                            action.setChecked(True)
+                        else:
+                            action.setChecked(False)
+        else:
+            logging.error(f"Theme '{theme_name}' not found.")
+
+    def on_theme_changed(self, stylesheet: str, theme_data: dict):
+        """Called when the ThemeManager applies a new theme."""
+        colors = theme_data.get("colors", {})
+
+        # Determine darkness from theme data for robust logic
+        bg_color = QtGui.QColor(colors.get("window_bg", "#FFFFFF"))
+        self.is_dark_mode = bg_color.lightnessF() < 0.5
+
+        # The main stylesheet is already applied by the ThemeManager.
+        # Only update UI elements that have dynamic styles.
+
+        # Re-apply styles to QGroupBoxes as they use dynamic pixmap paths
+        self._update_groupbox_style(self.options_group_box)
+        self._update_groupbox_style(self.premium_group_box)
+
+        # --- NEW ---
+        # After the main theme is applied, re-apply our specific
+        # tree widget styles to ensure the checkboxes are correct.
+        self._apply_tree_widget_theme()
+
+        # Update other specific, dynamic, or overridden elements
+        qss_overrides = theme_data.get("qss_overrides", {})
+
+        # Safely apply the vibe_label override
+        vibe_override = qss_overrides.get("FileSelectionGUI #vibe_label")
+        if vibe_override:
+            try:
+                # Safely format the override string, it might contain color placeholders
+                self.vibe_label.setStyleSheet(vibe_override.format(**colors))
+            except (KeyError, IndexError) as e:
+                logging.warning(
+                    f"Could not format vibe_label override: {e}. Applying as is.")
+                self.vibe_label.setStyleSheet(vibe_override)
+
+        # Update preset explanation text color from theme
+        if hasattr(self, "preset_explanation"):
+            disabled_color = colors.get("disabled_text_color", "#808080")
+            self.preset_explanation.setStyleSheet(
+                f"font-size: 10px; color: {disabled_color};")
+
+        # Update the success message color
+        success_color = colors.get("accent_color_1", "#0078d4")
+        self.text_label.setStyleSheet(
+            f"font-size: 20px; color: {success_color}; font-weight: bold;")
+
+    def _populate_theme_controls(self):
+        """Refreshes the theme combo box and View menu theme actions."""
+        # Refresh combo box
+        current_theme_name = self.theme_combo.currentText()
+        self.theme_combo.clear()
+        available_themes = self.theme_manager.get_available_themes()
+        for name, is_pro_theme in available_themes:
+            self.theme_combo.addItem(name)
+            if is_pro_theme and not pro.enabled:
+                idx = self.theme_combo.findText(name)
+                if idx != -1:
+                    self.theme_combo.model().item(idx).setEnabled(False)
+
+        # Restore selection in combo box
+        idx = self.theme_combo.findText(current_theme_name)
+        if idx != -1:
+            self.theme_combo.setCurrentIndex(idx)
+        elif self.theme_manager.active_theme_name in self.theme_manager.themes:
+            # Fallback to active theme if current selection is no longer valid
+            idx = self.theme_combo.findText(
+                self.theme_manager.active_theme_name)
+            if idx != -1:
+                self.theme_combo.setCurrentIndex(idx)
+
+        # Refresh View menu
+        mb = self.menuBar()
+        view_menu = mb.findChild(QtWidgets.QMenu, "&View")
+        if view_menu:
+            themes_menu = view_menu.findChild(QtWidgets.QMenu, "&Themes")
+            if themes_menu:
+                # Clear existing theme actions, but keep "Add Custom Theme..." if it exists
+                actions_to_remove = []
+                for action in themes_menu.actions():
+                    if action.text() != "Add Custom Theme...":
+                        actions_to_remove.append(action)
+                for action in actions_to_remove:
+                    themes_menu.removeAction(action)
+
+                # Add updated theme actions
+                for name, is_pro_theme in available_themes:
+                    action = QtGui.QAction(name, self)
+                    action.setCheckable(True)
+                    if is_pro_theme and not pro.enabled:
+                        action.setEnabled(False)
+                    action.triggered.connect(
+                        lambda checked, n=name: self.on_theme_selected(n))
+                    themes_menu.addAction(action)
+                    # Set the initial checked state
+                    if name == self.theme_manager.active_theme_name:
+                        action.setChecked(True)

@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "name": "Dark",
+    "version": "1.0",
+    "author": "AICodePrep GUI",
+    "pro": false
+  },
+  "fonts": {
+    "primary": {
+      "family": "Segoe UI",
+      "source": "system",
+      "size_modifier": 0
+    }
+  },
+  "colors": {
+    "window_bg": "#353535",
+    "base_bg": "#2a2a2a",
+    "alternate_base_bg": "#000000ff",
+    "text_color": "#ffffff",
+    "disabled_text_color": "#808080",
+    "highlight_bg": "#790202ff",
+    "highlight_text": "#ffffff",
+    "link_color": "#9a82da",
+    "button_bg": "#000000",
+    "button_text": "#ffffff",
+    "border_color": "#000000",
+    "accent_color_1": "#2a82da",
+    "accent_color_2": "#bd93f9",
+    "accent_color_3": "#50fa7b",
+    "error_color": "#ff5555"
+  },
+  "qss_overrides": {
+    "FileSelectionGUI #vibe_label": "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #044c1e, stop:1 #51ff00); color: white; padding: 0px; border-radius: 8px;"
+  }
+}

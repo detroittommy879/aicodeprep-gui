@@ -7,6 +7,7 @@ import urllib.parse
 from datetime import datetime
 from PySide6 import QtWidgets, QtCore, QtGui, QtNetwork
 from aicodeprep_gui import __version__
+from aicodeprep_gui import pro  # Needed for pro.enabled check
 
 
 class VoteDialog(QtWidgets.QDialog):
@@ -470,3 +471,88 @@ class DialogManager:
         """Shows a dialog encouraging the user to share the app."""
         dialog = ShareDialog(self.parent)
         dialog.exec()
+
+    def open_add_theme_dialog(self):
+        """Opens the dialog for adding a custom theme, if Pro is enabled."""
+        if not pro.enabled:
+            logging.warning(
+                "Attempted to open 'Add Custom Theme' dialog without Pro mode enabled.")
+            self.show_info_message(
+                "Pro Feature", "Adding custom themes is a Pro feature. Please enable Pro mode to use this.")
+            return
+
+        dialog = AddThemeDialog(self.parent, self.parent.theme_manager)
+        if dialog.exec() == QtWidgets.QDialog.Accepted:
+            # If a theme was successfully added, the dialog itself will have
+            # notified the ThemeManager. We might want to refresh the UI.
+            # Trigger a UI refresh with current theme
+            self.parent.on_theme_changed("")
+            # Update the combo box and menu
+            self.parent._populate_theme_controls()
+
+    def show_info_message(self, title, message):
+        """Helper to show an informational message box."""
+        msg_box = QtWidgets.QMessageBox(self.parent)
+        msg_box.setIcon(QtWidgets.QMessageBox.Information)
+        msg_box.setWindowTitle(title)
+        msg_box.setText(message)
+        msg_box.exec()
+
+
+class AddThemeDialog(QtWidgets.QDialog):
+    """Dialog for adding a custom theme from a JSON string."""
+
+    def __init__(self, parent, theme_manager: 'ThemeManager'):
+        super().__init__(parent)
+        self.theme_manager = theme_manager
+        self.setWindowTitle("Add Custom Theme")
+        self.setMinimumSize(600, 500)
+
+        layout = QtWidgets.QVBoxLayout(self)
+
+        layout.addWidget(QtWidgets.QLabel(
+            "Paste your custom theme JSON below:"))
+
+        self.json_edit = QtWidgets.QPlainTextEdit()
+        self.json_edit.setPlaceholderText(
+            "{\n"
+            '  "meta": {\n'
+            '    "name": "My Custom Theme",\n'
+            '    "version": "1.0",\n'
+            '    "author": "Your Name",\n'
+            '    "pro": false\n'
+            "  },\n"
+            '  "fonts": { ... },\n'
+            '  "colors": { ... },\n'
+            '  "qss_overrides": { ... }\n'
+            "}"
+        )
+        layout.addWidget(self.json_edit)
+
+        self.status_label = QtWidgets.QLabel("")
+        self.status_label.setStyleSheet("color: red;")
+        layout.addWidget(self.status_label)
+
+        button_box = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.Save | QtWidgets.QDialogButtonBox.Cancel)
+        button_box.accepted.connect(self.save_theme)
+        button_box.rejected.connect(self.reject)
+        layout.addWidget(button_box)
+
+    def save_theme(self):
+        json_text = self.json_edit.toPlainText().strip()
+        if not json_text:
+            self.status_label.setText("JSON cannot be empty.")
+            return
+
+        success, message = self.theme_manager.add_custom_theme(json_text)
+
+        if success:
+            self.status_label.setStyleSheet("color: green;")
+            self.status_label.setText(message)
+            # Optionally, close the dialog after a short delay or on user confirmation
+            # Auto-close after 1.5s on success
+            QtCore.QTimer.singleShot(1500, self.accept)
+        else:
+            self.status_label.setStyleSheet("color: red;")
+            self.status_label.setText(message)
