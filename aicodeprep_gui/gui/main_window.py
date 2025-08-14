@@ -592,6 +592,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 self.addDockWidget(
                     QtCore.Qt.RightDockWidgetArea, self.preview_window)
                 self.preview_toggle.toggled.connect(self.toggle_preview_window)
+
+            # Load saved preview window state from preferences
+            self._load_preview_window_state()
         else:
             self.preview_toggle.setEnabled(False)
             self.preview_toggle.setToolTip(
@@ -1059,6 +1062,23 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
     def _expand_folders_for_paths(self, checked_paths):
         """Auto-expand folders that contain files from the given paths."""
         return self.tree_manager._expand_folders_for_paths(checked_paths)
+
+    def _load_preview_window_state(self):
+        """Load the saved preview window toggle state from preferences."""
+        if hasattr(self, 'preview_toggle') and self.preferences_manager.pro_features_from_prefs:
+            preview_enabled = self.preferences_manager.pro_features_from_prefs.get(
+                'preview_window_enabled', False)
+            # Set the checkbox state without triggering signals to avoid recursion
+            self.preview_toggle.blockSignals(True)
+            self.preview_toggle.setChecked(preview_enabled)
+            self.preview_toggle.blockSignals(False)
+
+            # Apply the state to the preview window
+            if preview_enabled:
+                self.toggle_preview_window(True)
+
+            logging.info(
+                f"Loaded preview window state from preferences: {preview_enabled}")
 
     def toggle_preview_window(self, enabled):
         """Toggle the preview window visibility."""

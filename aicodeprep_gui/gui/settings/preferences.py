@@ -18,8 +18,8 @@ def _prefs_path():
         return new_path
 
 
-def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None, output_format=None):
-    """Write preferences to .aicodeprep-gui file, now supports [format] section."""
+def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None, output_format=None, pro_features=None):
+    """Write preferences to .aicodeprep-gui file, now supports [format] and [pro] sections."""
     new_path = os.path.join(os.getcwd(), ".aicodeprep-gui")
     try:
         with open(new_path, "w", encoding="utf-8") as f:
@@ -44,6 +44,11 @@ def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None, o
                 f.write("\n")
             if output_format in ("xml", "markdown"):
                 f.write(f"[format]\noutput_format={output_format}\n\n")
+            if pro_features:
+                f.write("[pro]\n")
+                for key, value in pro_features.items():
+                    f.write(f"{key}={str(value).lower()}\n")
+                f.write("\n")
             if checked_relpaths:
                 f.write("[files]\n" + "\n".join(checked_relpaths) + "\n")
         logging.info(f"Saved preferences to {new_path}")
@@ -53,11 +58,12 @@ def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None, o
 
 def _read_prefs_file():
     """Read preferences file with backwards compatibility for legacy .auicp files (migrates to .aicodeprep-gui).
-    Returns checked, window_size, splitter_state, output_format (default 'xml').
+    Returns checked, window_size, splitter_state, output_format, pro_features.
     """
     checked, window_size, splitter_state = set(), None, None
     width_val, height_val = None, None
     output_format = "xml"
+    pro_features = {}
 
     legacy_path = os.path.join(os.getcwd(), ".auicp")
     new_path = os.path.join(os.getcwd(), ".aicodeprep-gui")
@@ -101,6 +107,16 @@ def _read_prefs_file():
                         val = line.split("=", 1)[1].strip().lower()
                         if val in ("xml", "markdown"):
                             output_format = val
+                elif section == "pro":
+                    if "=" in line:
+                        key, value = line.split("=", 1)
+                        key = key.strip()
+                        value = value.strip().lower()
+                        # Convert string boolean to actual boolean
+                        if value in ("true", "false"):
+                            pro_features[key] = value == "true"
+                        else:
+                            pro_features[key] = value
 
             if width_val is not None and height_val is not None:
                 window_size = (width_val, height_val)
@@ -123,7 +139,7 @@ def _read_prefs_file():
     except Exception as e:
         logging.error(f"Error reading preferences file: {e}")
 
-    return checked, window_size, splitter_state, output_format
+    return checked, window_size, splitter_state, output_format, pro_features
 
 
 class PreferencesManager:
@@ -133,6 +149,7 @@ class PreferencesManager:
         self.window_size_from_prefs = None
         self.splitter_state_from_prefs = None
         self.output_format_from_prefs = "xml"
+        self.pro_features_from_prefs = {}
         # True only if a prefs file actually exists on disk
         self.prefs_file_exists = False
         # Backward-compat flag; set true only when prefs file exists
@@ -143,11 +160,12 @@ class PreferencesManager:
         prefs_path = _prefs_path()
         self.prefs_file_exists = os.path.exists(prefs_path)
 
-        checked, window_size, splitter_state, output_format = _read_prefs_file()
+        checked, window_size, splitter_state, output_format, pro_features = _read_prefs_file()
         self.checked_files_from_prefs = checked
         self.window_size_from_prefs = window_size
         self.splitter_state_from_prefs = splitter_state
         self.output_format_from_prefs = output_format
+        self.pro_features_from_prefs = pro_features
 
         # Only mark as loaded when a prefs file actually exists
         self.prefs_loaded = self.prefs_file_exists
@@ -162,8 +180,15 @@ class PreferencesManager:
         size = self.main_window.size()
         splitter_state = self.main_window.splitter.saveState()
         fmt = self.main_window.format_combo.currentData()
+
+        # Collect pro features state
+        pro_features = {}
+        if hasattr(self.main_window, 'preview_toggle'):
+            pro_features['preview_window_enabled'] = self.main_window.preview_toggle.isChecked(
+            )
+
         _write_prefs_file(checked_relpaths, window_size=(
-            size.width(), size.height()), splitter_state=splitter_state, output_format=fmt)
+            size.width(), size.height()), splitter_state=splitter_state, output_format=fmt, pro_features=pro_features)
         self.main_window._save_prompt_options()
 
     def load_from_prefs_button_clicked(self):

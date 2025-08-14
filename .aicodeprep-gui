@@ -15,6 +15,9 @@ splitter_state=AAAA/wAAAAEAAAACAAADAAAAAPwB/////wEAAAACAA==
 [format]
 output_format=markdown
 
+[pro]
+preview_window_enabled=true
+
 [files]
 .clinerules
 pyproject.toml
