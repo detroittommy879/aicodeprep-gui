@@ -1002,8 +1002,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             settings = QtCore.QSettings("aicodeprep-gui", "UserIdentity")
             settings.setValue("generate_count", self.generate_count)
 
-            # Show share dialog every 6th generate
-            if self.generate_count > 0 and self.generate_count % 6 == 0:
+            # Show share dialog every 6th generate (skip for pro users)
+            if self.generate_count > 0 and self.generate_count % 6 == 0 and not pro.enabled:
                 QtCore.QTimer.singleShot(500, self.show_share_dialog_and_close)
             else:
                 # Increase the delay to ensure clipboard operations complete
