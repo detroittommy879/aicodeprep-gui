@@ -57,3 +57,4 @@ aicodeprep_gui\pro\multi_state_level_delegate.py
 aicodeprep_gui\pro\patches.py
 aicodeprep_gui\pro\preview_window.py
 aicodeprep_gui\pro\__init__.py
+pyside6_docs\pyside6_themes_and_styling.md

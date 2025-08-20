@@ -272,10 +272,17 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.vibe_label.setFont(vibe_font)
         self.vibe_label.setAlignment(
             QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
-        self.vibe_label.setStyleSheet(
-            "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #40e03f, stop:1 #ff900f); "
-            "color: white; padding: 0px 0px 0px 0px; border-radius: 8px;"
-        )
+        # Set initial vibe_label style based on theme
+        if self.is_dark_mode:
+            self.vibe_label.setStyleSheet(
+                "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #353535, stop:0.33 #90ee90, stop:0.67 #ffa500, stop:1 #353535); "
+                "color: black; padding: 0px 0px 0px 0px; border-radius: 8px;"
+            )
+        else:
+            self.vibe_label.setStyleSheet(
+                "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #f8f900, stop:0.33 #20c020, stop:0.67 #ff8c00, stop:1 #f8f900); "
+                "color: black; padding: 0px 0px 0px 0px; border-radius: 8px;"
+            )
         self.vibe_label.setFixedHeight(44)
 
         banner_wrap = QtWidgets.QWidget()
@@ -340,7 +347,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             "Presets help you save more time and will be saved for later use")
         preset_explanation.setObjectName("preset_explanation")
         preset_explanation.setStyleSheet(
-            f"font-size: 10px; color: {'#bbbbbb' if self.is_dark_mode else '#444444'};"
+            f"font-size: 10px; color: {'#fb9b0b' if self.is_dark_mode else '#444444'};"
         )
         main_layout.addWidget(preset_explanation)
 
@@ -496,7 +503,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         # Remember checkbox with help icon
         remember_help = QtWidgets.QLabel(
-            "<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
+            "<b style='color:#0098e4; font-size:14px; cursor:help;'>?</b>")
         remember_help.setToolTip(
             "Saves which files are included in the context for this folder, so you don't have to keep doing it over and over")
         remember_help.setAlignment(QtCore.Qt.AlignVCenter)
@@ -570,7 +577,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             "Enable file preview window")
         # Tooltip will be set conditionally below
         preview_help = QtWidgets.QLabel(
-            "<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
+            "<b style='color:#0098D4; font-size:14px; cursor:help;'>?</b>")
         preview_help.setToolTip(
             "Shows a docked window on the right that previews file contents when you select them in the tree")
         preview_help.setAlignment(QtCore.Qt.AlignVCenter)

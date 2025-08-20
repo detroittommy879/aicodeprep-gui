@@ -50,10 +50,17 @@ class UISettingsManager:
         ) if self.main_window.is_dark_mode else get_checkbox_style_light()
         self.main_window.tree_widget.setStyleSheet(base_style + checkbox_style)
 
-        self.main_window.vibe_label.setStyleSheet(
-            "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #40e03f, stop:1 #1f103f); "
-            "color: white; padding: 0px 0px 0px 0px; border-radius: 8px;"
-        )
+        # Set vibe_label style based on theme
+        if self.main_window.is_dark_mode:
+            self.main_window.vibe_label.setStyleSheet(
+                "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #353535, stop:0.33 #90ee90, stop:0.67 #ffa500, stop:1 #353535); "
+                "color: white; padding: 0px 0px 0px 0px; border-radius: 8px;"
+            )
+        else:
+            self.main_window.vibe_label.setStyleSheet(
+                "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #f8f900, stop:0.33 #20c020, stop:0.67 #ff8c00, stop:1 #f8f900); "
+                "color: black; padding: 0px 0px 0px 0px; border-radius: 8px;"
+            )
         for child in self.main_window.findChildren(QtWidgets.QLabel):
             if getattr(child, "objectName", lambda: "")() == "preset_explanation":
                 child.setStyleSheet(
