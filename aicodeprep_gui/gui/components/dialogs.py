@@ -1,3 +1,4 @@
+from PySide6.QtCore import QTimer
 import os
 import sys
 import json
@@ -470,3 +471,138 @@ class DialogManager:
         """Shows a dialog encouraging the user to share the app."""
         dialog = ShareDialog(self.parent)
         dialog.exec()
+
+    def open_activate_pro_dialog(self):
+        dialog = ActivateProDialog(
+            self.parent.GUMROAD_PRODUCT_ID,
+            self.parent.network_manager,
+            parent=self.parent)
+        dialog.exec()
+
+
+# --- ActivateProDialog for Pro license activation ---
+
+
+class ActivateProDialog(QtWidgets.QDialog):
+    RETRY_DELAYS = [1000, 2000, 4000]  # ms
+
+    def __init__(self, product_id: str, network_manager: QtNetwork.QNetworkAccessManager, parent=None):
+        super().__init__(parent)
+        self.product_id = product_id
+        self.network_manager = network_manager
+        self.attempt = 0
+        self.setup_ui()
+
+    def setup_ui(self):
+        self.setWindowTitle("Activate Pro License")
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.addWidget(QtWidgets.QLabel(
+            "Enter your Gumroad license key to activate Pro features:"))
+        link = QtWidgets.QLabel(
+            f'<a href="https://gumroad.com/l/{self.product_id}" '
+            'style="color:#28a745;">Buy a Lifetime Pro License</a>')
+        link.setOpenExternalLinks(True)
+        layout.addWidget(link)
+        self.license_key_input = QtWidgets.QLineEdit()
+        self.license_key_input.setPlaceholderText("XXXX-XXXX-XXXX")
+        layout.addWidget(self.license_key_input)
+        self.status_label = QtWidgets.QLabel("")
+        layout.addWidget(self.status_label)
+        btns = QtWidgets.QHBoxLayout()
+        self.activate_button = QtWidgets.QPushButton("Activate")
+        self.activate_button.clicked.connect(self.on_activate)
+        btns.addWidget(self.activate_button)
+        cancel = QtWidgets.QPushButton("Cancel")
+        cancel.clicked.connect(self.reject)
+        btns.addWidget(cancel)
+        layout.addLayout(btns)
+
+    def on_activate(self):
+        key = self.license_key_input.text().strip()
+        if not key:
+            QtWidgets.QMessageBox.warning(
+                self, "Error", "Please enter a license key.")
+            return
+        if not self.product_id:
+            QtWidgets.QMessageBox.critical(
+                self, "Error", "Product ID is not set.")
+            return
+        self.activate_button.setEnabled(False)
+        self.status_label.setText("Verifying license…")
+        self.attempt = 0
+        self.send_request(key)
+
+    def send_request(self, key):
+        self.attempt += 1
+        url = QtCore.QUrl("https://api.gumroad.com/v2/licenses/verify")
+        data = urllib.parse.urlencode({
+            "product_id": self.product_id,
+            "license_key": key,
+            "increment_uses_count": "true"
+        }).encode("utf-8")
+        req = QtNetwork.QNetworkRequest(url)
+        req.setHeader(QtNetwork.QNetworkRequest.ContentTypeHeader,
+                      "application/x-www-form-urlencoded")
+        self.reply = self.network_manager.post(req, data)
+        self.reply.finished.connect(self.on_reply)
+
+    def on_reply(self):
+        err = self.reply.error()
+        body = bytes(self.reply.readAll()).decode("utf-8", errors="ignore")
+        self.reply.deleteLater()
+        if err == QtNetwork.QNetworkReply.NetworkError.NoError:
+            try:
+                resp = json.loads(body)
+            except:
+                resp = {}
+            if resp.get("success") and not resp.get("purchase", {}).get("refunded", False):
+                # Check activation count and limit to 2 uses
+                uses = resp.get("uses", 0)
+                if uses > 2:
+                    QtWidgets.QMessageBox.warning(
+                        self, "Activation Limit Exceeded",
+                        f"License key has been activated {uses} times. Only 2 activations are allowed. Please purchase a new license for additional installs.")
+                    self.activate_button.setEnabled(True)
+                    self.status_label.setText("")
+                    return
+
+                # persist activation
+                try:
+                    open("pro_enabled", "w").close()
+                except Exception as e:
+                    QtWidgets.QMessageBox.warning(
+                        self, "Warning",
+                        f"Activated but failed to save file: {e}"
+                    )
+                QtWidgets.QMessageBox.information(
+                    self, "Success",
+                    "License verified! Please restart the app to enter Pro mode."
+                )
+                # close all windows so restart is clean
+                QtWidgets.QApplication.instance().quit()
+                return
+            else:
+                err_msg = resp.get(
+                    "message") or "Invalid or refunded license key."
+                QtWidgets.QMessageBox.warning(
+                    self, "Activation Failed", err_msg)
+                self.activate_button.setEnabled(True)
+                self.status_label.setText("")
+                return
+
+        # network error or HTTP error
+        if self.attempt < len(self.RETRY_DELAYS):
+            delay = self.RETRY_DELAYS[self.attempt - 1]
+            self.status_label.setText(
+                f"Network error ({err}). Retrying in {delay//1000}s…"
+            )
+            QTimer.singleShot(delay, lambda: self.send_request(
+                self.license_key_input.text().strip()))
+        else:
+            QtWidgets.QMessageBox.critical(
+                self, "Error",
+                "Could not reach the license server after multiple attempts.\n"
+                "Please try again later or contact support."
+            )
+            self.activate_button.setEnabled(True)
+            self.status_label.setText("")

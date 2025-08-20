@@ -38,6 +38,8 @@ from .utils.helpers import WindowHelpers
 
 
 class FileSelectionGUI(QtWidgets.QMainWindow):
+    GUMROAD_PRODUCT_ID = "KpjO4PdY2mQNCZC1k_ZkPQ=="  # set your Gumroad product_id
+
     def __init__(self, files):
         super().__init__()
         self.dialog_manager = DialogManager(self)
@@ -233,6 +235,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         complain_act = QtGui.QAction("Send Ideas, bugs, thoughts!", self)
         complain_act.triggered.connect(self.open_complain_dialog)
         help_menu.addAction(complain_act)
+
+        if not os.path.isfile("pro_enabled"):
+            act = QtGui.QAction("Activate Pro…", self)
+            act.triggered.connect(self.dialog_manager.open_activate_pro_dialog)
+            help_menu.addAction(act)
 
         self.format_combo = QtWidgets.QComboBox()
         self.format_combo.addItems(["XML <code>", "Markdown ###"])

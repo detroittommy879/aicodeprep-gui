@@ -22,7 +22,7 @@ preview_window_enabled=true
 .clinerules
 pyproject.toml
 README.md
-Z.md
+zzz_gumroad.md
 aicodeprep_gui\apptheme.py
 aicodeprep_gui\file_processor.py
 aicodeprep_gui\linux_installer.py
