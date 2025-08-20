@@ -7,7 +7,7 @@ import uuid
 import json
 from datetime import datetime, date
 from PySide6 import QtWidgets, QtCore, QtGui, QtNetwork
-from aicodeprep_gui import __version__
+from aicodeprep_gui import __version__  # Keep one of these, remove duplicate
 from aicodeprep_gui import update_checker
 from PySide6.QtCore import QTemporaryDir
 from importlib import resources
@@ -19,8 +19,8 @@ from aicodeprep_gui.apptheme import (
 from typing import List, Tuple
 from aicodeprep_gui import smart_logic
 from aicodeprep_gui.file_processor import process_files
-from aicodeprep_gui import __version__
-from aicodeprep_gui import pro
+# from aicodeprep_gui import __version__ # Duplicate import, removed
+from aicodeprep_gui import pro  # Keep one of these, remove duplicate
 
 # New modular imports
 from .components.layouts import FlowLayout
@@ -28,7 +28,7 @@ from .components.dialogs import DialogManager, VoteDialog
 from .components.tree_widget import FileTreeManager
 from .components.preset_buttons import PresetButtonManager
 # Level delegate is provided via Pro getter when enabled
-from aicodeprep_gui import pro
+# from aicodeprep_gui import pro # Duplicate import, removed
 from .settings.presets import global_preset_manager
 from .settings.preferences import PreferencesManager
 from .settings.ui_settings import UISettingsManager
@@ -63,6 +63,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             with resources.path('aicodeprep_gui.images', 'favicon.ico') as icon_path:
                 app_icon = QtGui.QIcon(str(icon_path))
             self.setWindowIcon(app_icon)
+            # Imports moved here for minimal change, but ideally these would be at top of file or within a dedicated setup method.
             from PySide6.QtWidgets import QSystemTrayIcon, QMenu
             from PySide6.QtGui import QAction
             tray = QSystemTrayIcon(app_icon, parent=self)
@@ -272,7 +273,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.vibe_label.setAlignment(
             QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
         self.vibe_label.setStyleSheet(
-            "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #40203f, stop:1 #1f103f); "
+            "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #40e03f, stop:1 #ff900f); "
             "color: white; padding: 0px 0px 0px 0px; border-radius: 8px;"
         )
         self.vibe_label.setFixedHeight(44)
@@ -542,7 +543,20 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         main_layout.addWidget(self.options_group_box)
 
         # --- New Pro Features Group ---
-        premium_group_box = QtWidgets.QGroupBox("Pro Features")
+        # Create horizontal layout for "Pro Features" and "Buy Pro Lifetime License"
+        pro_features_row = QtWidgets.QHBoxLayout()
+        pro_features_label = QtWidgets.QLabel("Pro Features")
+        pro_features_label.setFont(QtGui.QFont(self.default_font.family(),
+                                   self.default_font.pointSize() + 2, QtGui.QFont.Bold))
+        buy_pro_label = QtWidgets.QLabel(
+            '<a href="https://tombrothers.gumroad.com/l/zthvs" style="color: green;">Buy Pro Lifetime License</a>')
+        buy_pro_label.setOpenExternalLinks(True)
+        buy_pro_label.setAlignment(QtCore.Qt.AlignLeft)
+        pro_features_row.addWidget(pro_features_label)
+        pro_features_row.addStretch()
+        pro_features_row.addWidget(buy_pro_label)
+
+        premium_group_box = QtWidgets.QGroupBox()
         premium_group_box.setCheckable(True)
         self.premium_group_box = premium_group_box
 
@@ -550,26 +564,6 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         premium_content_layout = QtWidgets.QVBoxLayout(premium_container)
         premium_content_layout.setContentsMargins(0, 5, 0, 5)
-
-        # Helper function to create a disabled feature row
-        def create_feature_row(text: str, tooltip: str) -> QtWidgets.QHBoxLayout:
-            layout = QtWidgets.QHBoxLayout()
-            layout.setContentsMargins(0, 0, 0, 0)
-
-            checkbox = QtWidgets.QCheckBox(text)
-            checkbox.setEnabled(False)
-            layout.addWidget(checkbox)
-
-            help_icon = QtWidgets.QLabel(
-                "<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
-            help_icon.setToolTip(tooltip)
-            help_icon.setAlignment(QtCore.Qt.AlignVCenter)
-            layout.addWidget(help_icon)
-
-            layout.addStretch()
-            return layout
-
-        # No placeholder features - only real pro features below
 
         # Add Preview Window toggle to premium features (always visible)
         self.preview_toggle = QtWidgets.QCheckBox(
@@ -640,7 +634,12 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.pro_level_toggle.setEnabled(False)
             self.pro_level_toggle.setToolTip("Pro Feature")
 
+        # Add the new green clickable link
+        # buy_pro_label is now placed in the pro_features_row above the group box
+        # Remove from premium_content_layout
+
         # Apply style and add to main layout
+        main_layout.addLayout(pro_features_row)
         self._update_groupbox_style(self.premium_group_box)
         main_layout.addWidget(self.premium_group_box)
 
@@ -708,6 +707,25 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         # Ensure initial Level column state (off by default)
         # Column remains hidden until the Pro toggle is enabled.
+
+    # Helper function needs to be a method if it uses self.default_font.
+    # It was originally incorrectly defined inside __init__.
+    def _create_disabled_feature_row(self, text: str, tooltip: str) -> QtWidgets.QHBoxLayout:
+        layout = QtWidgets.QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        checkbox = QtWidgets.QCheckBox(text)
+        checkbox.setEnabled(False)
+        layout.addWidget(checkbox)
+
+        help_icon = QtWidgets.QLabel(
+            "<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
+        help_icon.setToolTip(tooltip)
+        help_icon.setAlignment(QtCore.Qt.AlignVCenter)
+        layout.addWidget(help_icon)
+
+        layout.addStretch()
+        return layout
 
     # Delegate methods to managers:
     def load_prefs_if_exists(self):

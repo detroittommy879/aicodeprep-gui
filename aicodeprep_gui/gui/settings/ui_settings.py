@@ -51,7 +51,7 @@ class UISettingsManager:
         self.main_window.tree_widget.setStyleSheet(base_style + checkbox_style)
 
         self.main_window.vibe_label.setStyleSheet(
-            "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #40203f, stop:1 #1f103f); "
+            "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #40e03f, stop:1 #1f103f); "
             "color: white; padding: 0px 0px 0px 0px; border-radius: 8px;"
         )
         for child in self.main_window.findChildren(QtWidgets.QLabel):
