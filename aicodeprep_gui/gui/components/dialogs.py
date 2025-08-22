@@ -402,53 +402,85 @@ class DialogManager:
         dlg.exec()
 
     def add_new_preset_dialog(self):
-        # Corrected relative import
-        from aicodeprep_gui.settings import presets as global_preset_manager
+        try:
+            # Import the global preset manager instance
+            from aicodeprep_gui.gui.settings.presets import global_preset_manager
 
-        lbl, ok = QtWidgets.QInputDialog.getText(
-            self.parent, "New preset", "Button label:")
-        if not ok or not lbl.strip():
-            return
+            lbl, ok = QtWidgets.QInputDialog.getText(
+                self.parent, "New preset", "Button label:")
+            if not ok or not lbl.strip():
+                logging.info(
+                    "Add preset dialog canceled or empty label provided")
+                return
 
-        dlg = QtWidgets.QDialog(self.parent)
-        dlg.setWindowTitle("Preset text")
-        dlg.setMinimumSize(400, 300)
-        v = QtWidgets.QVBoxLayout(dlg)
-        v.addWidget(QtWidgets.QLabel("Enter the preset text:"))
-        text_edit = QtWidgets.QPlainTextEdit()
-        v.addWidget(text_edit)
-        bb = QtWidgets.QDialogButtonBox(
-            QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
-        v.addWidget(bb)
-        bb.accepted.connect(dlg.accept)
-        bb.rejected.connect(dlg.reject)
+            dlg = QtWidgets.QDialog(self.parent)
+            dlg.setWindowTitle("Preset text")
+            dlg.setMinimumSize(400, 300)
+            v = QtWidgets.QVBoxLayout(dlg)
+            v.addWidget(QtWidgets.QLabel("Enter the preset text:"))
+            text_edit = QtWidgets.QPlainTextEdit()
+            v.addWidget(text_edit)
+            bb = QtWidgets.QDialogButtonBox(
+                QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+            v.addWidget(bb)
+            bb.accepted.connect(dlg.accept)
+            bb.rejected.connect(dlg.reject)
 
-        if dlg.exec() != QtWidgets.QDialog.Accepted:
-            return
+            if dlg.exec() != QtWidgets.QDialog.Accepted:
+                logging.info("Preset text dialog canceled")
+                return
 
-        txt = text_edit.toPlainText().strip()
-        if txt and global_preset_manager.add_preset(lbl.strip(), txt):
-            self.parent.preset_manager._add_preset_button(
-                lbl.strip(), txt, from_global=True)
-        else:
-            QtWidgets.QMessageBox.warning(
-                self.parent, "Error", "Failed to save preset.")
+            txt = text_edit.toPlainText().strip()
+            if not txt:
+                QtWidgets.QMessageBox.warning(
+                    self.parent, "Error", "Preset text cannot be empty.")
+                logging.warning("Attempted to save preset with empty text")
+                return
+
+            if global_preset_manager.add_preset(lbl.strip(), txt):
+                self.parent.preset_manager._add_preset_button(
+                    lbl.strip(), txt, from_global=True)
+                logging.info(f"Successfully added new preset: '{lbl.strip()}'")
+            else:
+                error_msg = f"Failed to save preset '{lbl.strip()}'. Check settings permissions and disk space."
+                QtWidgets.QMessageBox.warning(
+                    self.parent, "Error", error_msg)
+                logging.error(
+                    f"Failed to save preset '{lbl.strip()}' - global_preset_manager.add_preset returned False")
+        except ImportError as e:
+            error_msg = f"Failed to import preset settings module: {e}. Module path may be incorrect."
+            QtWidgets.QMessageBox.critical(
+                self.parent, "Import Error", error_msg)
+            logging.error(f"Import error in add_new_preset_dialog: {e}")
+        except Exception as e:
+            error_msg = f"Unexpected error while adding preset: {e}"
+            QtWidgets.QMessageBox.critical(
+                self.parent, "Error", error_msg)
+            logging.error(
+                f"Unexpected error in add_new_preset_dialog: {e}", exc_info=True)
 
     def delete_preset_dialog(self):
-        # Corrected relative import
-        from aicodeprep_gui.settings import presets as global_preset_manager
+        try:
+            # Import the global preset manager instance
+            from aicodeprep_gui.gui.settings.presets import global_preset_manager
 
-        presets = global_preset_manager.get_all_presets()
-        if not presets:
-            QtWidgets.QMessageBox.information(
-                self.parent, "No Presets", "There are no presets to delete.")
-            return
+            presets = global_preset_manager.get_all_presets()
+            if not presets:
+                QtWidgets.QMessageBox.information(
+                    self.parent, "No Presets", "There are no presets to delete.")
+                logging.info(
+                    "Delete preset dialog: No presets available to delete")
+                return
 
-        preset_labels = [p[0] for p in presets]
-        label_to_delete, ok = QtWidgets.QInputDialog.getItem(self.parent, "Delete Preset",
-                                                             "Select a preset to delete:", preset_labels, 0, False)
+            preset_labels = [p[0] for p in presets]
+            label_to_delete, ok = QtWidgets.QInputDialog.getItem(self.parent, "Delete Preset",
+                                                                 "Select a preset to delete:", preset_labels, 0, False)
 
-        if ok and label_to_delete:
+            if not ok or not label_to_delete:
+                logging.info(
+                    "Delete preset dialog canceled or no preset selected")
+                return
+
             # Find the button widget corresponding to the label
             button_to_remove = None
             for i in range(self.parent.preset_strip.count()):
@@ -463,9 +495,25 @@ class DialogManager:
                 # Call the existing delete logic, which includes the confirmation dialog.
                 self.parent.preset_manager._delete_preset(
                     label_to_delete, button_to_remove, from_global=True)
-            else:  # This 'else' was the main indentation issue in the original code
+                logging.info(
+                    f"Successfully initiated deletion of preset: '{label_to_delete}'")
+            else:
+                error_msg = f"Could not find the corresponding button for preset '{label_to_delete}'. The UI might be out of sync with stored presets."
                 QtWidgets.QMessageBox.warning(
-                    self.parent, "Error", "Could not find the corresponding button to delete. The UI might be out of sync.")
+                    self.parent, "Error", error_msg)
+                logging.error(
+                    f"UI sync error: Could not find button for preset '{label_to_delete}' in preset strip")
+        except ImportError as e:
+            error_msg = f"Failed to import preset settings module: {e}. Module path may be incorrect."
+            QtWidgets.QMessageBox.critical(
+                self.parent, "Import Error", error_msg)
+            logging.error(f"Import error in delete_preset_dialog: {e}")
+        except Exception as e:
+            error_msg = f"Unexpected error while deleting preset: {e}"
+            QtWidgets.QMessageBox.critical(
+                self.parent, "Error", error_msg)
+            logging.error(
+                f"Unexpected error in delete_preset_dialog: {e}", exc_info=True)
 
     def open_share_dialog(self):
         """Shows a dialog encouraging the user to share the app."""
@@ -566,13 +614,26 @@ class ActivateProDialog(QtWidgets.QDialog):
                     self.status_label.setText("")
                     return
 
-                # persist activation
+                # persist activation globally
                 try:
-                    open("pro_enabled", "w").close()
+                    # Save license information to global settings
+                    settings = QtCore.QSettings("aicodeprep-gui", "ProLicense")
+                    settings.setValue("license_key", key)
+                    settings.setValue("license_verified", True)
+                    settings.setValue(
+                        "activation_date", QtCore.QDateTime.currentDateTime().toString())
+                    settings.setValue("uses_count", uses)
+
+                    # Also create local file for backward compatibility if possible
+                    try:
+                        open("pro_enabled", "w").close()
+                    except Exception:
+                        pass  # Ignore local file creation errors since global settings are the primary storage
+
                 except Exception as e:
                     QtWidgets.QMessageBox.warning(
                         self, "Warning",
-                        f"Activated but failed to save file: {e}"
+                        f"Activated but failed to save license information: {e}"
                     )
                 QtWidgets.QMessageBox.information(
                     self, "Success",

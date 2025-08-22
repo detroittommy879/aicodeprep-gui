@@ -8,8 +8,8 @@
 version=1.0
 
 [window]
-width=1134
-height=1488
+width=950
+height=1341
 splitter_state=AAAA/wAAAAEAAAACAAADAAAAAPwB/////wEAAAACAA==
 
 [format]
@@ -19,42 +19,8 @@ output_format=markdown
 preview_window_enabled=true
 
 [files]
-.clinerules
-pyproject.toml
-README.md
-zzz_gumroad.md
-aicodeprep_gui\apptheme.py
 aicodeprep_gui\file_processor.py
-aicodeprep_gui\linux_installer.py
-aicodeprep_gui\macos_installer.py
 aicodeprep_gui\main.py
 aicodeprep_gui\smart_logic.py
-aicodeprep_gui\update_checker.py
-aicodeprep_gui\windows_registry.py
 aicodeprep_gui\__init__.py
 aicodeprep_gui\data\default_config.toml
-aicodeprep_gui\gui\main_window.py
-aicodeprep_gui\gui\__init__.py
-aicodeprep_gui\gui\components\dialogs.py
-aicodeprep_gui\gui\components\installer_dialogs.py
-aicodeprep_gui\gui\components\layouts.py
-aicodeprep_gui\gui\components\multi_state_level_delegate.py
-aicodeprep_gui\gui\components\preset_buttons.py
-aicodeprep_gui\gui\components\tree_widget.py
-aicodeprep_gui\gui\components\__init__.py
-aicodeprep_gui\gui\handlers\file_events.py
-aicodeprep_gui\gui\handlers\ui_events.py
-aicodeprep_gui\gui\handlers\update_events.py
-aicodeprep_gui\gui\handlers\__init__.py
-aicodeprep_gui\gui\settings\preferences.py
-aicodeprep_gui\gui\settings\presets.py
-aicodeprep_gui\gui\settings\ui_settings.py
-aicodeprep_gui\gui\settings\__init__.py
-aicodeprep_gui\gui\utils\helpers.py
-aicodeprep_gui\gui\utils\metrics.py
-aicodeprep_gui\gui\utils\__init__.py
-aicodeprep_gui\pro\multi_state_level_delegate.py
-aicodeprep_gui\pro\patches.py
-aicodeprep_gui\pro\preview_window.py
-aicodeprep_gui\pro\__init__.py
-pyside6_docs\pyside6_themes_and_styling.md

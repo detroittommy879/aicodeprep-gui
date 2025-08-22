@@ -167,6 +167,51 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         central = QtWidgets.QWidget()
         self.setCentralWidget(central)
+        # Prefer palette-based gradient painting to reduce banding and allow multiple stops.
+        # Store central as an attribute so helper can reapply on resize.
+        self.central_widget = central
+
+        def _apply_gradient_to_central():
+            # Use ObjectBoundingMode so coordinates are relative to the widget size.
+            grad = QtGui.QLinearGradient(0, 0, 1, 1)
+            grad.setCoordinateMode(QtGui.QGradient.ObjectBoundingMode)
+            if getattr(self, "is_dark_mode", False):
+                grad.setColorAt(0.00, QtGui.QColor("#2b2b2b"))
+                grad.setColorAt(0.45, QtGui.QColor("#232323"))
+                grad.setColorAt(1.00, QtGui.QColor("#1b1b1b"))
+            else:
+                grad.setColorAt(0.00, QtGui.QColor("#07fbff"))
+                grad.setColorAt(0.35, QtGui.QColor("#f2f8fe"))
+                grad.setColorAt(0.70, QtGui.QColor("#eef4fa"))
+                grad.setColorAt(1.00, QtGui.QColor("#eef4fa"))
+            brush = QtGui.QBrush(grad)
+            pal = self.central_widget.palette()
+            pal.setBrush(QtGui.QPalette.Window, brush)
+            self.central_widget.setAutoFillBackground(True)
+            self.central_widget.setPalette(pal)
+
+        # Initial application
+        _apply_gradient_to_central()
+
+        # Reapply gradient on resize to ensure accurate object-bounding coordinates.
+        # Wrap existing resizeEvent to preserve default behavior.
+        original_resize = getattr(self.central_widget, "resizeEvent", None)
+
+        def _resize_event(event):
+            try:
+                _apply_gradient_to_central()
+            except Exception:
+                pass
+            if original_resize:
+                try:
+                    original_resize(event)
+                except Exception:
+                    QtWidgets.QWidget.resizeEvent(self.central_widget, event)
+            else:
+                QtWidgets.QWidget.resizeEvent(self.central_widget, event)
+
+        self.central_widget.resizeEvent = _resize_event
+
         main_layout = QtWidgets.QVBoxLayout(central)
         main_layout.setContentsMargins(20, 10, 20, 10)
 
@@ -237,7 +282,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         complain_act.triggered.connect(self.open_complain_dialog)
         help_menu.addAction(complain_act)
 
-        if not os.path.isfile("pro_enabled"):
+        if not self._is_pro_enabled():
             act = QtGui.QAction("Activate Pro…", self)
             act.triggered.connect(self.dialog_manager.open_activate_pro_dialog)
             help_menu.addAction(act)
@@ -1146,3 +1191,23 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 self.preview_window.clear_preview()
         else:
             self.preview_window.clear_preview()
+
+    def _is_pro_enabled(self):
+        """Check if pro mode is enabled globally."""
+        # Check command line flag
+        if '--pro' in sys.argv:
+            return True
+
+        # Check for local pro_enabled file (legacy support)
+        if os.path.isfile('pro_enabled'):
+            return True
+
+        # Check global settings for license key
+        try:
+            settings = QtCore.QSettings("aicodeprep-gui", "ProLicense")
+            license_key = settings.value("license_key", "")
+            license_verified = settings.value(
+                "license_verified", False, type=bool)
+            return bool(license_key and license_verified)
+        except Exception:
+            return False

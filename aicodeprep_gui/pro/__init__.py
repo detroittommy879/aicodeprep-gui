@@ -1,9 +1,31 @@
 """Premium plugin loader."""
 import os
 import sys
+from PySide6 import QtCore
+
+
+def _check_pro_enabled():
+    """Check if pro mode is enabled via CLI flag, local file, or global settings."""
+    # Command line flag takes precedence
+    if '--pro' in sys.argv:
+        return True
+
+    # Check for local pro_enabled file (legacy support)
+    if os.path.isfile('pro_enabled'):
+        return True
+
+    # Check global settings for license key
+    try:
+        settings = QtCore.QSettings("aicodeprep-gui", "ProLicense")
+        license_key = settings.value("license_key", "")
+        license_verified = settings.value("license_verified", False, type=bool)
+        return bool(license_key and license_verified)
+    except Exception:
+        return False
+
 
 # Check if pro mode is enabled
-enabled = '--pro' in sys.argv or os.path.isfile('pro_enabled')
+enabled = _check_pro_enabled()
 
 # Preview window instance
 _preview_window = None
