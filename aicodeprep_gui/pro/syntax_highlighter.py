@@ -10,19 +10,25 @@ import os
 class SyntaxHighlightedTextEdit(QtWidgets.QTextEdit):
     """A QTextEdit with syntax highlighting using Pygments."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, font_name="JetBrains Mono"):
         super().__init__(parent)
         self.setReadOnly(True)
         self.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
 
         # Set default font
-        font = QtGui.QFont("Consolas", 10)
+        font = QtGui.QFont(font_name, 10)
         font.setStyleHint(QtGui.QFont.Monospace)
+        # Set font weight to ExtraLight (200)
+        font.setWeight(QtGui.QFont.Weight.ExtraLight)
         self.setFont(font)
 
         # Default syntax and theme
         self._syntax = "text"
-        self._theme = "default"
+        self._theme = "nord"
+        # Add flag to control syntax highlighting
+        self._syntax_highlighting_enabled = True
+        # Add flag to prevent recursion
+        self._applying_highlighting = False
 
         # Connect text change signal
         self.textChanged.connect(self._highlight_text)
@@ -30,7 +36,12 @@ class SyntaxHighlightedTextEdit(QtWidgets.QTextEdit):
     def set_syntax(self, syntax):
         """Set the syntax for highlighting."""
         self._syntax = syntax
-        self._highlight_text()
+        if self._syntax_highlighting_enabled:
+            self._highlight_text()
+        else:
+            # Just update the plain text without highlighting
+            plain_text = self.toPlainText()
+            super().setPlainText(plain_text)
 
     def set_theme(self, theme):
         """Set the theme for highlighting."""
@@ -54,8 +65,19 @@ class SyntaxHighlightedTextEdit(QtWidgets.QTextEdit):
 
     def _highlight_text(self):
         """Apply syntax highlighting to the text content."""
+        # Prevent recursion
+        if self._applying_highlighting:
+            return
+
         # Get current text
         plain_text = self.toPlainText()
+
+        # If syntax highlighting is disabled, just set plain text
+        if not self._syntax_highlighting_enabled:
+            # Only update if the text is different to avoid unnecessary updates
+            if self.toPlainText() != plain_text:
+                super().setPlainText(plain_text)
+            return
 
         if not plain_text:
             return
@@ -90,10 +112,10 @@ class SyntaxHighlightedTextEdit(QtWidgets.QTextEdit):
             # Save cursor position
             cursor_pos = self.textCursor().position()
 
-            # Block signals to prevent recursion
-            self.blockSignals(True)
+            # Set flag to prevent recursion
+            self._applying_highlighting = True
             self.setHtml(highlighted)
-            self.blockSignals(False)
+            self._applying_highlighting = False
 
             # Restore cursor position
             cursor = self.textCursor()
@@ -101,6 +123,8 @@ class SyntaxHighlightedTextEdit(QtWidgets.QTextEdit):
             self.setTextCursor(cursor)
         except Exception:
             # Fallback to plain text if highlighting fails
+            # Reset flag before fallback
+            self._applying_highlighting = False
             super().setPlainText(plain_text)
 
     def setPlainText(self, text):
@@ -111,8 +135,8 @@ class SyntaxHighlightedTextEdit(QtWidgets.QTextEdit):
     def setHtml(self, html):
         """Override to ensure highlighting is applied."""
         super().setHtml(html)
-        # Only re-highlight if this wasn't called from _highlight_text
-        if not self.signalsBlocked():
+        # Only re-highlight if this wasn't called from _highlight_text and syntax highlighting is enabled
+        if not self._applying_highlighting and self._syntax_highlighting_enabled:
             self._highlight_text()
 
 
@@ -213,3 +237,18 @@ def get_available_themes():
 def get_available_lexers():
     """Get a list of available lexers."""
     return [lexer[0] for lexer in get_all_lexers()]
+
+
+def set_syntax_highlighting_enabled(text_edit, enabled):
+    """Enable or disable syntax highlighting for a SyntaxHighlightedTextEdit instance."""
+    text_edit._syntax_highlighting_enabled = enabled
+    if enabled:
+        # When enabling, re-apply highlighting to current text
+        text_edit._highlight_text()
+    else:
+        # When disabling, just set plain text without triggering highlighting process
+        plain_text = text_edit.toPlainText()
+        # Temporarily block signals to avoid recursion
+        text_edit.blockSignals(True)
+        text_edit.setPlainText(plain_text)
+        text_edit.blockSignals(False)

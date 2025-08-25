@@ -644,23 +644,107 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         premium_content_layout.addLayout(preview_layout)
 
+        # Add Syntax Highlighting toggle to premium features
+        self.syntax_highlight_toggle = QtWidgets.QCheckBox(
+            "Enable syntax highlighting in preview")
+        syntax_highlight_help = QtWidgets.QLabel(
+            "<b style='color:#0098D4; font-size:14px; cursor:help;'>?</b>")
+        syntax_highlight_help.setToolTip(
+            "Apply syntax highlighting to code in the preview window")
+        syntax_highlight_help.setAlignment(QtCore.Qt.AlignVCenter)
+
+        syntax_highlight_layout = QtWidgets.QHBoxLayout()
+        syntax_highlight_layout.setContentsMargins(0, 0, 0, 0)
+        syntax_highlight_layout.addWidget(self.syntax_highlight_toggle)
+        syntax_highlight_layout.addWidget(syntax_highlight_help)
+        syntax_highlight_layout.addStretch()
+
+        premium_content_layout.addLayout(syntax_highlight_layout)
+
+        # Add Font selection dropdown to premium features
+        font_layout = QtWidgets.QHBoxLayout()
+        font_layout.setContentsMargins(0, 0, 0, 0)
+        font_label = QtWidgets.QLabel("Preview Font:")
+        self.font_combo = QtWidgets.QComboBox()
+        # Populate font combo with available fonts
+        self._populate_font_combo()
+        font_help = QtWidgets.QLabel(
+            "<b style='color:#0098D4; font-size:14px; cursor:help;'>?</b>")
+        font_help.setToolTip(
+            "Select font for preview window")
+        font_help.setAlignment(QtCore.Qt.AlignVCenter)
+
+        font_layout.addWidget(font_label)
+        font_layout.addWidget(self.font_combo)
+        font_layout.addWidget(font_help)
+        font_layout.addStretch()
+        premium_content_layout.addLayout(font_layout)
+
+        # Add Font weight slider to premium features
+        font_weight_layout = QtWidgets.QHBoxLayout()
+        font_weight_layout.setContentsMargins(0, 0, 0, 0)
+        font_weight_label = QtWidgets.QLabel("Font Weight:")
+        self.font_weight_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
+        self.font_weight_slider.setRange(100, 900)  # QFont weight range
+        self.font_weight_slider.setValue(200)  # Default to 200 as requested
+        self.font_weight_slider.setTickPosition(QtWidgets.QSlider.TicksBelow)
+        self.font_weight_slider.setTickInterval(100)
+        self.font_weight_value_label = QtWidgets.QLabel("200")
+        font_weight_help = QtWidgets.QLabel(
+            "<b style='color:#0098D4; font-size:14px; cursor:help;'>?</b>")
+        font_weight_help.setToolTip(
+            "Adjust font weight for preview window")
+        font_weight_help.setAlignment(QtCore.Qt.AlignVCenter)
+
+        font_weight_layout.addWidget(font_weight_label)
+        font_weight_layout.addWidget(self.font_weight_slider)
+        font_weight_layout.addWidget(self.font_weight_value_label)
+        font_weight_layout.addWidget(font_weight_help)
+        font_weight_layout.addStretch()
+        premium_content_layout.addLayout(font_weight_layout)
+
+        # Connect font controls signals
+        self.font_combo.currentTextChanged.connect(self._on_font_changed)
+        self.font_weight_slider.valueChanged.connect(
+            self._on_font_weight_changed)
+
         if pro.enabled:
             self.preview_toggle.setEnabled(True)
             self.preview_toggle.setToolTip(
                 "Show docked preview of selected files")
-            # Initialize preview window
-            self.preview_window = pro.get_preview_window()
+            # Initialize preview window with selected font
+            selected_font = self.font_combo.currentText() if hasattr(
+                self, 'font_combo') else "JetBrains Mono"
+            self.preview_window = pro.get_preview_window(
+                font_name=selected_font)
             if self.preview_window:
                 self.addDockWidget(
                     QtCore.Qt.RightDockWidgetArea, self.preview_window)
                 self.preview_toggle.toggled.connect(self.toggle_preview_window)
+                # Connect syntax highlighting toggle
+                self.syntax_highlight_toggle.toggled.connect(
+                    self.toggle_syntax_highlighting)
 
             # Load saved preview window state from preferences
             self._load_preview_window_state()
+            # Load saved syntax highlighting state from preferences
+            self._load_syntax_highlight_state()
+
+            # For pro users, enable syntax highlighting and set default to checked
+            self.syntax_highlight_toggle.setEnabled(True)
+            self.syntax_highlight_toggle.setToolTip(
+                "Apply syntax highlighting to code in the preview window")
+            self.syntax_highlight_toggle.setChecked(
+                True)  # Default to enabled for pro users
         else:
             self.preview_toggle.setEnabled(False)
             self.preview_toggle.setToolTip(
                 "Enable file preview window (Pro Feature)")
+
+            # Disable syntax highlighting for non-pro users
+            self.syntax_highlight_toggle.setEnabled(False)
+            self.syntax_highlight_toggle.setToolTip(
+                "Enable syntax highlighting (Pro Feature)")
 
         # The main layout for the QGroupBox itself. It will contain the collapsible widget.
         premium_group_box_main_layout = QtWidgets.QVBoxLayout(
@@ -805,9 +889,12 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         # Update preview window font if it exists
         if hasattr(self, 'preview_window') and self.preview_window:
-            self.preview_window.text_edit.setFont(self.default_font)
-            # Re-highlight text to apply new font
-            self.preview_window.text_edit._highlight_text()
+            # Update the preview window with the new font
+            current_font = self.preview_window.text_edit.font()
+            current_font.setPointSize(self.default_font.pointSize())
+            self.preview_window.text_edit.setFont(current_font)
+            # Update the preview to apply the new font
+            self.update_file_preview()
 
         # Update all widgets with dynamic font sizes
         self._update_dynamic_fonts()
@@ -1405,6 +1492,58 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             logging.info(
                 f"Loaded preview window state from preferences: {preview_enabled}")
 
+    def _load_syntax_highlight_state(self):
+        """Load the saved syntax highlighting toggle state from preferences."""
+        if hasattr(self, 'syntax_highlight_toggle') and self.preferences_manager.pro_features_from_prefs:
+            syntax_highlight_enabled = self.preferences_manager.pro_features_from_prefs.get(
+                'syntax_highlight_enabled', True)  # Default to True for pro users
+            # Set the checkbox state without triggering signals to avoid recursion
+            self.syntax_highlight_toggle.blockSignals(True)
+            self.syntax_highlight_toggle.setChecked(syntax_highlight_enabled)
+            self.syntax_highlight_toggle.blockSignals(False)
+
+            logging.info(
+                f"Loaded syntax highlighting state from preferences: {syntax_highlight_enabled}")
+
+    def _populate_font_combo(self):
+        """Populate the font combo box with available fonts."""
+        # Add the available fonts from the fonts/ folder
+        font_files = [
+            "JetBrains Mono",
+            "Lekton",
+            "Space Mono"
+        ]
+
+        # Add fonts to combo box
+        for font_name in font_files:
+            self.font_combo.addItem(font_name)
+
+        # Set default selection
+        self.font_combo.setCurrentText("JetBrains Mono")
+
+    def _on_font_changed(self, font_name):
+        """Handle font selection change."""
+        if hasattr(self, 'preview_window') and self.preview_window:
+            # Update the preview window font
+            font = QtGui.QFont(font_name, self.default_font.pointSize())
+            font.setWeight(QtGui.QFont.Weight(self.font_weight_slider.value()))
+            self.preview_window.text_edit.setFont(font)
+            # Re-highlight text to apply new font
+            self.preview_window.text_edit._highlight_text()
+
+    def _on_font_weight_changed(self, value):
+        """Handle font weight slider change."""
+        # Update the value label
+        self.font_weight_value_label.setText(str(value))
+
+        if hasattr(self, 'preview_window') and self.preview_window:
+            # Update the preview window font with new weight
+            current_font = self.preview_window.text_edit.font()
+            current_font.setWeight(QtGui.QFont.Weight(value))
+            self.preview_window.text_edit.setFont(current_font)
+            # Re-highlight text to apply new font weight
+            self.preview_window.text_edit._highlight_text()
+
     def toggle_preview_window(self, enabled):
         """Toggle the preview window visibility."""
         if hasattr(self, 'preview_window') and self.preview_window:
@@ -1423,6 +1562,14 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                         self.update_file_preview)
                 except TypeError:
                     pass  # Signal was never connected
+
+    def toggle_syntax_highlighting(self, enabled):
+        """Toggle syntax highlighting in the preview window."""
+        if hasattr(self, 'preview_window') and self.preview_window:
+            # Store the syntax highlighting state in the preview window
+            self.preview_window.set_syntax_highlighting_enabled(enabled)
+            # Refresh the preview if a file is currently being displayed
+            self.update_file_preview()
 
     def update_file_preview(self):
         """Update the preview based on current tree selection."""

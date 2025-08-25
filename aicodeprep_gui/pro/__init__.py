@@ -32,12 +32,12 @@ enabled = _check_pro_enabled()
 _preview_window = None
 
 
-def get_preview_window():
+def get_preview_window(font_name="JetBrains Mono"):
     """Get the global preview window instance."""
     global _preview_window
     if enabled and _preview_window is None:
         from .preview_window import FilePreviewDock
-        _preview_window = FilePreviewDock()
+        _preview_window = FilePreviewDock(font_name=font_name)
     return _preview_window
 
 

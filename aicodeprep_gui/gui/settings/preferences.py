@@ -186,6 +186,8 @@ class PreferencesManager:
         if hasattr(self.main_window, 'preview_toggle'):
             pro_features['preview_window_enabled'] = self.main_window.preview_toggle.isChecked(
             )
+        if hasattr(self.main_window, 'syntax_highlight_toggle'):
+            pro_features['syntax_highlight_enabled'] = self.main_window.syntax_highlight_toggle.isChecked()
 
         _write_prefs_file(checked_relpaths, window_size=(
             size.width(), size.height()), splitter_state=splitter_state, output_format=fmt, pro_features=pro_features)

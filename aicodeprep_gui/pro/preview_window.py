@@ -8,7 +8,7 @@ from .syntax_highlighter import SyntaxHighlightedTextEdit, get_file_syntax
 class FilePreviewDock(QtWidgets.QDockWidget):
     """A dockable window for previewing file contents."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, font_name="JetBrains Mono"):
         super().__init__("File Preview", parent)
         self.setObjectName("file_preview_dock")
         self.setAllowedAreas(QtCore.Qt.RightDockWidgetArea)
@@ -18,8 +18,8 @@ class FilePreviewDock(QtWidgets.QDockWidget):
         layout = QtWidgets.QVBoxLayout(content)
         layout.setContentsMargins(0, 0, 0, 0)
 
-        # Text preview area
-        self.text_edit = SyntaxHighlightedTextEdit()
+        # Text preview area with specified font
+        self.text_edit = SyntaxHighlightedTextEdit(font_name=font_name)
 
         # Font setup is handled by SyntaxHighlightedTextEdit
 
@@ -37,6 +37,16 @@ class FilePreviewDock(QtWidgets.QDockWidget):
 
         # Hide initially
         self.hide()
+
+        # Syntax highlighting state (enabled by default for pro users)
+        self.syntax_highlighting_enabled = True
+
+    def set_syntax_highlighting_enabled(self, enabled):
+        """Enable or disable syntax highlighting."""
+        self.syntax_highlighting_enabled = enabled
+        # Also update the text edit widget directly
+        from .syntax_highlighter import set_syntax_highlighting_enabled
+        set_syntax_highlighting_enabled(self.text_edit, enabled)
 
     def preview_file(self, file_path):
         """Load and display file contents."""
@@ -59,13 +69,20 @@ class FilePreviewDock(QtWidgets.QDockWidget):
             if len(content) > max_chars:
                 content = content[:max_chars] + "\n\n... [Content truncated]"
 
-            # Determine syntax based on file extension
-            syntax = get_file_syntax(file_path)
-            self.text_edit.set_syntax(syntax)
-
-            self.text_edit.setPlainText(content)
-            self.status_label.setText(
-                f"Preview: {os.path.basename(file_path)} ({syntax})")
+            if self.syntax_highlighting_enabled:
+                # Determine syntax based on file extension
+                syntax = get_file_syntax(file_path)
+                self.text_edit.set_syntax(syntax)
+                self.text_edit.setPlainText(content)
+                self.status_label.setText(
+                    f"Preview: {os.path.basename(file_path)} ({syntax})")
+            else:
+                # Instead of disabling syntax highlighting, treat as plain text
+                # This avoids the recursion issues with toggling syntax highlighting
+                self.text_edit.set_syntax("text")
+                self.text_edit.setPlainText(content)
+                self.status_label.setText(
+                    f"Preview: {os.path.basename(file_path)} (plain text)")
 
         except Exception as e:
             self.text_edit.setPlainText(f"Error loading file: {str(e)}")
