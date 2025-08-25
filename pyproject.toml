@@ -29,7 +29,8 @@ dependencies = [
     "toml",
     "pathspec",
     "requests", # for your network check
-    "packaging"
+    "packaging",
+    "Pygments>=2.18.0" # for syntax highlighting in preview window
 ]
 requires-python = ">=3.8" # PySide6 requires Python 3.8+
 

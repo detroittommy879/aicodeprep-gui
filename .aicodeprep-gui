@@ -8,9 +8,9 @@
 version=1.0
 
 [window]
-width=950
+width=1321
 height=1305
-splitter_state=AAAA/wAAAAEAAAACAAADAAAAAQgB/////wEAAAACAA==
+splitter_state=AAAA/wAAAAEAAAACAAADAAAAAQQB/////wEAAAACAA==
 
 [format]
 output_format=markdown

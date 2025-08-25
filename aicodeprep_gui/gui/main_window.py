@@ -149,10 +149,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         # Font size multiplier for adjusting all font sizes in the app
         # 0 means no adjustment, positive values increase size, negative values decrease size
         self.font_size_multiplier = 0
-        font_stack = '"Segoe UI", "Ubuntu", "Helvetica Neue", Arial, sans-serif'
+        font_stack = '"JetBrains Mono", "Segoe UI", "Ubuntu", "Helvetica Neue", Arial, sans-serif'
         adjusted_font_size = default_font_size + self.font_size_multiplier
         adjusted_font_size = int(adjusted_font_size * scale_factor)
-        self.default_font = QtGui.QFont("Segoe UI", adjusted_font_size)
+        self.default_font = QtGui.QFont("JetBrains Mono", adjusted_font_size)
         self.setFont(self.default_font)
         self.setStyleSheet(f"font-family: {font_stack};")
         style = self.style()
@@ -789,7 +789,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         adjusted_font_size = default_font_size + self.font_size_multiplier
         adjusted_font_size = int(adjusted_font_size * scale_factor)
-        self.default_font = QtGui.QFont("Segoe UI", adjusted_font_size)
+        self.default_font = QtGui.QFont("JetBrains Mono", adjusted_font_size)
 
         # Update font for the main window
         self.setFont(self.default_font)
@@ -802,6 +802,12 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         vibe_font.setBold(True)
         vibe_font.setPointSize(self.default_font.pointSize() + 8)
         self.vibe_label.setFont(vibe_font)
+
+        # Update preview window font if it exists
+        if hasattr(self, 'preview_window') and self.preview_window:
+            self.preview_window.text_edit.setFont(self.default_font)
+            # Re-highlight text to apply new font
+            self.preview_window.text_edit._highlight_text()
 
         # Update all widgets with dynamic font sizes
         self._update_dynamic_fonts()

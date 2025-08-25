@@ -25,6 +25,7 @@ import logging
 from typing import List
 from aicodeprep_gui.smart_logic import collect_all_files
 from aicodeprep_gui.gui import show_file_selection_gui
+from aicodeprep_gui.apptheme import load_custom_fonts
 
 # Configure logging with explicit console handler only
 logger = logging.getLogger()
@@ -236,6 +237,13 @@ def main():
     from importlib import resources
     with resources.as_file(resources.files('aicodeprep_gui.images').joinpath('favicon.ico')) as icon_path:
         app.setWindowIcon(QIcon(str(icon_path)))
+
+    # Load custom fonts
+    loaded_fonts = load_custom_fonts()
+    if loaded_fonts:
+        logging.info(f"Loaded custom fonts: {', '.join(loaded_fonts)}")
+    else:
+        logging.warning("No custom fonts were loaded")
 
     if args.debug:
         logger.setLevel(logging.DEBUG)

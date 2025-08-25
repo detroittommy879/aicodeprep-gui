@@ -301,3 +301,43 @@ def get_checkbox_style_dark() -> str:
 
 def get_checkbox_style_light() -> str:
     return _checkbox_style(False)
+
+
+def load_custom_fonts():
+    """Load custom fonts from the data/fonts directory."""
+    try:
+        # Get the path to the fonts directory
+        fonts_dir = resources.files('aicodeprep_gui.data.fonts')
+
+        # List of font files to load
+        font_files = [
+            "JetBrainsMono-Regular.ttf",
+            "JetBrainsMono-VariableFont_wght.ttf",
+            "Lekton-Regular.ttf",
+            "SpaceMono-Regular.ttf"
+        ]
+
+        loaded_fonts = []
+
+        # Load each font file
+        for font_file in font_files:
+            try:
+                with resources.as_file(fonts_dir.joinpath(font_file)) as font_path:
+                    font_id = QtGui.QFontDatabase.addApplicationFont(
+                        str(font_path))
+                    if font_id != -1:
+                        families = QtGui.QFontDatabase.applicationFontFamilies(
+                            font_id)
+                        if families:
+                            loaded_fonts.append(families[0])
+                            logging.info(
+                                f"Loaded font: {families[0]} from {font_file}")
+                    else:
+                        logging.warning(f"Failed to load font: {font_file}")
+            except Exception as e:
+                logging.error(f"Error loading font {font_file}: {e}")
+
+        return loaded_fonts
+    except Exception as e:
+        logging.error(f"Error accessing fonts directory: {e}")
+        return []

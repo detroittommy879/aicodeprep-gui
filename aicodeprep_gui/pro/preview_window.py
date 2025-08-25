@@ -2,6 +2,8 @@
 import os
 from PySide6 import QtWidgets, QtCore, QtGui
 from aicodeprep_gui.smart_logic import is_binary_file
+from .syntax_highlighter import SyntaxHighlightedTextEdit, get_file_syntax
+
 
 class FilePreviewDock(QtWidgets.QDockWidget):
     """A dockable window for previewing file contents."""
@@ -17,14 +19,9 @@ class FilePreviewDock(QtWidgets.QDockWidget):
         layout.setContentsMargins(0, 0, 0, 0)
 
         # Text preview area
-        self.text_edit = QtWidgets.QPlainTextEdit()
-        self.text_edit.setReadOnly(True)
-        self.text_edit.setLineWrapMode(QtWidgets.QPlainTextEdit.NoWrap)
+        self.text_edit = SyntaxHighlightedTextEdit()
 
-        # Font setup
-        font = QtGui.QFont("Consolas", 10)
-        font.setStyleHint(QtGui.QFont.Monospace)
-        self.text_edit.setFont(font)
+        # Font setup is handled by SyntaxHighlightedTextEdit
 
         # Status label
         self.status_label = QtWidgets.QLabel()
@@ -62,8 +59,13 @@ class FilePreviewDock(QtWidgets.QDockWidget):
             if len(content) > max_chars:
                 content = content[:max_chars] + "\n\n... [Content truncated]"
 
+            # Determine syntax based on file extension
+            syntax = get_file_syntax(file_path)
+            self.text_edit.set_syntax(syntax)
+
             self.text_edit.setPlainText(content)
-            self.status_label.setText(f"Preview: {os.path.basename(file_path)}")
+            self.status_label.setText(
+                f"Preview: {os.path.basename(file_path)} ({syntax})")
 
         except Exception as e:
             self.text_edit.setPlainText(f"Error loading file: {str(e)}")
