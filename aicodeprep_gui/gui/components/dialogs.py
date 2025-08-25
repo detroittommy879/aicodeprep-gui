@@ -39,7 +39,7 @@ class VoteDialog(QtWidgets.QDialog):
         title = QtWidgets.QLabel("Vote Screen!")
         title.setAlignment(QtCore.Qt.AlignHCenter)
         title.setStyleSheet(
-            "font-size: 28px; color: #1fa31f; font-weight: bold; margin-bottom: 12px;")
+            f"font-size: {28 + self.parent.font_size_multiplier}px; color: #1fa31f; font-weight: bold; margin-bottom: 12px;")
         layout.addWidget(title)
 
         # Feature voting rows
@@ -125,7 +125,8 @@ class ShareDialog(QtWidgets.QDialog):
 
         title = QtWidgets.QLabel("Enjoying this tool? Share it!")
         title_font = title.font()
-        title_font.setPointSize(title_font.pointSize() + 4)
+        title_font.setPointSize(
+            title_font.pointSize() + 4 + self.parent.font_size_multiplier)
         title_font.setBold(True)
         title.setFont(title_font)
         title.setAlignment(QtCore.Qt.AlignCenter)
@@ -525,6 +526,8 @@ class DialogManager:
             self.parent.GUMROAD_PRODUCT_ID,
             self.parent.network_manager,
             parent=self.parent)
+        # Add the second product ID to the dialog's product_ids list
+        dialog.product_ids.append(self.parent.GUMROAD_PRODUCT_ID_2)
         dialog.exec()
 
 
@@ -532,11 +535,13 @@ class DialogManager:
 
 
 class ActivateProDialog(QtWidgets.QDialog):
-    RETRY_DELAYS = [1000, 2000, 4000]  # ms
+    # ms - extended retry sequence
+    RETRY_DELAYS = [1000, 2000, 4000, 8000, 16000]
 
     def __init__(self, product_id: str, network_manager: QtNetwork.QNetworkAccessManager, parent=None):
         super().__init__(parent)
-        self.product_id = product_id
+        # Store as list to allow multiple product IDs
+        self.product_ids = [product_id]
         self.network_manager = network_manager
         self.attempt = 0
         self.setup_ui()
@@ -546,8 +551,10 @@ class ActivateProDialog(QtWidgets.QDialog):
         layout = QtWidgets.QVBoxLayout(self)
         layout.addWidget(QtWidgets.QLabel(
             "Enter your Gumroad license key to activate Pro features:"))
+        # Use the first product ID for the link
+        product_id = self.product_ids[0] if self.product_ids else ""
         link = QtWidgets.QLabel(
-            f'<a href="https://gumroad.com/l/{self.product_id}" '
+            f'<a href="https://gumroad.com/l/{product_id}" '
             'style="color:#28a745;">Buy a Lifetime Pro License</a>')
         link.setOpenExternalLinks(True)
         layout.addWidget(link)
@@ -571,9 +578,9 @@ class ActivateProDialog(QtWidgets.QDialog):
             QtWidgets.QMessageBox.warning(
                 self, "Error", "Please enter a license key.")
             return
-        if not self.product_id:
+        if not self.product_ids:
             QtWidgets.QMessageBox.critical(
-                self, "Error", "Product ID is not set.")
+                self, "Error", "Product IDs are not set.")
             return
         self.activate_button.setEnabled(False)
         self.status_label.setText("Verifying license…")
@@ -582,17 +589,28 @@ class ActivateProDialog(QtWidgets.QDialog):
 
     def send_request(self, key):
         self.attempt += 1
-        url = QtCore.QUrl("https://api.gumroad.com/v2/licenses/verify")
-        data = urllib.parse.urlencode({
-            "product_id": self.product_id,
-            "license_key": key,
-            "increment_uses_count": "true"
-        }).encode("utf-8")
-        req = QtNetwork.QNetworkRequest(url)
-        req.setHeader(QtNetwork.QNetworkRequest.ContentTypeHeader,
-                      "application/x-www-form-urlencoded")
-        self.reply = self.network_manager.post(req, data)
-        self.reply.finished.connect(self.on_reply)
+        # Calculate which product ID we should try based on attempt count
+        product_index = (self.attempt - 1) // len(self.RETRY_DELAYS)
+
+        # Try all product IDs in sequence
+        if product_index < len(self.product_ids):
+            product_id = self.product_ids[product_index]
+            url = QtCore.QUrl("https://api.gumroad.com/v2/licenses/verify")
+            data = urllib.parse.urlencode({
+                "product_id": product_id,
+                "license_key": key,
+                "increment_uses_count": "true"
+            }).encode("utf-8")
+            req = QtNetwork.QNetworkRequest(url)
+            req.setHeader(QtNetwork.QNetworkRequest.ContentTypeHeader,
+                          "application/x-www-form-urlencoded")
+            self.reply = self.network_manager.post(req, data)
+            self.reply.finished.connect(self.on_reply)
+        else:
+            # All attempts exhausted
+            self.status_label.setText(
+                "Invalid license key for all product IDs.")
+            self.activate_button.setEnabled(True)
 
     def on_reply(self):
         err = self.reply.error()
@@ -618,22 +636,25 @@ class ActivateProDialog(QtWidgets.QDialog):
                 try:
                     # Save license information to global settings
                     settings = QtCore.QSettings("aicodeprep-gui", "ProLicense")
-                    settings.setValue("license_key", key)
+                    license_key_value = key if "key" in locals(
+                    ) else self.license_key_input.text().strip()
+                    settings.setValue("license_key", license_key_value)
                     settings.setValue("license_verified", True)
                     settings.setValue(
                         "activation_date", QtCore.QDateTime.currentDateTime().toString())
                     settings.setValue("uses_count", uses)
 
-                    # Also create local file for backward compatibility if possible
+                    # Set global QSettings value for pro_enabled
                     try:
-                        open("pro_enabled", "w").close()
-                    except Exception:
-                        pass  # Ignore local file creation errors since global settings are the primary storage
+                        settings.setValue("pro_enabled", True)
+                    except Exception as e:
+                        logging.error(
+                            f"Failed to set pro_enabled in QSettings: {e}")
 
                 except Exception as e:
                     QtWidgets.QMessageBox.warning(
                         self, "Warning",
-                        f"Activated but failed to save license information: {e}"
+                        f"Activated but failed to save license information: {e} (license_key={self.license_key_input.text().strip()})"
                     )
                 QtWidgets.QMessageBox.information(
                     self, "Success",
@@ -643,27 +664,53 @@ class ActivateProDialog(QtWidgets.QDialog):
                 QtWidgets.QApplication.instance().quit()
                 return
             else:
-                err_msg = resp.get(
-                    "message") or "Invalid or refunded license key."
-                QtWidgets.QMessageBox.warning(
-                    self, "Activation Failed", err_msg)
-                self.activate_button.setEnabled(True)
-                self.status_label.setText("")
-                return
+                # Check if there are more product IDs to try
+                # Calculate which product ID we're currently trying
+                product_index = (self.attempt - 1) // len(self.RETRY_DELAYS)
+                if product_index + 1 < len(self.product_ids):
+                    # Try next product ID
+                    self.status_label.setText(
+                        "Trying alternative product ID...")
+                    # Reset attempt counter for the next product ID
+                    self.attempt = product_index * len(self.RETRY_DELAYS)
+                    QTimer.singleShot(1000, lambda: self.send_request(
+                        self.license_key_input.text().strip()))
+                    return
+                else:
+                    err_msg = resp.get(
+                        "message") or "Invalid or refunded license key."
+                    QtWidgets.QMessageBox.warning(
+                        self, "Activation Failed", err_msg)
+                    self.activate_button.setEnabled(True)
+                    self.status_label.setText("")
+                    return
 
         # network error or HTTP error
-        if self.attempt < len(self.RETRY_DELAYS):
-            delay = self.RETRY_DELAYS[self.attempt - 1]
+        # Calculate which product ID and retry attempt we're on
+        product_index = (self.attempt - 1) // len(self.RETRY_DELAYS)
+        retry_index = (self.attempt - 1) % len(self.RETRY_DELAYS)
+
+        if retry_index < len(self.RETRY_DELAYS):
+            # Retry with the same product ID
+            delay = self.RETRY_DELAYS[retry_index]
             self.status_label.setText(
                 f"Network error ({err}). Retrying in {delay//1000}s…"
             )
             QTimer.singleShot(delay, lambda: self.send_request(
                 self.license_key_input.text().strip()))
         else:
-            QtWidgets.QMessageBox.critical(
-                self, "Error",
-                "Could not reach the license server after multiple attempts.\n"
-                "Please try again later or contact support."
-            )
-            self.activate_button.setEnabled(True)
-            self.status_label.setText("")
+            # Try next product ID if available
+            if product_index + 1 < len(self.product_ids):
+                self.status_label.setText("Trying alternative product ID...")
+                # Reset attempt counter for the next product ID
+                self.attempt = product_index * len(self.RETRY_DELAYS)
+                QTimer.singleShot(1000, lambda: self.send_request(
+                    self.license_key_input.text().strip()))
+            else:
+                QtWidgets.QMessageBox.critical(
+                    self, "Error",
+                    "Could not reach the license server after multiple attempts.\n"
+                    "Please try again later or contact support."
+                )
+                self.activate_button.setEnabled(True)
+                self.status_label.setText("")

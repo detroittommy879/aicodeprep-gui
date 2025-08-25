@@ -16,6 +16,8 @@ if "--delset" in sys.argv:
     QSettings("aicodeprep-gui", "PromptOptions").clear()
     # Delete UserIdentity
     QSettings("aicodeprep-gui", "UserIdentity").clear()
+    # Delete ProLicense
+    QSettings("aicodeprep-gui", "ProLicense").clear()
     print("All aicodeprep-gui user settings deleted.")
     sys.exit(0)
 import argparse
@@ -188,13 +190,14 @@ def main():
     # --- END: Headless / Skip-UI Mode ---
 
     if '--pro' in sys.argv:
-        open('pro_enabled', 'w').close()   # Create marker file
+        # Set global QSettings value for pro_enabled
+        QSettings("aicodeprep-gui", "ProLicense").setValue("pro_enabled", True)
 
     force_update = args.force_update_check
 
     # Set Windows AppUserModelID for proper taskbar icon
     if platform.system() == "Windows":
-        myappid = 'wuu73.aicodeprep-gui.1.1.5'  # arbitrary unique string
+        myappid = 'wuu73.aicodeprep-gui.1.1.6'  # arbitrary unique string
         try:
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
                 myappid)

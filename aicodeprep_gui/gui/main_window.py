@@ -39,6 +39,7 @@ from .utils.helpers import WindowHelpers
 
 class FileSelectionGUI(QtWidgets.QMainWindow):
     GUMROAD_PRODUCT_ID = "KpjO4PdY2mQNCZC1k_ZkPQ=="  # set your Gumroad product_id
+    GUMROAD_PRODUCT_ID_2 = "O1LkPokDSKDZdhSitEvvrA=="  # set your Gumroad product_id
 
     def __init__(self, files):
         super().__init__()
@@ -145,9 +146,13 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             scale_factor = self.app.primaryScreen().devicePixelRatio()
 
         default_font_size = 9
+        # Font size multiplier for adjusting all font sizes in the app
+        # 0 means no adjustment, positive values increase size, negative values decrease size
+        self.font_size_multiplier = 0
         font_stack = '"Segoe UI", "Ubuntu", "Helvetica Neue", Arial, sans-serif'
-        default_font_size = int(default_font_size * scale_factor)
-        self.default_font = QtGui.QFont("Segoe UI", default_font_size)
+        adjusted_font_size = default_font_size + self.font_size_multiplier
+        adjusted_font_size = int(adjusted_font_size * scale_factor)
+        self.default_font = QtGui.QFont("Segoe UI", adjusted_font_size)
         self.setFont(self.default_font)
         self.setStyleSheet(f"font-family: {font_stack};")
         style = self.style()
@@ -171,27 +176,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         # Store central as an attribute so helper can reapply on resize.
         self.central_widget = central
 
-        def _apply_gradient_to_central():
-            # Use ObjectBoundingMode so coordinates are relative to the widget size.
-            grad = QtGui.QLinearGradient(0, 0, 1, 1)
-            grad.setCoordinateMode(QtGui.QGradient.ObjectBoundingMode)
-            if getattr(self, "is_dark_mode", False):
-                grad.setColorAt(0.00, QtGui.QColor("#2b2b2b"))
-                grad.setColorAt(0.45, QtGui.QColor("#232323"))
-                grad.setColorAt(1.00, QtGui.QColor("#1b1b1b"))
-            else:
-                grad.setColorAt(0.00, QtGui.QColor("#07fbff"))
-                grad.setColorAt(0.35, QtGui.QColor("#f2f8fe"))
-                grad.setColorAt(0.70, QtGui.QColor("#eef4fa"))
-                grad.setColorAt(1.00, QtGui.QColor("#eef4fa"))
-            brush = QtGui.QBrush(grad)
-            pal = self.central_widget.palette()
-            pal.setBrush(QtGui.QPalette.Window, brush)
-            self.central_widget.setAutoFillBackground(True)
-            self.central_widget.setPalette(pal)
-
         # Initial application
-        _apply_gradient_to_central()
+        self.apply_gradient_to_central()
 
         # Reapply gradient on resize to ensure accurate object-bounding coordinates.
         # Wrap existing resizeEvent to preserve default behavior.
@@ -199,7 +185,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         def _resize_event(event):
             try:
-                _apply_gradient_to_central()
+                self.apply_gradient_to_central()
             except Exception:
                 pass
             if original_resize:
@@ -313,19 +299,20 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.vibe_label = QtWidgets.QLabel("AI Code Prep GUI")
         vibe_font = QtGui.QFont(self.default_font)
         vibe_font.setBold(True)
-        vibe_font.setPointSize(self.default_font.pointSize() + 8)
+        vibe_font.setPointSize(
+            self.default_font.pointSize() + 8 + self.font_size_multiplier)
         self.vibe_label.setFont(vibe_font)
         self.vibe_label.setAlignment(
             QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
         # Set initial vibe_label style based on theme
         if self.is_dark_mode:
             self.vibe_label.setStyleSheet(
-                "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #353535, stop:0.33 #90ee90, stop:0.67 #ffa500, stop:1 #353535); "
+                "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #353535, stop:0.33 #909f90, stop:0.67 #ffc590, stop:1 #353535); "
                 "color: black; padding: 0px 0px 0px 0px; border-radius: 8px;"
             )
         else:
             self.vibe_label.setStyleSheet(
-                "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #f8f900, stop:0.33 #20c020, stop:0.67 #ff8c00, stop:1 #f8f900); "
+                "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #f8f970, stop:0.33 #207020, stop:0.67 #ff8c50, stop:1 #f8f900); "
                 "color: black; padding: 0px 0px 0px 0px; border-radius: 8px;"
             )
         self.vibe_label.setFixedHeight(44)
@@ -392,7 +379,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             "Presets help you save more time and will be saved for later use")
         preset_explanation.setObjectName("preset_explanation")
         preset_explanation.setStyleSheet(
-            f"font-size: 10px; color: {'#fb9b0b' if self.is_dark_mode else '#444444'};"
+            f"font-size: {10 + self.font_size_multiplier}px; color: {'#fb9b0b' if self.is_dark_mode else '#44444'};"
         )
         main_layout.addWidget(preset_explanation)
 
@@ -417,7 +404,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             }
             QTreeView::item:selected, QTreeWidget::item:selected {
                 background-color: #8B0000; /* Dark red instead of blue */
-                color: white;
+                color: #ffffff;
             }
         """
         checkbox_style = get_checkbox_style_dark(
@@ -585,6 +572,27 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         prompt_bottom_layout.addStretch()
         options_content_layout.addLayout(prompt_bottom_layout)
 
+        # Font size adjustment
+        font_size_layout = QtWidgets.QHBoxLayout()
+        font_size_layout.setContentsMargins(0, 0, 0, 0)
+        font_size_label = QtWidgets.QLabel("Font Size:")
+        self.font_size_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
+        # Allow adjustment from -5 to +10
+        self.font_size_slider.setRange(-5, 10)
+        self.font_size_slider.setValue(self.font_size_multiplier)
+        self.font_size_slider.setTickPosition(QtWidgets.QSlider.TicksBelow)
+        self.font_size_slider.setTickInterval(1)
+        self.font_size_value_label = QtWidgets.QLabel(
+            str(self.font_size_multiplier))
+
+        font_size_layout.addWidget(font_size_label)
+        font_size_layout.addWidget(self.font_size_slider)
+        font_size_layout.addWidget(self.font_size_value_label)
+        options_content_layout.addLayout(font_size_layout)
+
+        # Connect slider to update function
+        self.font_size_slider.valueChanged.connect(self.update_font_size)
+
         group_box_main_layout = QtWidgets.QVBoxLayout(options_group_box)
         group_box_main_layout.setContentsMargins(10, 5, 10, 10)
         group_box_main_layout.addWidget(options_container)
@@ -600,13 +608,14 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         pro_features_label = QtWidgets.QLabel("Pro Features")
         pro_features_label.setFont(QtGui.QFont(self.default_font.family(),
                                    self.default_font.pointSize() + 2, QtGui.QFont.Bold))
-        buy_pro_label = QtWidgets.QLabel(
-            '<a href="https://tombrothers.gumroad.com/l/zthvs" style="color: green;">Buy Pro Lifetime License</a>')
-        buy_pro_label.setOpenExternalLinks(True)
-        buy_pro_label.setAlignment(QtCore.Qt.AlignLeft)
         pro_features_row.addWidget(pro_features_label)
         pro_features_row.addStretch()
-        pro_features_row.addWidget(buy_pro_label)
+        if not pro.enabled:
+            buy_pro_label = QtWidgets.QLabel(
+                '<a href="https://tombrothers.gumroad.com/l/zthvs" style="color: green;">Buy Pro Lifetime License</a>')
+            buy_pro_label.setOpenExternalLinks(True)
+            buy_pro_label.setAlignment(QtCore.Qt.AlignLeft)
+            pro_features_row.addWidget(buy_pro_label)
 
         premium_group_box = QtWidgets.QGroupBox()
         premium_group_box.setCheckable(True)
@@ -757,11 +766,242 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.update_token_counter()
         self.preset_manager._load_global_presets()
 
+        # Load font size multiplier setting
+        self._load_font_size_setting()
+
         # Ensure initial Level column state (off by default)
         # Column remains hidden until the Pro toggle is enabled.
 
+    def update_font_size(self, value):
+        """Update all fonts in the application based on the font size multiplier."""
+        self.font_size_multiplier = value
+        self.font_size_value_label.setText(str(value))
+
+        # Update the default font
+        default_font_size = 9
+        if hasattr(self, 'app') and self.app:
+            if platform.system() == 'Windows':
+                scale_factor = self.app.primaryScreen().logicalDotsPerInch() / 96.0
+            else:
+                scale_factor = self.app.primaryScreen().devicePixelRatio()
+        else:
+            scale_factor = 1.0
+
+        adjusted_font_size = default_font_size + self.font_size_multiplier
+        adjusted_font_size = int(adjusted_font_size * scale_factor)
+        self.default_font = QtGui.QFont("Segoe UI", adjusted_font_size)
+
+        # Update font for the main window
+        self.setFont(self.default_font)
+
+        # Update font for all child widgets recursively
+        self._update_all_widget_fonts(self.default_font)
+
+        # Update the vibe label font
+        vibe_font = QtGui.QFont(self.default_font)
+        vibe_font.setBold(True)
+        vibe_font.setPointSize(self.default_font.pointSize() + 8)
+        self.vibe_label.setFont(vibe_font)
+
+        # Update all widgets with dynamic font sizes
+        self._update_dynamic_fonts()
+
+        # Save the setting
+        self._save_font_size_setting()
+
+    def _update_all_widget_fonts(self, font):
+        """Recursively update fonts for all child widgets."""
+        # Update font for all child widgets
+        for widget in self.findChildren(QtWidgets.QWidget):
+            # Skip widgets that have their own specific font handling
+            if widget not in [self.vibe_label]:
+                # For most widgets, we'll set the font directly
+                widget.setFont(font)
+
+        # Special handling for certain widget types to ensure proper sizing
+        for button in self.findChildren(QtWidgets.QPushButton):
+            button_font = QtGui.QFont(font)
+            button_font.setPointSize(font.pointSize())
+            button.setFont(button_font)
+
+        for label in self.findChildren(QtWidgets.QLabel):
+            label_font = QtGui.QFont(font)
+            label_font.setPointSize(font.pointSize())
+            label.setFont(label_font)
+
+        for combo in self.findChildren(QtWidgets.QComboBox):
+            combo_font = QtGui.QFont(font)
+            combo_font.setPointSize(font.pointSize())
+            combo.setFont(combo_font)
+
+        for checkbox in self.findChildren(QtWidgets.QCheckBox):
+            checkbox_font = QtGui.QFont(font)
+            checkbox_font.setPointSize(font.pointSize())
+            checkbox.setFont(checkbox_font)
+
+        for tree in self.findChildren(QtWidgets.QTreeWidget):
+            tree_font = QtGui.QFont(font)
+            tree_font.setPointSize(font.pointSize())
+            tree.setFont(tree_font)
+
+        for header in self.findChildren(QtWidgets.QHeaderView):
+            header_font = QtGui.QFont(font)
+            header_font.setPointSize(font.pointSize())
+            header.setFont(header_font)
+
+        for textbox in self.findChildren(QtWidgets.QPlainTextEdit):
+            textbox_font = QtGui.QFont(font)
+            textbox_font.setPointSize(font.pointSize())
+            textbox.setFont(textbox_font)
+
+        for slider in self.findChildren(QtWidgets.QSlider):
+            slider_font = QtGui.QFont(font)
+            slider_font.setPointSize(font.pointSize())
+            # Note: Sliders don't typically display text, but setting for consistency
+            slider.setFont(slider_font)
+
+        for groupbox in self.findChildren(QtWidgets.QGroupBox):
+            groupbox_font = QtGui.QFont(font)
+            groupbox_font.setPointSize(font.pointSize())
+            groupbox.setFont(groupbox_font)
+
+    def _update_dynamic_fonts(self):
+        """Update fonts for widgets that use dynamic sizing."""
+        # Update preset explanation labels
+        for child in self.findChildren(QtWidgets.QLabel):
+            if getattr(child, "objectName", lambda: "")() == "preset_explanation":
+                child.setStyleSheet(
+                    f"font-size: {10 + self.font_size_multiplier}px; color: {'#fb9b0b' if self.is_dark_mode else '#444444'};"
+                )
+
+        # Update text label if it has text
+        if self.text_label.text():
+            # Get current color from existing style
+            current_color = "#00c3ff" if self.is_dark_mode else "#0078d4"
+            if "ff9900" in self.text_label.styleSheet():
+                current_color = "#ff9900" if self.is_dark_mode else "#cc7a00"
+            elif "ff666" in self.text_label.styleSheet():
+                current_color = "#ff6666" if self.is_dark_mode else "#cc0000"
+
+            self.text_label.setStyleSheet(
+                f"font-size: {20 + self.font_size_multiplier}px; color: {current_color}; font-weight: bold;"
+            )
+
+        # Update info label
+        if hasattr(self, 'info_label') and self.info_label:
+            current_font_size = 9 + self.font_size_multiplier
+            # Preserve existing styling but update font size
+            current_style = self.info_label.styleSheet()
+            if "font-size" in current_style:
+                # Replace existing font-size with new one
+                import re
+                updated_style = re.sub(
+                    r"font-size:\s*[^;]+;",
+                    f"font-size: {current_font_size}px;",
+                    current_style
+                )
+                self.info_label.setStyleSheet(updated_style)
+            else:
+                # Add font-size to existing style
+                self.info_label.setStyleSheet(
+                    f"{current_style} font-size: {current_font_size}px;"
+                )
+
+        # Update token label
+        if hasattr(self, 'token_label') and self.token_label:
+            current_font_size = 9 + self.font_size_multiplier
+            self.token_label.setStyleSheet(
+                f"font-size: {current_font_size}px;"
+            )
+
+        # Update all other labels that might have custom styling
+        for label in self.findChildren(QtWidgets.QLabel):
+            # Skip labels that are already handled
+            if label in [self.vibe_label, self.text_label, self.info_label, self.token_label]:
+                continue
+
+            # Check if label has custom styling with font-size
+            current_style = label.styleSheet()
+            if current_style and "font-size" in current_style:
+                current_font_size = 9 + self.font_size_multiplier
+                import re
+                updated_style = re.sub(
+                    r"font-size:\s*[^;]+;",
+                    f"font-size: {current_font_size}px;",
+                    current_style
+                )
+                label.setStyleSheet(updated_style)
+
+        # Update menu bar
+        if self.menuBar():
+            self.menuBar().setFont(QtGui.QFont(self.default_font))
+
+        # Update all menu items
+        for action in self.menuBar().actions():
+            action.setFont(QtGui.QFont(self.default_font))
+
+        # Update all menu items in submenus
+        for menu in self.findChildren(QtWidgets.QMenu):
+            menu.setFont(QtGui.QFont(self.default_font))
+            for action in menu.actions():
+                action.setFont(QtGui.QFont(self.default_font))
+
+        # Update slider value label
+        if hasattr(self, 'font_size_value_label') and self.font_size_value_label:
+            current_font_size = 9 + self.font_size_multiplier
+            self.font_size_value_label.setStyleSheet(
+                f"font-size: {current_font_size}px;"
+            )
+
+    def _save_font_size_setting(self):
+        """Save the font size multiplier setting to QSettings."""
+        try:
+            settings = QtCore.QSettings("aicodeprep-gui", "Appearance")
+            settings.setValue("font_size_multiplier",
+                              self.font_size_multiplier)
+        except Exception as e:
+            logging.error(f"Failed to save font size setting: {e}")
+
+    def _load_font_size_setting(self):
+        """Load the font size multiplier setting from QSettings."""
+        try:
+            settings = QtCore.QSettings("aicodeprep-gui", "Appearance")
+            if settings.contains("font_size_multiplier"):
+                saved_value = settings.value("font_size_multiplier", type=int)
+                self.font_size_multiplier = saved_value
+                self.font_size_slider.setValue(saved_value)
+                # Update fonts with the loaded value
+                self.update_font_size(saved_value)
+        except Exception as e:
+            logging.error(f"Failed to load font size setting: {e}")
+
     # Helper function needs to be a method if it uses self.default_font.
     # It was originally incorrectly defined inside __init__.
+
+    def apply_gradient_to_central(self):
+        """Apply a palette-based linear gradient to the central widget."""
+        if not hasattr(self, "central_widget") or self.central_widget is None:
+            return
+        try:
+            grad = QtGui.QLinearGradient(0, 0, 1, 1)
+            grad.setCoordinateMode(QtGui.QGradient.ObjectBoundingMode)
+            if getattr(self, "is_dark_mode", False):
+                grad.setColorAt(0.00, QtGui.QColor("#4b455b"))
+                grad.setColorAt(0.45, QtGui.QColor("#111111"))
+                grad.setColorAt(1.00, QtGui.QColor("#333333"))
+            else:
+                grad.setColorAt(0.00, QtGui.QColor("#bbbbbb"))
+                grad.setColorAt(0.35, QtGui.QColor("#eeeeee"))
+                grad.setColorAt(0.70, QtGui.QColor("#999999"))
+                grad.setColorAt(1.00, QtGui.QColor("#9ea4b0"))
+            brush = QtGui.QBrush(grad)
+            pal = self.central_widget.palette()
+            pal.setBrush(QtGui.QPalette.Window, brush)
+            self.central_widget.setAutoFillBackground(True)
+            self.central_widget.setPalette(pal)
+        except Exception as e:
+            logging.error(f"apply_gradient_to_central failed: {e}")
+
     def _create_disabled_feature_row(self, text: str, tooltip: str) -> QtWidgets.QHBoxLayout:
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -1012,6 +1252,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
     def on_update_check_finished(self, message: str):
         """Slot to handle the result of the update check."""
+        if not hasattr(self, "update_label"):
+            return
         if message:
             self.update_label.setText(message)
             self.update_label.setVisible(True)
@@ -1055,21 +1297,21 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     self.text_label.setText(
                         "Warning: Clipboard copy may have failed. Content saved to fullcode.txt")
                     self.text_label.setStyleSheet(
-                        f"font-size: 20px; color: {'#ff9900' if self.is_dark_mode else '#cc7a00'}; font-weight: bold;"
+                        f"font-size: {20 + self.font_size_multiplier}px; color: {'#ff9900' if self.is_dark_mode else '#cc7a00'}; font-weight: bold;"
                     )
                 else:
                     logging.info(f"Copied {len(content)} chars to clipboard.")
                     self.text_label.setText(
                         "Copied to clipboard and fullcode.txt")
                     self.text_label.setStyleSheet(
-                        f"font-size: 20px; color: {'#00c3ff' if self.is_dark_mode else '#0078d4'}; font-weight: bold;"
+                        f"font-size: {20 + self.font_size_multiplier}px; color: {'#00c3ff' if self.is_dark_mode else '#0078d4'}; font-weight: bold;"
                     )
             except Exception as e:
                 logging.error(f"Failed to copy to clipboard: {e}")
                 self.text_label.setText(
                     f"Clipboard error: {str(e)}. Content saved to fullcode.txt")
                 self.text_label.setStyleSheet(
-                    f"font-size: 20px; color: {'#ff6666' if self.is_dark_mode else '#cc0000'}; font-weight: bold;"
+                    f"font-size: {20 + self.font_size_multiplier}px; color: {'#ff6666' if self.is_dark_mode else '#cc0000'}; font-weight: bold;"
                 )
 
             self.save_prefs()
@@ -1198,16 +1440,16 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         if '--pro' in sys.argv:
             return True
 
-        # Check for local pro_enabled file (legacy support)
-        if os.path.isfile('pro_enabled'):
-            return True
-
-        # Check global settings for license key
+        # Check global settings for pro_enabled, license key, and verification
         try:
             settings = QtCore.QSettings("aicodeprep-gui", "ProLicense")
+            pro_enabled = settings.value("pro_enabled", False, type=bool)
+            if not pro_enabled:
+                return False
             license_key = settings.value("license_key", "")
             license_verified = settings.value(
                 "license_verified", False, type=bool)
-            return bool(license_key and license_verified)
-        except Exception:
+            return bool(pro_enabled and license_key and license_verified)
+        except Exception as e:
+            logging.error(f"QSettings error in _is_pro_enabled: {e}")
             return False

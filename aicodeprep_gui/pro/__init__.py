@@ -5,22 +5,23 @@ from PySide6 import QtCore
 
 
 def _check_pro_enabled():
-    """Check if pro mode is enabled via CLI flag, local file, or global settings."""
+    """Check if pro mode is enabled via CLI flag or global settings."""
     # Command line flag takes precedence
     if '--pro' in sys.argv:
         return True
 
-    # Check for local pro_enabled file (legacy support)
-    if os.path.isfile('pro_enabled'):
-        return True
-
-    # Check global settings for license key
+    # Check global settings for license key and pro status
     try:
         settings = QtCore.QSettings("aicodeprep-gui", "ProLicense")
+        pro_enabled = settings.value("pro_enabled", False, type=bool)
+        if not pro_enabled:
+            return False
         license_key = settings.value("license_key", "")
         license_verified = settings.value("license_verified", False, type=bool)
-        return bool(license_key and license_verified)
-    except Exception:
+        return bool(pro_enabled and license_key and license_verified)
+    except Exception as e:
+        import logging
+        logging.error(f"QSettings error in _check_pro_enabled: {e}")
         return False
 
 

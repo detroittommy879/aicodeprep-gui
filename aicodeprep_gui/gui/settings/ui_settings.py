@@ -54,27 +54,29 @@ class UISettingsManager:
         if self.main_window.is_dark_mode:
             self.main_window.vibe_label.setStyleSheet(
                 "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #353535, stop:0.33 #90ee90, stop:0.67 #ffa500, stop:1 #353535); "
-                "color: white; padding: 0px 0px 0px 0px; border-radius: 8px;"
+                "color: #ffffff; padding: 0px 0px 0px 0px; border-radius: 8px;"
             )
         else:
             self.main_window.vibe_label.setStyleSheet(
                 "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #f8f900, stop:0.33 #20c020, stop:0.67 #ff8c00, stop:1 #f8f900); "
-                "color: black; padding: 0px 0px 0px 0px; border-radius: 8px;"
+                "color: #000000; padding: 0px 0px 0px 0px; border-radius: 8px;"
             )
         for child in self.main_window.findChildren(QtWidgets.QLabel):
             if getattr(child, "objectName", lambda: "")() == "preset_explanation":
                 child.setStyleSheet(
-                    f"font-size: 10px; color: {'#bbbbbb' if self.main_window.is_dark_mode else '#444444'};"
+                    f"font-size: {10 + self.main_window.font_size_multiplier}px; color: {'#bbbbbb' if self.main_window.is_dark_mode else '#444444'};"
                 )
         if self.main_window.text_label.text():
             self.main_window.text_label.setStyleSheet(
-                f"font-size: 20px; color: {'#00c3ff' if self.main_window.is_dark_mode else '#0078d4'}; font-weight: bold;"
+                f"font-size: {20 + self.main_window.font_size_multiplier}px; color: {'#00c3ff' if self.main_window.is_dark_mode else '#0078d4'}; font-weight: bold;"
             )
 
         self.main_window._update_groupbox_style(
             self.main_window.options_group_box)
         self.main_window._update_groupbox_style(
             self.main_window.premium_group_box)
+        # Reapply gradient to central widget after theme change
+        self.main_window.apply_gradient_to_central()
 
         self._save_dark_mode_setting()
 
