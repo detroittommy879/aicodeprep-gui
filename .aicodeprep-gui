@@ -8,12 +8,12 @@
 version=1.0
 
 [window]
-width=1117
-height=1057
-splitter_state=AAAA/wAAAAEAAAACAAADAAAAAQQB/////wEAAAACAA==
+width=1099
+height=1273
+splitter_state=AAAA/wAAAAEAAAACAAADAAAAAQAB/////wEAAAACAA==
 
 [format]
-output_format=markdown
+output_format=xml
 
 [pro]
 preview_window_enabled=true
@@ -28,6 +28,8 @@ aicodeprep_gui\linux_installer.py
 aicodeprep_gui\macos_installer.py
 aicodeprep_gui\main.py
 aicodeprep_gui\smart_logic.py
+aicodeprep_gui\update_checker.py
+aicodeprep_gui\windows_registry.py
 aicodeprep_gui\__init__.py
 aicodeprep_gui\data\default_config.toml
 aicodeprep_gui\gui\main_window.py
@@ -54,4 +56,5 @@ aicodeprep_gui\images\__init__.py
 aicodeprep_gui\pro\multi_state_level_delegate.py
 aicodeprep_gui\pro\patches.py
 aicodeprep_gui\pro\preview_window.py
+aicodeprep_gui\pro\syntax_highlighter.py
 aicodeprep_gui\pro\__init__.py

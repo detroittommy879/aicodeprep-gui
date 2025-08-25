@@ -149,12 +149,20 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         # Font size multiplier for adjusting all font sizes in the app
         # 0 means no adjustment, positive values increase size, negative values decrease size
         self.font_size_multiplier = 0
-        font_stack = '"JetBrains Mono", "Segoe UI", "Ubuntu", "Helvetica Neue", Arial, sans-serif'
+        # Best Practice for Your App (aicodeprep GUI)
+        # UI font stack for multilingual users
+        font_stack = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Arabic", Arial, sans-serif'
         adjusted_font_size = default_font_size + self.font_size_multiplier
         adjusted_font_size = int(adjusted_font_size * scale_factor)
-        self.default_font = QtGui.QFont("JetBrains Mono", adjusted_font_size)
+        # Use system font instead of JetBrains Mono for main UI
+        self.default_font = QtGui.QFont()
+        self.default_font.setPointSize(adjusted_font_size)
         self.setFont(self.default_font)
         self.setStyleSheet(f"font-family: {font_stack};")
+        # Font debug info
+        from aicodeprep_gui.apptheme import load_custom_fonts
+        loaded_fonts = load_custom_fonts()
+        print("Font debug info: Loaded font families:", loaded_fonts)
         style = self.style()
         self.folder_icon = style.standardIcon(QtWidgets.QStyle.SP_DirIcon)
         self.file_icon = style.standardIcon(QtWidgets.QStyle.SP_FileIcon)
@@ -661,24 +669,24 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         premium_content_layout.addLayout(syntax_highlight_layout)
 
-        # Add Font selection dropdown to premium features
-        font_layout = QtWidgets.QHBoxLayout()
-        font_layout.setContentsMargins(0, 0, 0, 0)
-        font_label = QtWidgets.QLabel("Preview Font:")
-        self.font_combo = QtWidgets.QComboBox()
-        # Populate font combo with available fonts
-        self._populate_font_combo()
-        font_help = QtWidgets.QLabel(
-            "<b style='color:#0098D4; font-size:14px; cursor:help;'>?</b>")
-        font_help.setToolTip(
-            "Select font for preview window")
-        font_help.setAlignment(QtCore.Qt.AlignVCenter)
+        # # Add Font selection dropdown to premium features
+        # font_layout = QtWidgets.QHBoxLayout()
+        # font_layout.setContentsMargins(0, 0, 0, 0)
+        # font_label = QtWidgets.QLabel("Preview Font:")
+        # self.font_combo = QtWidgets.QComboBox()
+        # # Populate font combo with available fonts
+        # self._populate_font_combo()
+        # font_help = QtWidgets.QLabel(
+        #     "<b style='color:#0098D4; font-size:14px; cursor:help;'>?</b>")
+        # font_help.setToolTip(
+        #     "Select font for preview window")
+        # font_help.setAlignment(QtCore.Qt.AlignVCenter)
 
-        font_layout.addWidget(font_label)
-        font_layout.addWidget(self.font_combo)
-        font_layout.addWidget(font_help)
-        font_layout.addStretch()
-        premium_content_layout.addLayout(font_layout)
+        # font_layout.addWidget(font_label)
+        # font_layout.addWidget(self.font_combo)
+        # font_layout.addWidget(font_help)
+        # font_layout.addStretch()
+        # premium_content_layout.addLayout(font_layout)
 
         # Add Font weight slider to premium features
         font_weight_layout = QtWidgets.QHBoxLayout()
@@ -704,7 +712,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         premium_content_layout.addLayout(font_weight_layout)
 
         # Connect font controls signals
-        self.font_combo.currentTextChanged.connect(self._on_font_changed)
+        # self.font_combo.currentTextChanged.connect(self._on_font_changed)
         self.font_weight_slider.valueChanged.connect(
             self._on_font_weight_changed)
 
@@ -713,10 +721,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.preview_toggle.setToolTip(
                 "Show docked preview of selected files")
             # Initialize preview window with selected font
-            selected_font = self.font_combo.currentText() if hasattr(
-                self, 'font_combo') else "JetBrains Mono"
+            # selected_font = self.font_combo.currentText() if hasattr(
+            #     self, 'font_combo') else "Space Mono"
             self.preview_window = pro.get_preview_window(
-                font_name=selected_font)
+                font_name="JetBrains Mono")
             if self.preview_window:
                 self.addDockWidget(
                     QtCore.Qt.RightDockWidgetArea, self.preview_window)
@@ -873,7 +881,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         adjusted_font_size = default_font_size + self.font_size_multiplier
         adjusted_font_size = int(adjusted_font_size * scale_factor)
-        self.default_font = QtGui.QFont("JetBrains Mono", adjusted_font_size)
+        # Use system font instead of JetBrains Mono for main UI
+        self.default_font = QtGui.QFont()
+        self.default_font.setPointSize(adjusted_font_size)
 
         # Update font for the main window
         self.setFont(self.default_font)
@@ -1120,7 +1130,75 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         return self.preferences_manager.save_prefs()
 
     def toggle_dark_mode(self, state):
-        return self.ui_settings_manager.toggle_dark_mode(state)
+        """Toggle dark/light mode and update all relevant UI elements."""
+        try:
+            self.is_dark_mode = bool(state)
+
+            # Apply palette
+            if self.is_dark_mode:
+                apply_dark_palette(self.app)
+            else:
+                apply_light_palette(self.app)
+
+            # Apply UI styles
+            font_stack = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Arabic", Arial, sans-serif'
+            self.setStyleSheet(f"font-family: {font_stack};")
+
+            base_style = """
+                QTreeView, QTreeWidget {
+                    outline: 2; /* Remove focus rectangle */
+                }
+            """
+            checkbox_style = get_checkbox_style_dark(
+            ) if self.is_dark_mode else get_checkbox_style_light()
+            self.tree_widget.setStyleSheet(base_style + checkbox_style)
+
+            # Update vibe label style
+            if self.is_dark_mode:
+                self.vibe_label.setStyleSheet(
+                    "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #353535, stop:0.33 #90ee90, stop:0.67 #ffa500, stop:1 #353535); "
+                    "color: #ffffff; padding: 0px 0px 0px 0px; border-radius: 8px;"
+                )
+            else:
+                self.vibe_label.setStyleSheet(
+                    "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #f8f900, stop:0.33 #20c020, stop:0.67 #ff8c50, stop:1 #f8f900); "
+                    "color: #000000; padding: 0px 0px 0px 0px; border-radius: 8px;"
+                )
+
+            # Update preview window theme
+            if hasattr(self, 'preview_window') and self.preview_window:
+                try:
+                    self.preview_window.set_dark_mode(self.is_dark_mode)
+                except Exception as e:
+                    logging.error(f"Preview window theme update failed: {e}")
+
+            # Update other UI elements
+            for child in self.findChildren(QtWidgets.QLabel):
+                if getattr(child, "objectName", lambda: "")() == "preset_explanation":
+                    child.setStyleSheet(
+                        f"font-size: {10 + self.font_size_multiplier}px; color: {'#bbbbbb' if self.is_dark_mode else '#444444'};"
+                    )
+
+            if self.text_label.text():
+                self.text_label.setStyleSheet(
+                    f"font-size: {20 + self.font_size_multiplier}px; color: {'#00c3ff' if self.is_dark_mode else '#0078d4'}; font-weight: bold;"
+                )
+
+            self._update_groupbox_style(self.options_group_box)
+            self._update_groupbox_style(self.premium_group_box)
+
+            # Reapply gradient to central widget after theme change
+            self.apply_gradient_to_central()
+
+            # Save dark mode setting
+            try:
+                settings = QtCore.QSettings("aicodeprep-gui", "Appearance")
+                settings.setValue("dark_mode_enabled", self.is_dark_mode)
+            except Exception as e:
+                logging.error(f"Failed to save dark mode setting: {e}")
+
+        except Exception as e:
+            logging.error(f"toggle_dark_mode failed: {e}")
 
     def on_item_expanded(self, item):
         return self.tree_manager.on_item_expanded(item)
@@ -1505,31 +1583,34 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             logging.info(
                 f"Loaded syntax highlighting state from preferences: {syntax_highlight_enabled}")
 
-    def _populate_font_combo(self):
-        """Populate the font combo box with available fonts."""
-        # Add the available fonts from the fonts/ folder
-        font_files = [
-            "JetBrains Mono",
-            "Lekton",
-            "Space Mono"
-        ]
+    # def _populate_font_combo(self):
+    #     """Populate the font combo box with available fonts."""
+    #     # Add the available fonts from the fonts/ folder
+    #     font_files = [
+    #         "JetBrains Mono",
+    #         "Lekton",
+    #         "Space Mono"
+    #     ]
 
-        # Add fonts to combo box
-        for font_name in font_files:
-            self.font_combo.addItem(font_name)
+    #     # Add fonts to combo box
+    #     for font_name in font_files:
+    #         self.font_combo.addItem(font_name)
 
-        # Set default selection
-        self.font_combo.setCurrentText("JetBrains Mono")
+    #     # Set default selection to Space Mono
+    #     self.font_combo.setCurrentText("Space Mono")
 
-    def _on_font_changed(self, font_name):
-        """Handle font selection change."""
-        if hasattr(self, 'preview_window') and self.preview_window:
-            # Update the preview window font
-            font = QtGui.QFont(font_name, self.default_font.pointSize())
-            font.setWeight(QtGui.QFont.Weight(self.font_weight_slider.value()))
-            self.preview_window.text_edit.setFont(font)
-            # Re-highlight text to apply new font
-            self.preview_window.text_edit._highlight_text()
+    # def _on_font_changed(self, font_name):
+    #     """Handle font selection change."""
+    #     if hasattr(self, 'preview_window') and self.preview_window:
+    #         # Update the preview window font
+    #         font = QtGui.QFont(font_name, self.default_font.pointSize())
+    #         font.setWeight(QtGui.QFont.Weight(self.font_weight_slider.value()))
+    #         # Ensure monospace style hint for preview fonts
+    #         if font_name in ["Space Mono", "JetBrains Mono", "Lekton"]:
+    #             font.setStyleHint(QtGui.QFont.Monospace)
+    #         self.preview_window.text_edit.setFont(font)
+    #         # Re-highlight text to apply new font
+    #         self.preview_window.text_edit._highlight_text()
 
     def _on_font_weight_changed(self, value):
         """Handle font weight slider change."""

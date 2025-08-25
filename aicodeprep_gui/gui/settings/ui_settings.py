@@ -38,7 +38,9 @@ class UISettingsManager:
         else:
             apply_light_palette(self.main_window.app)
 
-        font_stack = '"Segoe UI", "Ubuntu", "Helvetica Neue", Arial, sans-serif'
+        # Best Practice for Your App (aicodeprep GUI)
+        # UI font stack for multilingual users
+        font_stack = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Arabic", Arial, sans-serif'
         self.main_window.setStyleSheet(f"font-family: {font_stack};")
 
         base_style = """
@@ -79,6 +81,8 @@ class UISettingsManager:
         self.main_window.apply_gradient_to_central()
 
         self._save_dark_mode_setting()
+
+        # Removed preview window refresh logic
 
     def _load_panel_visibility(self):
         settings = QtCore.QSettings("aicodeprep-gui", "PanelVisibility")

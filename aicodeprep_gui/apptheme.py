@@ -66,48 +66,43 @@ def apply_dark_palette(app: QtWidgets.QApplication):
 
 def apply_light_palette(app: QtWidgets.QApplication):
     """Apply a more comfortable and reliable light color palette to the application."""
-    # The default QApplication palette is a good starting point.
+    # Get the default palette as a starting point
     light = app.style().standardPalette()
 
     # Define our core colors
-    window_color = QtGui.QColor(200, 200, 240)  # A comfortable off-white
-    base_color = QtGui.QColor(55, 255, 255)    # For text entry fields
-    text_color = QtGui.QColor(0, 0, 0)
-    highlight_color = QtGui.QColor(61, 155, 228)
+    window_color = QtGui.QColor(240, 240, 240)  # Light gray for main window
+    base_color = QtGui.QColor(255, 255, 255)    # White for text areas
+    text_color = QtGui.QColor(0, 0, 0)          # Black text
+    highlight_color = QtGui.QColor(61, 155, 228)  # Blue for selections
 
-    # *** THE CRITICAL FIX IS HERE ***
-    # Set the background for text-entry widgets AND item views (lists, trees)
-    # to be consistent with the main window background.
-    # This fixes the bright white tree view
-    light.setColor(QtGui.QPalette.Base, window_color)
-    light.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor(
-        233, 233, 233))  # For alternating rows
-
-    # Set the main window background and text colors
+    # Set the palette colors
     light.setColor(QtGui.QPalette.Window, window_color)
     light.setColor(QtGui.QPalette.WindowText, text_color)
-
-    # Set general text color
+    # White for text entry widgets
+    light.setColor(QtGui.QPalette.Base, base_color)
+    light.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor(245, 245, 245))
+    light.setColor(QtGui.QPalette.ToolTipBase, window_color)
+    light.setColor(QtGui.QPalette.ToolTipText, text_color)
     light.setColor(QtGui.QPalette.Text, text_color)
-
-    # Button colors
     light.setColor(QtGui.QPalette.Button, window_color)
     light.setColor(QtGui.QPalette.ButtonText, text_color)
-
-    # Highlight colors (when an item is selected)
+    light.setColor(QtGui.QPalette.Link, QtGui.QColor(0, 102, 204))
     light.setColor(QtGui.QPalette.Highlight, highlight_color)
     light.setColor(QtGui.QPalette.HighlightedText, QtGui.QColor(255, 255, 255))
 
     # Disabled colors
-    disabled_color = QtGui.QColor(120, 120, 120)
+    disabled_color = QtGui.QColor(150, 150, 150)
     light.setColor(QtGui.QPalette.Disabled,
                    QtGui.QPalette.Text, disabled_color)
     light.setColor(QtGui.QPalette.Disabled,
                    QtGui.QPalette.ButtonText, disabled_color)
+    light.setColor(QtGui.QPalette.Disabled,
+                   QtGui.QPalette.WindowText, disabled_color)
 
+    # Apply the palette
     app.setPalette(light)
 
-    # Clear any application-wide stylesheets that might interfere with the palette
+    # Clear any application-wide stylesheets that might interfere
     app.setStyleSheet("")
 
 
@@ -311,9 +306,8 @@ def load_custom_fonts():
 
         # List of font files to load
         font_files = [
-            "JetBrainsMono-Regular.ttf",
             "JetBrainsMono-VariableFont_wght.ttf",
-            "Lekton-Regular.ttf",
+            "FiraCode-VariableFont_wght.ttf",
             "SpaceMono-Regular.ttf"
         ]
 
@@ -336,6 +330,12 @@ def load_custom_fonts():
                         logging.warning(f"Failed to load font: {font_file}")
             except Exception as e:
                 logging.error(f"Error loading font {font_file}: {e}")
+
+        # Print debug info about loaded fonts
+        if loaded_fonts:
+            logging.info(f"All loaded custom fonts: {', '.join(loaded_fonts)}")
+        else:
+            logging.warning("No custom fonts were loaded")
 
         return loaded_fonts
     except Exception as e:

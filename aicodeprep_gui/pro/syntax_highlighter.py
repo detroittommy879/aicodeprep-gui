@@ -5,6 +5,7 @@ from pygments.formatters import HtmlFormatter
 from pygments.lexers import get_lexer_by_name, get_all_lexers
 from pygments.util import ClassNotFound
 import os
+from aicodeprep_gui.apptheme import system_pref_is_dark
 
 
 class SyntaxHighlightedTextEdit(QtWidgets.QTextEdit):
@@ -18,13 +19,14 @@ class SyntaxHighlightedTextEdit(QtWidgets.QTextEdit):
         # Set default font
         font = QtGui.QFont(font_name, 10)
         font.setStyleHint(QtGui.QFont.Monospace)
-        # Set font weight to ExtraLight (200)
         font.setWeight(QtGui.QFont.Weight.ExtraLight)
         self.setFont(font)
 
         # Default syntax and theme
         self._syntax = "text"
-        self._theme = "nord"
+        self._is_dark_mode = system_pref_is_dark()  # Track current theme
+        self._update_theme()  # Set initial theme
+
         # Add flag to control syntax highlighting
         self._syntax_highlighting_enabled = True
         # Add flag to prevent recursion
@@ -40,6 +42,7 @@ class SyntaxHighlightedTextEdit(QtWidgets.QTextEdit):
             self._highlight_text()
         else:
             # Just update the plain text without highlighting
+            # But preserve the font settings
             plain_text = self.toPlainText()
             super().setPlainText(plain_text)
 
@@ -47,6 +50,21 @@ class SyntaxHighlightedTextEdit(QtWidgets.QTextEdit):
         """Set the theme for highlighting."""
         self._theme = theme
         self._highlight_text()
+
+    def _update_theme(self):
+        """Update the Pygments theme based on current dark/light mode."""
+        if self._is_dark_mode:
+            self._theme = "monokai"
+        else:
+            self._theme = "default"
+
+    def set_dark_mode(self, is_dark):
+        """Set dark/light mode and update theme."""
+        if self._is_dark_mode != is_dark:
+            self._is_dark_mode = is_dark
+            self._update_theme()
+            if self._syntax_highlighting_enabled:
+                self._highlight_text()
 
     def _get_lexer_for_syntax(self, syntax):
         """Get the appropriate lexer for the given syntax."""
@@ -69,73 +87,79 @@ class SyntaxHighlightedTextEdit(QtWidgets.QTextEdit):
         if self._applying_highlighting:
             return
 
+        # Remove dynamic theme selection and revert to original behavior
+
         # Get current text
         plain_text = self.toPlainText()
 
-        # If syntax highlighting is disabled, just set plain text
+        # Block signals to avoid recursion when updating text
+        self.blockSignals(True)
+
+        # If syntax highlighting is disabled, just set plain text but preserve font
         if not self._syntax_highlighting_enabled:
-            # Only update if the text is different to avoid unnecessary updates
-            if self.toPlainText() != plain_text:
-                super().setPlainText(plain_text)
+            cursor_pos = self.textCursor().position()
+            super().setPlainText(plain_text)
+            cursor = self.textCursor()
+            cursor.setPosition(min(cursor_pos, len(plain_text)))
+            self.setTextCursor(cursor)
+            self.blockSignals(False)
             return
 
         if not plain_text:
+            self.blockSignals(False)
             return
 
         # Get lexer for current syntax with better error handling
         try:
             lexer = self._get_lexer_for_syntax(self._syntax)
         except Exception:
-            # Fallback to plain text if lexer fails
             super().setPlainText(plain_text)
+            self.blockSignals(False)
             return
 
         # Create HTML formatter with Qt-compatible settings
         try:
             formatter = HtmlFormatter(
                 style=self._theme,
-                noclasses=True,  # Use inline styles instead of CSS classes
+                noclasses=True,
                 nobackground=True,
                 prestyles=f"white-space:pre-wrap; font-family:'{self.font().family()}'; font-size:{self.font().pointSize()}pt;",
-                lineseparator="\n",  # Use newline instead of <br />
-                linenos=False,  # Disable line numbers
-                wrapcode=True  # Wrap code in a <code> tag
+                lineseparator="\n",
+                linenos=False,
+                wrapcode=True
             )
         except Exception:
-            # Fallback to plain text if formatter fails
             super().setPlainText(plain_text)
+            self.blockSignals(False)
             return
 
         # Highlight text and set as HTML
         try:
             highlighted = highlight(plain_text, lexer, formatter)
-            # Save cursor position
             cursor_pos = self.textCursor().position()
-
-            # Set flag to prevent recursion
             self._applying_highlighting = True
             self.setHtml(highlighted)
             self._applying_highlighting = False
-
-            # Restore cursor position
             cursor = self.textCursor()
             cursor.setPosition(min(cursor_pos, len(plain_text)))
             self.setTextCursor(cursor)
         except Exception:
-            # Fallback to plain text if highlighting fails
-            # Reset flag before fallback
             self._applying_highlighting = False
             super().setPlainText(plain_text)
+        self.blockSignals(False)
 
     def setPlainText(self, text):
-        """Override to ensure highlighting is applied."""
+        """Override to ensure highlighting is applied, but avoid recursion."""
+        self.blockSignals(True)
         super().setPlainText(text)
+        self.blockSignals(False)
         self._highlight_text()
 
     def setHtml(self, html):
-        """Override to ensure highlighting is applied."""
+        """Override to ensure highlighting is applied, but avoid recursion."""
+        self.blockSignals(True)
         super().setHtml(html)
-        # Only re-highlight if this wasn't called from _highlight_text and syntax highlighting is enabled
+        self.blockSignals(False)
         if not self._applying_highlighting and self._syntax_highlighting_enabled:
             self._highlight_text()
 
@@ -247,6 +271,7 @@ def set_syntax_highlighting_enabled(text_edit, enabled):
         text_edit._highlight_text()
     else:
         # When disabling, just set plain text without triggering highlighting process
+        # But preserve the font settings
         plain_text = text_edit.toPlainText()
         # Temporarily block signals to avoid recursion
         text_edit.blockSignals(True)

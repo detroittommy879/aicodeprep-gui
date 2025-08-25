@@ -38,8 +38,18 @@ class FilePreviewDock(QtWidgets.QDockWidget):
         # Hide initially
         self.hide()
 
+    # Removed refresh_syntax_highlighting method
+
         # Syntax highlighting state (enabled by default for pro users)
         self.syntax_highlighting_enabled = True
+
+    def set_dark_mode(self, is_dark):
+        """Update the preview window for dark/light mode."""
+        if hasattr(self, "text_edit") and self.text_edit:
+            try:
+                self.text_edit.set_dark_mode(is_dark)
+            except Exception as e:
+                self.text_edit.setPlainText(f"Theme update error: {str(e)}")
 
     def set_syntax_highlighting_enabled(self, enabled):
         """Enable or disable syntax highlighting."""
