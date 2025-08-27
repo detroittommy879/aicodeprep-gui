@@ -2,6 +2,25 @@
 
 ---
 
+## [1.2.0] - 2025-XX-XX
+
+### ✨ New Features
+
+- **Syntax Highlighting in Preview Window**: Added syntax highlighting for the file preview window (Pro feature). Supports a wide range of programming languages with proper color schemes for both light and dark modes.
+- **Font Weight Control**: Added a slider in the Pro features section to adjust the font weight in the preview window, providing better readability customization.
+- **Improved Workflow**: The application now remains open after generating context, allowing for iterative refinement of file selections and prompts without having to relaunch the application.
+
+### 🔄 Changed
+
+- **Generate Context Behavior**: Clicking "GENERATE CONTEXT!" no longer quits the application, providing a more seamless workflow for making adjustments and regenerating context as needed.
+- **Preview Window Enhancements**: Improved the preview window with better font handling, syntax highlighting capabilities, and theme synchronization.
+
+### 🛠️ Technical Improvements
+
+- **Syntax Highlighting Implementation**: Integrated Pygments library for robust syntax highlighting in the preview window.
+- **UI Responsiveness**: Enhanced the application's responsiveness when generating and managing large code contexts.
+- **Font Management**: Added Font Size slider for users who wanted bigger fonts
+
 ## [1.0.6] - 2025-10-01
 
 ### 🐛 Fixed

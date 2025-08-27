@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 # CRITICAL: Changed name to match your new package name
 name = "aicodeprep-gui" 
-version = "1.1.6"
+version = "1.2.0"
 description = "A smart GUI to select, filter, and concatenate code files for large language model (LLM) and AI analysis."
 readme = "README.md"
 authors = [{ name = "Tom Brothers", email = "tom@wuu73.org" }]
@@ -49,7 +49,13 @@ where = ["."]
 
 [tool.setuptools.package-data]
 # CRITICAL: Changed key to match your actual package name `aicodeprep_gui`
-aicodeprep_gui = ["data/default_config.toml", "images/*.png", "images/*.ico", "data/AICodePrep.workflow.zip"]
+aicodeprep_gui = [
+    "data/default_config.toml",
+    "images/*.png",
+    "images/*.ico",
+    "data/AICodePrep.workflow.zip",
+    "data/fonts/*.ttf"
+]
 
 # SUGGESTION: Create optional dependencies for developers/builders
 [project.optional-dependencies]

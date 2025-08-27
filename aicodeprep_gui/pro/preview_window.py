@@ -47,7 +47,22 @@ class FilePreviewDock(QtWidgets.QDockWidget):
         """Update the preview window for dark/light mode."""
         if hasattr(self, "text_edit") and self.text_edit:
             try:
+                # Store current font settings
+                current_font = self.text_edit.font()
+                font_family = current_font.family()
+                font_size = current_font.pointSize()
+                font_weight = current_font.weight()
+
+                # Update theme
                 self.text_edit.set_dark_mode(is_dark)
+
+                # Restore font settings
+                restored_font = QtGui.QFont(font_family, font_size)
+                restored_font.setWeight(QtGui.QFont.Weight(font_weight))
+                self.text_edit.setFont(restored_font)
+
+                # Re-apply highlighting
+                self.text_edit._highlight_text()
             except Exception as e:
                 self.text_edit.setPlainText(f"Theme update error: {str(e)}")
 

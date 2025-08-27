@@ -16,11 +16,25 @@ class SyntaxHighlightedTextEdit(QtWidgets.QTextEdit):
         self.setReadOnly(True)
         self.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
 
-        # Set default font
-        font = QtGui.QFont(font_name, 10)
+        # Robust JetBrains Mono font selection
+        font_family = font_name
+        available_fonts = QtGui.QFontDatabase.families()
+        if font_name not in available_fonts:
+            for family in available_fonts:
+                if "jetbrains" in family.lower() and "mono" in family.lower():
+                    font_family = family
+                    break
+
+        # Set default font with explicit weight
+        font = QtGui.QFont(font_family, 10)
         font.setStyleHint(QtGui.QFont.Monospace)
         font.setWeight(QtGui.QFont.Weight.ExtraLight)
         self.setFont(font)
+
+        # Log font info for debugging
+        import logging
+        logging.info(
+            f"SyntaxHighlightedTextEdit: Using font family '{font_family}' (requested: '{font_name}')")
 
         # Default syntax and theme
         self._syntax = "text"
@@ -123,7 +137,7 @@ class SyntaxHighlightedTextEdit(QtWidgets.QTextEdit):
                 style=self._theme,
                 noclasses=True,
                 nobackground=True,
-                prestyles=f"white-space:pre-wrap; font-family:'{self.font().family()}'; font-size:{self.font().pointSize()}pt;",
+                prestyles=f"white-space:pre-wrap; font-family:'{self.font().family()}'; font-size:{self.font().pointSize()}pt; font-weight:{self.font().weight()};",
                 lineseparator="\n",
                 linenos=False,
                 wrapcode=True

@@ -554,31 +554,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         remember_layout.addStretch()
         options_content_layout.addLayout(remember_layout)
 
-        # Prompt top checkbox with help icon
-        prompt_top_help = QtWidgets.QLabel(
-            "<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
-        prompt_top_help.setToolTip(
-            "Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these")
-        prompt_top_help.setAlignment(QtCore.Qt.AlignVCenter)
-        prompt_top_layout = QtWidgets.QHBoxLayout()
-        prompt_top_layout.setContentsMargins(0, 0, 0, 0)
-        prompt_top_layout.addWidget(self.prompt_top_checkbox)
-        prompt_top_layout.addWidget(prompt_top_help)
-        prompt_top_layout.addStretch()
-        options_content_layout.addLayout(prompt_top_layout)
+        # (Prompt top checkbox moved to Pro Features section below)
 
-        # Prompt bottom checkbox with help icon
-        prompt_bottom_help = QtWidgets.QLabel(
-            "<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
-        prompt_bottom_help.setToolTip(
-            "Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these")
-        prompt_bottom_help.setAlignment(QtCore.Qt.AlignVCenter)
-        prompt_bottom_layout = QtWidgets.QHBoxLayout()
-        prompt_bottom_layout.setContentsMargins(0, 0, 0, 0)
-        prompt_bottom_layout.addWidget(self.prompt_bottom_checkbox)
-        prompt_bottom_layout.addWidget(prompt_bottom_help)
-        prompt_bottom_layout.addStretch()
-        options_content_layout.addLayout(prompt_bottom_layout)
+        # (Prompt bottom checkbox moved to Pro Features section below)
 
         # Font size adjustment
         font_size_layout = QtWidgets.QHBoxLayout()
@@ -704,12 +682,59 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             "Adjust font weight for preview window")
         font_weight_help.setAlignment(QtCore.Qt.AlignVCenter)
 
+        font_weight_label.hide()
+        self.font_weight_slider.hide()
+        self.font_weight_value_label.hide()
+        font_weight_help.hide()
         font_weight_layout.addWidget(font_weight_label)
         font_weight_layout.addWidget(self.font_weight_slider)
         font_weight_layout.addWidget(self.font_weight_value_label)
         font_weight_layout.addWidget(font_weight_help)
         font_weight_layout.addStretch()
         premium_content_layout.addLayout(font_weight_layout)
+
+        # Add prompt/question checkboxes to Pro Features section
+        prompt_top_text = "Add prompt/question to top - Adding to top AND bottom often gets better responses from AI models"
+        prompt_bottom_text = "Add prompt/question to bottom - Adding to top AND bottom often gets better responses from AI models"
+
+        self.prompt_top_checkbox.setText(prompt_top_text)
+        self.prompt_bottom_checkbox.setText(prompt_bottom_text)
+
+        # Help icons and tooltips
+        prompt_top_help = QtWidgets.QLabel(
+            "<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
+        prompt_top_help.setToolTip(
+            "Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these")
+        prompt_top_help.setAlignment(QtCore.Qt.AlignVCenter)
+        prompt_top_layout = QtWidgets.QHBoxLayout()
+        prompt_top_layout.setContentsMargins(0, 0, 0, 0)
+        prompt_top_layout.addWidget(self.prompt_top_checkbox)
+        prompt_top_layout.addWidget(prompt_top_help)
+        prompt_top_layout.addStretch()
+        premium_content_layout.addLayout(prompt_top_layout)
+
+        prompt_bottom_help = QtWidgets.QLabel(
+            "<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
+        prompt_bottom_help.setToolTip(
+            "Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these")
+        prompt_bottom_help.setAlignment(QtCore.Qt.AlignVCenter)
+        prompt_bottom_layout = QtWidgets.QHBoxLayout()
+        prompt_bottom_layout.setContentsMargins(0, 0, 0, 0)
+        prompt_bottom_layout.addWidget(self.prompt_bottom_checkbox)
+        prompt_bottom_layout.addWidget(prompt_bottom_help)
+        prompt_bottom_layout.addStretch()
+        premium_content_layout.addLayout(prompt_bottom_layout)
+
+        # Set checkbox states and enabled/disabled based on Pro status
+        if pro.enabled:
+            self.prompt_top_checkbox.setEnabled(True)
+            self.prompt_bottom_checkbox.setEnabled(True)
+            self._load_prompt_options()
+        else:
+            self.prompt_top_checkbox.setChecked(False)
+            self.prompt_bottom_checkbox.setChecked(True)
+            self.prompt_top_checkbox.setEnabled(False)
+            self.prompt_bottom_checkbox.setEnabled(False)
 
         # Connect font controls signals
         # self.font_combo.currentTextChanged.connect(self._on_font_changed)
@@ -863,6 +888,15 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         # Ensure initial Level column state (off by default)
         # Column remains hidden until the Pro toggle is enabled.
+
+        # --- Show v1.2.0 update notice on first run of this version ---
+        try:
+            settings = QtCore.QSettings("aicodeprep-gui", "UserIdentity")
+            if not settings.value("v1.2.0_update_seen", False, type=bool):
+                self.dialog_manager.open_update_notice_dialog()
+                settings.setValue("v1.2.0_update_seen", True)
+        except Exception as e:
+            logging.error(f"Failed to show v1.2.0 update notice: {e}")
 
     def update_font_size(self, value):
         """Update all fonts in the application based on the font size multiplier."""
@@ -1492,20 +1526,14 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             settings = QtCore.QSettings("aicodeprep-gui", "UserIdentity")
             settings.setValue("generate_count", self.generate_count)
 
-            # Show share dialog every 6th generate (skip for pro users)
+            # Show share dialog every 6th generate (skip for pro users) but no longer close the app
             if self.generate_count > 0 and self.generate_count % 6 == 0 and not pro.enabled:
-                QtCore.QTimer.singleShot(500, self.show_share_dialog_and_close)
-            else:
-                # Increase the delay to ensure clipboard operations complete
-                QtCore.QTimer.singleShot(2000, self.close)
-        else:
-            self.close()
+                QtCore.QTimer.singleShot(500, self.show_share_dialog)
 
-    def show_share_dialog_and_close(self):
-        """Shows the share dialog and closes the window after user dismisses it."""
+    def show_share_dialog(self):
+        """Shows the share dialog and keeps the main window open."""
         self.dialog_manager.open_share_dialog()
-        # Close the window after the dialog is dismissed
-        self.close()
+        # The self.close() call has been removed from this method.
 
     def quit_without_processing(self):
         self.action = 'quit'

@@ -28,7 +28,7 @@ The core philosophy is simple: **You know your code best.** Instead of letting a
 
 3.  **Fine-tune & Prompt**: Quickly check/uncheck files, use powerful **prompt presets** (like one for [Cline](https://github.com/stitionai/cline)), or write a custom question.
 
-4.  **Generate & Paste**: Click "GENERATE CONTEXT!". The entire code bundle and your prompt are **instantly copied to your clipboard**, ready to be pasted into ChatGPT, Gemini, Claude, Openrouter, or any other AI model.
+4.  **Generate & Iterate**: Click "GENERATE CONTEXT!". The entire code bundle and your prompt are instantly copied to your clipboard, ready to be pasted into ChatGPT, Gemini, Claude, Openrouter, or any other AI model. The app remains open, allowing you to make adjustments and regenerate as needed.
 
 ![Screenshot](scrs/flowbig.png)
 
@@ -44,20 +44,40 @@ The core philosophy is simple: **You know your code best.** Instead of letting a
   - Blazing-fast startup thanks to **lazy-loading**, which skips huge directories like `node_modules/` or `venv/` until you need them.
   - Remembers your file selections, window size, and layout on a per-project basis in a local `.aicodeprep-gui` file.
 - 🎨 **Unique & Polished UI**:
-  - A clean, modern interface built with PySide6.
+  - A clean, modern interface built with PySide6. Does not use a web browser view! For speed.
   - **Automatic Light/Dark mode** detection that syncs with your OS, plus a manual toggle.
   - Satisfying, custom-styled UI components, including an intuitive file tree with hover effects.
   - Real-time **token counter** to help you stay within context limits.
+- 🎨 **Syntax Highlighting**: Pro users get syntax highlighting in the file preview window, making code easier to read and understand.
 - 🔧 **Powerful Prompt Engineering**:
   - Create, save, and manage **global prompt presets** that are available across all your projects.
   - Comes with useful defaults for debugging, security analysis, or generating prompts for AI agents like **Cline**.
 - 🌐 **IDE & Agent Agnostic**:
   - This is **not another IDE plugin**. It's a standalone utility that enhances your workflow with _any_ tool.
   - Perfect for preparing context for agent-based IDEs like **Cursor** or **Windsurf**, or for direct use in web-based chatbots.
+  - This will help fix really hard bugs when none of those agents can figure out because they do not manage context very well.
+
+## Pro Features
+
+Upgrade to Pro to unlock these additional features:
+
+- Put your prompt above AND below the code context, which helps focus the AI models on your problem and can improve intelligence
+- File preview window with syntax highlighting
+- Font customization for better readability (close to finished)
+- Context compression modes (coming soon)
+- Future Rust version - currently about halfway finished
+
+Pro licenses help support continued development and are available as a one-time purchase. My housing costs are crazy expensive so every bit helps!
 
 ---
 
 ## Installation
+
+Scripts are available on the Pro version that you can just double click on:
+
+[Link to Pro Package](https://tombrothers.gumroad.com/l/dcgufn)
+
+Or if you want to cut and paste a few commands its easy:
 
 The TL;DR version:
 Make sure python is installed on your system, then install pipx. Just google how to do that or ask AI etc. Then open a fresh terminal/cmd window and type:
@@ -164,7 +184,9 @@ For the ultimate workflow, add the right-click menu item after installing:
 2.  **Select**: Review the automatically selected files. The app will remember your choices for the next time you open it in this folder.
 3.  **Prompt (Optional)**: Click a preset button or type a question in the prompt box.
 4.  **Generate**: Click **GENERATE CONTEXT!**.
-5.  **Paste**: Your context is now on your clipboard. Paste it into your AI of choice.
+5.  **Paste**: Your context is now on your clipboard. Paste it into your AI of choice. It also writes it to fullcode.txt file.
+
+![Screenshot](scrs/v1.png)
 
 ### The Command Line
 
@@ -179,6 +201,11 @@ aicodeprep-gui /path/to/your/project
 
 # See all options
 aicp --help
+
+# Skip opening the interface, and immediately just generate the context and put it on clipboard
+aicp -s
+
+# ^ this will "smart select" which code files you will need, or it will use the same files you selected last time in this folder
 ```
 
 ---
@@ -240,6 +267,8 @@ If this tool saves you time and makes your life easier, consider supporting its 
 | Monero   | `46FzbFckBy9bbExzwAifMPBheYFb37k8ghGWSHqc6wE1BiEz6rQc2f665JmqUdtv1baRmuUEcDoJ2dpqY6Msa3uCKArszQZ` |
 | CashApp  | `$lightweb73`                                                                                     |
 | Website  | [https://wuu73.org/hello.html](https://wuu73.org/hello.html)                                      |
+
+Or just activate the Pro version (in Help menu in the app)
 
 ---
 

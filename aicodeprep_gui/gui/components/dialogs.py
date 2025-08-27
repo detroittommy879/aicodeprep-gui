@@ -108,13 +108,44 @@ class VoteDialog(QtWidgets.QDialog):
         self.accept()
 
 
+class UpdateNoticeDialog(QtWidgets.QDialog):
+    """Dialog to notify users of v1.2.0 update changes."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("v1.2.0 Update")
+        self.setMinimumWidth(420)
+        layout = QtWidgets.QVBoxLayout(self)
+        title = QtWidgets.QLabel("v1.2.0 Update")
+        title.setAlignment(QtCore.Qt.AlignCenter)
+        title.setStyleSheet(
+            "font-size: 22px; font-weight: bold; color: #0078d4; margin-bottom: 8px;")
+        layout.addWidget(title)
+        msg = (
+            "I changed the app so that this version no longer quits as soon as you click GENERATE CONTEXT! button.<br><br>"
+            "The reason it used to be that way is because that was just the way worked when it was just a terminal command.<br><br>"
+            "Now, when you generate context, it just generates it, puts it onto the clipboard and writes to fullcode.txt, and that's it. You can just keep it open if you want and keep generating or adjusting.<br><br>"
+            "<b>Note:</b> The file tree might not auto-update for new files (I'll add that soon) yet so if there are new files then you might have to restart the app.<br><br>"
+            "Also there is a Font Size adjustment for people who wanted to increase the Font size.<br><br>"
+            "Happy Coding!"
+        )
+        label = QtWidgets.QLabel(msg)
+        label.setWordWrap(True)
+        label.setTextFormat(QtCore.Qt.RichText)
+        layout.addWidget(label)
+        btn_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok)
+        btn_box.accepted.connect(self.accept)
+        layout.addWidget(btn_box)
+
+
 class ShareDialog(QtWidgets.QDialog):
     """A dialog to encourage users to share the application."""
     SHARE_URL = "https://wuu73.org/aicp"
     SHARE_TEXT = "I'm using aicodeprep-gui to easily prepare my code for LLMs. It's a huge time-saver! Check it out:"
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, main_window=None):
         super().__init__(parent)
+        self.main_window = main_window
         self.setWindowTitle("Share AI Code Prep")
         self.setMinimumWidth(500)
 
@@ -125,8 +156,10 @@ class ShareDialog(QtWidgets.QDialog):
 
         title = QtWidgets.QLabel("Enjoying this tool? Share it!")
         title_font = title.font()
+        font_size_multiplier = getattr(
+            self.main_window, "font_size_multiplier", 0)
         title_font.setPointSize(
-            title_font.pointSize() + 4 + self.parent.font_size_multiplier)
+            title_font.pointSize() + 4 + font_size_multiplier)
         title_font.setBold(True)
         title.setFont(title_font)
         title.setAlignment(QtCore.Qt.AlignCenter)
@@ -209,6 +242,11 @@ class ShareDialog(QtWidgets.QDialog):
 class DialogManager:
     def __init__(self, parent_window):
         self.parent = parent_window
+
+    def open_update_notice_dialog(self):
+        """Show the v1.2.0 update notice dialog."""
+        dlg = UpdateNoticeDialog(self.parent)
+        dlg.exec()
 
     def open_links_dialog(self):
         """Shows a dialog with helpful links."""
@@ -518,7 +556,7 @@ class DialogManager:
 
     def open_share_dialog(self):
         """Shows a dialog encouraging the user to share the app."""
-        dialog = ShareDialog(self.parent)
+        dialog = ShareDialog(parent=self.parent, main_window=self.parent)
         dialog.exec()
 
     def open_activate_pro_dialog(self):

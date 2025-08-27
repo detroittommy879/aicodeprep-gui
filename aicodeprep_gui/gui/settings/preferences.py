@@ -1,7 +1,7 @@
 import os
 import logging
 import base64
-from PySide6 import QtCore
+from PySide6 import QtCore, QtWidgets
 
 AICODEPREP_GUI_VERSION = "1.0"
 

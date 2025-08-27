@@ -6,6 +6,7 @@ AICODEPREP_GUI_VERSION = "1.0"
 DEFAULT_PRESETS = [
     ("Debug", "Can you help me debug this code?"),
     ("Security check", "Can you analyze this code for any security issues?"),
+    ("Agent Prompt", "Write a prompt for my AI coding agent. Split the tasks into sub-tasks with enough detail to guide the agent. The agent might not be very smart but you can guide it along using plain English and find / replace style text, include just enough details to guide the agent and include some of the 'whys' about why we are doing what we are doing, to help guide it along. Enclose the entire agent prompt in one big code tag for easy copy and paste. "),
     ("Best Practices", "Please analyze this code for: Error handling, Edge cases, Performance optimization, Best practices, Please do not unnecessarily remove any comments or code. Generate the code with clear comments explaining the logic."),
     ("Please review for", "Code quality and adherence to best practices, Potential bugs or edge cases, Performance optimizations, Readability and maintainability, Security concerns. Suggest improvements and explain your reasoning for each suggestion"),
     ("Cline, Roo Code Prompt", "Write a prompt for Cline, an AI coding agent, to make the necessary changes. Enclose the entire Cline prompt in one single code tag for easy copy and paste. Cline likes search and replace blocks with just plain language with a little bit of explanations about why we are doing things to help guide the agent.")
