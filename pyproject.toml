@@ -27,6 +27,7 @@ dependencies = [
     # These are the RUNTIME dependencies. Users who pip install your package need these.
     "PySide6>=6.9,<6.10", # Simplified dependency, Essentials and Addons are included
     "toml",
+    "NodeGraphQt",
     "pathspec",
     "requests", # for your network check
     "packaging",

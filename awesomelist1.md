@@ -1,0 +1,9 @@
+| Fitten Code | Fitten Code is an AI programming assistant driven by Fitten LLM models, which can automatically generate code, improve development efficiency, help you debug, and save your time. It can also chat with you and solve your programming problems.freeand supports over 80 languages: Python, C++,JavaScript, TypeScript, Java, etc. Fitten Code supports Visual Studio Code and JetBrains series IDEs, including IntelliJ IDEA, PyCharm, WebStorm, etc.|[URL](https://code.fittentech.com/en?lang=en)| Free |
+
+|flappy|Production-Ready LLM Agent SDK for Every Developer|[GitHub](https://github.com/pleisto/flappy) ![GitHub Repo stars](https://img.shields.io/github/stars/pleisto/flappy.svg?style=social) |Free|
+
+| Plandex | Open source, terminal-based AI programming engine for complex tasks | [GitHub](https://github.com/plandex-ai/plandex) ![GitHub Repo stars](https://img.shields.io/github/stars/plandex-ai/plandex?style=social)| Free |
+
+| Mistral/Codestral|[Empowering developers and democratising coding with Mistral AI.](https://mistral.ai/news/codestral/), models:https://huggingface.co/mistralai/Codestral-22B-v0.1|[URL](https://chat.mistral.ai/chat)|Free|
+
+| aicodeprep-gui | Cross-platform context maker app with UI. For fast sharing project code context to AI Studio, ChatGPT, GLM 4.5, Qwen3's web chat interfaces which usually will get better results from AI models compared to agents (tools and MCP dumb them down). Removes the friction when going from IDE/project <--> web chat interfaces. UI is for fast selecting code files or let it auto smart select, generate context block to clipboard, and paste into web chat. Preset buttons for common prompts/questions. One line install with pipx install aicodeprep-gui | [Website](https://wuu73.org/aicp) [GitHub](https://github.com/detroittommy879/aicodeprep-gui) ![GitHub Repo stars](https://img.shields.io/github/stars/detroittommy879/aicodeprep-gui.svg?style=social) | Free or Pro |

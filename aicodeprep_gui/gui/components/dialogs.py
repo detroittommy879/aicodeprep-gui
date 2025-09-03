@@ -650,6 +650,76 @@ class ActivateProDialog(QtWidgets.QDialog):
                 "Invalid license key for all product IDs.")
             self.activate_button.setEnabled(True)
 
+    def _get_error_description(self, error_code, error_string, http_status):
+        """Convert Qt network error codes to human-readable descriptions."""
+        error_map = {
+            QtNetwork.QNetworkReply.NetworkError.ConnectionRefusedError: "Connection refused by server",
+            QtNetwork.QNetworkReply.NetworkError.RemoteHostClosedError: "Server closed the connection",
+            QtNetwork.QNetworkReply.NetworkError.HostNotFoundError: "Server hostname not found (DNS issue)",
+            QtNetwork.QNetworkReply.NetworkError.TimeoutError: "Connection timed out",
+            QtNetwork.QNetworkReply.NetworkError.SslHandshakeFailedError: "SSL/TLS certificate validation failed",
+            QtNetwork.QNetworkReply.NetworkError.TemporaryNetworkFailureError: "Temporary network failure",
+            QtNetwork.QNetworkReply.NetworkError.NetworkSessionFailedError: "Network session failed",
+            QtNetwork.QNetworkReply.NetworkError.BackgroundRequestNotAllowedError: "Background request not allowed",
+            QtNetwork.QNetworkReply.NetworkError.TooManyRedirectsError: "Too many redirects",
+            QtNetwork.QNetworkReply.NetworkError.InsecureRedirectError: "Insecure redirect detected",
+            QtNetwork.QNetworkReply.NetworkError.ProxyConnectionRefusedError: "Proxy server refused connection",
+            QtNetwork.QNetworkReply.NetworkError.ProxyConnectionClosedError: "Proxy server closed connection",
+            QtNetwork.QNetworkReply.NetworkError.ProxyNotFoundError: "Proxy server not found",
+            QtNetwork.QNetworkReply.NetworkError.ProxyTimeoutError: "Proxy connection timed out",
+            QtNetwork.QNetworkReply.NetworkError.ProxyAuthenticationRequiredError: "Proxy authentication required",
+            QtNetwork.QNetworkReply.NetworkError.ContentAccessDenied: "Access denied by server",
+            QtNetwork.QNetworkReply.NetworkError.ContentOperationNotPermittedError: "Operation not permitted",
+            QtNetwork.QNetworkReply.NetworkError.ContentNotFoundError: "Content not found",
+            QtNetwork.QNetworkReply.NetworkError.AuthenticationRequiredError: "Authentication required",
+            QtNetwork.QNetworkReply.NetworkError.ContentReSendError: "Content re-send error",
+            QtNetwork.QNetworkReply.NetworkError.ContentConflictError: "Content conflict",
+            QtNetwork.QNetworkReply.NetworkError.ContentGoneError: "Content gone",
+            QtNetwork.QNetworkReply.NetworkError.InternalServerError: "Internal server error",
+            QtNetwork.QNetworkReply.NetworkError.OperationNotImplementedError: "Operation not implemented",
+            QtNetwork.QNetworkReply.NetworkError.ServiceUnavailableError: "Service unavailable",
+            QtNetwork.QNetworkReply.NetworkError.ProtocolUnknownError: "Unknown protocol",
+            QtNetwork.QNetworkReply.NetworkError.ProtocolInvalidOperationError: "Invalid protocol operation",
+            QtNetwork.QNetworkReply.NetworkError.UnknownNetworkError: "Unknown network error",
+            QtNetwork.QNetworkReply.NetworkError.UnknownProxyError: "Unknown proxy error",
+            QtNetwork.QNetworkReply.NetworkError.UnknownContentError: "Unknown content error",
+            QtNetwork.QNetworkReply.NetworkError.ProtocolFailure: "Protocol failure"
+        }
+
+        # Check for HTTP status codes
+        if http_status:
+            if http_status == 400:
+                return "Bad request (400)"
+            elif http_status == 401:
+                return "Authentication failed (401)"
+            elif http_status == 403:
+                return "Access forbidden (403)"
+            elif http_status == 404:
+                return "License server endpoint not found (404)"
+            elif http_status == 429:
+                return "Too many requests - rate limited (429)"
+            elif http_status == 500:
+                return "Internal server error (500)"
+            elif http_status == 502:
+                return "Bad gateway (502)"
+            elif http_status == 503:
+                return "Service unavailable (503)"
+            elif http_status == 504:
+                return "Gateway timeout (504)"
+            else:
+                return f"HTTP error {http_status}"
+
+        # Use mapped description if available
+        if error_code in error_map:
+            return error_map[error_code]
+
+        # Fallback to Qt's error string if available
+        if error_string and error_string != "Unknown error":
+            return error_string
+
+        # Final fallback
+        return f"Network error (code: {error_code})"
+
     def on_reply(self):
         err = self.reply.error()
         body = bytes(self.reply.readAll()).decode("utf-8", errors="ignore")
@@ -674,8 +744,7 @@ class ActivateProDialog(QtWidgets.QDialog):
                 try:
                     # Save license information to global settings
                     settings = QtCore.QSettings("aicodeprep-gui", "ProLicense")
-                    license_key_value = key if "key" in locals(
-                    ) else self.license_key_input.text().strip()
+                    license_key_value = self.license_key_input.text().strip()
                     settings.setValue("license_key", license_key_value)
                     settings.setValue("license_verified", True)
                     settings.setValue(
@@ -692,7 +761,7 @@ class ActivateProDialog(QtWidgets.QDialog):
                 except Exception as e:
                     QtWidgets.QMessageBox.warning(
                         self, "Warning",
-                        f"Activated but failed to save license information: {e} (license_key={self.license_key_input.text().strip()})"
+                        f"Activated but failed to save license information: {e} (license_key={license_key_value})"
                     )
                 QtWidgets.QMessageBox.information(
                     self, "Success",
@@ -728,11 +797,29 @@ class ActivateProDialog(QtWidgets.QDialog):
         product_index = (self.attempt - 1) // len(self.RETRY_DELAYS)
         retry_index = (self.attempt - 1) % len(self.RETRY_DELAYS)
 
+        # Get detailed error information
+        error_string = self.reply.errorString()
+        http_status = self.reply.attribute(
+            QtNetwork.QNetworkRequest.HttpStatusCodeAttribute)
+        http_reason = self.reply.attribute(
+            QtNetwork.QNetworkRequest.HttpReasonPhraseAttribute)
+
+        # Log detailed error for debugging
+        logging.error(
+            f"License verification network error: {err} - {error_string}")
+        if http_status:
+            logging.error(f"HTTP Status: {http_status} {http_reason}")
+        if body:
+            # Log first 500 chars
+            logging.error(f"Response body: {body[:500]}...")
+
         if retry_index < len(self.RETRY_DELAYS):
             # Retry with the same product ID
             delay = self.RETRY_DELAYS[retry_index]
+            error_desc = self._get_error_description(
+                err, error_string, http_status)
             self.status_label.setText(
-                f"Network error ({err}). Retrying in {delay//1000}s…"
+                f"Network error: {error_desc}. Retrying in {delay//1000}s…"
             )
             QTimer.singleShot(delay, lambda: self.send_request(
                 self.license_key_input.text().strip()))
@@ -745,10 +832,14 @@ class ActivateProDialog(QtWidgets.QDialog):
                 QTimer.singleShot(1000, lambda: self.send_request(
                     self.license_key_input.text().strip()))
             else:
+                error_desc = self._get_error_description(
+                    err, error_string, http_status)
                 QtWidgets.QMessageBox.critical(
-                    self, "Error",
-                    "Could not reach the license server after multiple attempts.\n"
-                    "Please try again later or contact support."
+                    self, "Network Error",
+                    f"Could not reach the license server after multiple attempts.\n\n"
+                    f"Error: {error_desc}\n\n"
+                    f"Please check your internet connection and try again. "
+                    f"If the problem persists, your network may be blocking HTTPS requests to gumroad.com."
                 )
                 self.activate_button.setEnabled(True)
                 self.status_label.setText("")

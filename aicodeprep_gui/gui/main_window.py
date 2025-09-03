@@ -50,6 +50,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.preset_manager = PresetButtonManager(self)
         self.metrics_manager = MetricsManager(self)
         self.window_helpers = WindowHelpers(self)
+        self.flow_dock = None
 
         self.initial_show_event = True
         self.temp_dir = QTemporaryDir()
@@ -646,6 +647,33 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         syntax_highlight_layout.addStretch()
 
         premium_content_layout.addLayout(syntax_highlight_layout)
+
+        # Flow Studio toggle (Phase 1: visible for Free as read-only; editable for Pro)
+        self.flow_studio_toggle = QtWidgets.QCheckBox("Enable Flow Studio")
+        flow_help = QtWidgets.QLabel(
+            "<b style='color:#0098D4; font-size:14px; cursor:help;'>?</b>")
+        flow_help.setToolTip(
+            "Show the Flow Studio dock. Free mode is read-only; Pro can edit and save flows.")
+        flow_help.setAlignment(QtCore.Qt.AlignVCenter)
+
+        flow_layout = QtWidgets.QHBoxLayout()
+        flow_layout.setContentsMargins(0, 0, 0, 0)
+        flow_layout.addWidget(self.flow_studio_toggle)
+        flow_layout.addWidget(flow_help)
+        flow_layout.addStretch()
+        premium_content_layout.addLayout(flow_layout)
+
+        # Configure gating and wiring
+        if pro.enabled:
+            self.flow_studio_toggle.setEnabled(True)
+            self.flow_studio_toggle.setToolTip(
+                "Show the Flow Studio dock (editable).")
+        else:
+            # Still visible in Free mode but read-only
+            self.flow_studio_toggle.setEnabled(True)
+            self.flow_studio_toggle.setToolTip(
+                "Show the Flow Studio dock (read-only in Free mode).")
+        self.flow_studio_toggle.toggled.connect(self.toggle_flow_studio)
 
         # # Add Font selection dropdown to premium features
         # font_layout = QtWidgets.QHBoxLayout()
@@ -1679,6 +1707,31 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.preview_window.set_syntax_highlighting_enabled(enabled)
             # Refresh the preview if a file is currently being displayed
             self.update_file_preview()
+
+    def toggle_flow_studio(self, enabled):
+        """Show/hide the Flow Studio dock. In Free mode, the dock is read-only."""
+        try:
+            if enabled:
+                if not hasattr(self, "flow_dock") or self.flow_dock is None:
+                    self.flow_dock = pro.get_flow_dock()
+                if self.flow_dock:
+                    # Add to right dock area if not already added
+                    if self.flow_dock.parent() is None:
+                        self.addDockWidget(
+                            QtCore.Qt.RightDockWidgetArea, self.flow_dock)
+                    self.flow_dock.show()
+                else:
+                    logging.error("Flow Studio dock is None after creation.")
+                    QtWidgets.QMessageBox.warning(
+                        self,
+                        "Flow Studio",
+                        "Flow Studio could not be initialized. See logs for details.",
+                    )
+            else:
+                if hasattr(self, "flow_dock") and self.flow_dock:
+                    self.flow_dock.hide()
+        except Exception as e:
+            logging.error(f"toggle_flow_studio failed: {e}")
 
     def update_file_preview(self):
         """Update the preview based on current tree selection."""

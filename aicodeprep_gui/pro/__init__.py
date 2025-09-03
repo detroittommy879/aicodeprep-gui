@@ -57,3 +57,27 @@ def get_level_delegate(parent, is_dark_mode: bool = False):
         import logging
         logging.error(f"Failed to load Pro Level delegate: {e}")
         return None
+
+
+# Flow Studio singleton
+_flow_dock = None
+
+
+def get_flow_dock():
+    """
+    Create or return the Flow Studio dock.
+
+    - If Pro is enabled: editable graph.
+    - If Pro is not enabled: graph is read-only but still visible.
+    """
+    global _flow_dock
+    try:
+        if _flow_dock is None:
+            from .flow.flow_dock import FlowStudioDock
+            read_only = not enabled
+            _flow_dock = FlowStudioDock(read_only=read_only)
+        return _flow_dock
+    except Exception as e:
+        import logging
+        logging.error(f"Failed to load Flow Studio dock: {e}")
+        return None
