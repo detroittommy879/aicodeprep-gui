@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/detroittommy879-aicodeprep-gui-badge.png)](https://mseep.ai/app/detroittommy879-aicodeprep-gui)
+
 # aicodeprep-gui: The fast context maker
 
 **Context Engineering basically.. but made effortless! prepare and share project code with any AI model, on any OS, from any editor.**
