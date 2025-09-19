@@ -1,0 +1,152 @@
+{
+  "graph": {
+    "layout_direction": 0,
+    "acyclic": true,
+    "pipe_collision": false,
+    "pipe_slicing": true,
+    "pipe_style": 1,
+    "accept_connection_types": {},
+    "reject_connection_types": {}
+  },
+  "nodes": {
+    "0x20eeb4a59d0": {
+      "type_": "aicp.flow.ContextOutputNode",
+      "icon": null,
+      "name": "Context Output",
+      "color": [
+        13,
+        18,
+        23,
+        255
+      ],
+      "border_color": [
+        74,
+        84,
+        85,
+        255
+      ],
+      "text_color": [
+        255,
+        255,
+        255,
+        180
+      ],
+      "disabled": false,
+      "selected": true,
+      "visible": true,
+      "width": 160,
+      "height": 60,
+      "pos": [
+        78.76059115377916,
+        -320.3011894092315
+      ],
+      "layout_direction": 0,
+      "port_deletion_allowed": false,
+      "subgraph_session": {},
+      "custom": {
+        "version": "1.0.0",
+        "path": "fullcode.txt",
+        "use_latest_generated": true
+      }
+    },
+    "0x20eeb4ae7d0": {
+      "type_": "aicp.flow.ClipboardNode",
+      "icon": null,
+      "name": "Clipboard",
+      "color": [
+        13,
+        18,
+        23,
+        255
+      ],
+      "border_color": [
+        74,
+        84,
+        85,
+        255
+      ],
+      "text_color": [
+        255,
+        255,
+        255,
+        180
+      ],
+      "disabled": false,
+      "selected": true,
+      "visible": true,
+      "width": 160,
+      "height": 60,
+      "pos": [
+        337.1078583043243,
+        -41.91922959457122
+      ],
+      "layout_direction": 0,
+      "port_deletion_allowed": false,
+      "subgraph_session": {},
+      "custom": {
+        "version": "1.0.0"
+      }
+    },
+    "0x20eeb4a8290": {
+      "type_": "aicp.flow.FileWriteNode",
+      "icon": null,
+      "name": "File Write",
+      "color": [
+        13,
+        18,
+        23,
+        255
+      ],
+      "border_color": [
+        74,
+        84,
+        85,
+        255
+      ],
+      "text_color": [
+        255,
+        255,
+        255,
+        180
+      ],
+      "disabled": false,
+      "selected": true,
+      "visible": true,
+      "width": 160,
+      "height": 60,
+      "pos": [
+        594.7367569539158,
+        -309.9261605271786
+      ],
+      "layout_direction": 0,
+      "port_deletion_allowed": false,
+      "subgraph_session": {},
+      "custom": {
+        "version": "1.0.0",
+        "path": "fullcode.txt"
+      }
+    }
+  },
+  "connections": [
+    {
+      "out": [
+        "0x20eeb4a59d0",
+        "text"
+      ],
+      "in": [
+        "0x20eeb4ae7d0",
+        "text"
+      ]
+    },
+    {
+      "out": [
+        "0x20eeb4a59d0",
+        "text"
+      ],
+      "in": [
+        "0x20eeb4a8290",
+        "text"
+      ]
+    }
+  ]
+}

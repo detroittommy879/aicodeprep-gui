@@ -263,6 +263,23 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         open_settings_folder_act.triggered.connect(self.open_settings_folder)
         edit_menu.addAction(open_settings_folder_act)
 
+        # Flow menu (Phase 2)
+        flow_menu = mb.addMenu("&Flow")
+
+        flow_import_act = QtGui.QAction("Import Flow JSON…", self)
+        flow_import_act.triggered.connect(self._flow_import_action)
+        flow_menu.addAction(flow_import_act)
+
+        flow_export_act = QtGui.QAction("Export Flow JSON…", self)
+        flow_export_act.triggered.connect(self._flow_export_action)
+        flow_menu.addAction(flow_export_act)
+
+        flow_reset_act = QtGui.QAction("Reset to Default Flow", self)
+        flow_reset_act.triggered.connect(self._flow_reset_action)
+        flow_menu.addAction(flow_reset_act)
+
+        flow_menu.addSeparator()
+
         help_menu = mb.addMenu("&Help")
         links_act = QtGui.QAction("Help / Links and Guides", self)
         links_act.triggered.connect(self.open_links_dialog)
@@ -1732,6 +1749,72 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     self.flow_dock.hide()
         except Exception as e:
             logging.error(f"toggle_flow_studio failed: {e}")
+
+    # ---- Flow menu helpers (Phase 2) ----
+    def _ensure_flow_dock(self) -> bool:
+        """Create and dock Flow Studio if missing. Returns True on success."""
+        try:
+            if not hasattr(self, "flow_dock") or self.flow_dock is None:
+                self.flow_dock = pro.get_flow_dock()
+            if not self.flow_dock:
+                logging.error("Flow Studio dock is None after creation.")
+                return False
+            if self.flow_dock.parent() is None:
+                self.addDockWidget(
+                    QtCore.Qt.RightDockWidgetArea, self.flow_dock)
+            return True
+        except Exception as e:
+            logging.error(f"_ensure_flow_dock failed: {e}")
+            return False
+
+    def _flow_import_action(self):
+        """Menu: Import Flow JSON… (Pro only; Free shows info)."""
+        try:
+            if not self._ensure_flow_dock():
+                QtWidgets.QMessageBox.warning(
+                    self, "Flow Studio", "Flow Studio could not be initialized.")
+                return
+            # Delegate to dock handler (has gating + QSettings dir)
+            if hasattr(self.flow_dock, "_on_import_clicked"):
+                self.flow_dock._on_import_clicked()
+            else:
+                QtWidgets.QMessageBox.warning(
+                    self, "Flow Import", "Import handler not available.")
+        except Exception as e:
+            logging.error(f"_flow_import_action failed: {e}")
+            QtWidgets.QMessageBox.warning(self, "Flow Import", f"Error: {e}")
+
+    def _flow_export_action(self):
+        """Menu: Export Flow JSON… (Pro only; Free shows info)."""
+        try:
+            if not self._ensure_flow_dock():
+                QtWidgets.QMessageBox.warning(
+                    self, "Flow Studio", "Flow Studio could not be initialized.")
+                return
+            if hasattr(self.flow_dock, "_on_export_clicked"):
+                self.flow_dock._on_export_clicked()
+            else:
+                QtWidgets.QMessageBox.warning(
+                    self, "Flow Export", "Export handler not available.")
+        except Exception as e:
+            logging.error(f"_flow_export_action failed: {e}")
+            QtWidgets.QMessageBox.warning(self, "Flow Export", f"Error: {e}")
+
+    def _flow_reset_action(self):
+        """Menu: Reset to Default Flow (Pro only; Free shows info)."""
+        try:
+            if not self._ensure_flow_dock():
+                QtWidgets.QMessageBox.warning(
+                    self, "Flow Studio", "Flow Studio could not be initialized.")
+                return
+            if hasattr(self.flow_dock, "reset_to_default_flow"):
+                self.flow_dock.reset_to_default_flow()
+            else:
+                QtWidgets.QMessageBox.warning(
+                    self, "Reset Flow", "Reset handler not available.")
+        except Exception as e:
+            logging.error(f"_flow_reset_action failed: {e}")
+            QtWidgets.QMessageBox.warning(self, "Reset Flow", f"Error: {e}")
 
     def update_file_preview(self):
         """Update the preview based on current tree selection."""

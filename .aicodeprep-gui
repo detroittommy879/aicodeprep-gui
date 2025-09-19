@@ -8,9 +8,9 @@
 version=1.0
 
 [window]
-width=1074
+width=1908
 height=1514
-splitter_state=AAAA/wAAAAEAAAACAAABlwAAAW4B/////wEAAAACAA==
+splitter_state=AAAA/wAAAAEAAAACAAABqAAAAVkB/////wEAAAACAA==
 
 [format]
 output_format=xml
@@ -22,16 +22,11 @@ syntax_highlight_enabled=true
 [files]
 ng.md
 pyproject.toml
-README.md
 aicodeprep_gui\apptheme.py
 aicodeprep_gui\file_processor.py
-aicodeprep_gui\linux_installer.py
-aicodeprep_gui\macos_installer.py
 aicodeprep_gui\main.py
 aicodeprep_gui\smart_logic.py
 aicodeprep_gui\update_checker.py
-aicodeprep_gui\windows_registry.py
-aicodeprep_gui\__init__.py
 aicodeprep_gui\data\default_config.toml
 aicodeprep_gui\gui\main_window.py
 aicodeprep_gui\gui\__init__.py
@@ -59,3 +54,8 @@ aicodeprep_gui\pro\patches.py
 aicodeprep_gui\pro\preview_window.py
 aicodeprep_gui\pro\syntax_highlighter.py
 aicodeprep_gui\pro\__init__.py
+aicodeprep_gui\pro\flow\flow_dock.py
+aicodeprep_gui\pro\flow\serializer.py
+aicodeprep_gui\pro\flow\__init__.py
+aicodeprep_gui\pro\flow\nodes\base.py
+aicodeprep_gui\pro\flow\nodes\io_nodes.py

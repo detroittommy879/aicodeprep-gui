@@ -1,4 +1,4 @@
-Feature Add-on PRD: “Flow Studio” (Node-Graph, dockable, pro-editable) by GPT-5
+Feature Add-on PRD: “Flow Studio” (Node-Graph, dockable, pro-editable)
 
 Overview
 
@@ -96,7 +96,7 @@ Phase 1 — Basic Flow Studio Dock, Read-Only Default (no execution changes)
   - Default flow visible/read-only in Free mode; editable in Pro mode, no execution yet.
   - No regression in “Generate Context!” flow.
 
-STOP HERE AND ASK ME TO OPEN APP FOR A QUICK TEST--
+STOP HERE AND ASK ME TO OPEN APP FOR A QUICK TEST-- I tested and worked out some minor bugs, now it works and the default nodes do display, but they are not connected. I can manually connect some of them though and it looks great!
 
 Phase 2 — Flow persistence and default session handling; Import/Export UI
 

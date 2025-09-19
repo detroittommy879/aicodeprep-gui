@@ -1,43 +1,161 @@
-"""Serializer stubs for Flow Studio (Phase 1).
+"""Flow Studio serializer (Phase 2).
 
-Phase 2 will implement real load/save using NodeGraphQt's session API.
-These functions are placeholders to keep imports stable across phases.
+Implements load/save/import/export using NodeGraphQt session API with basic redaction.
+- Uses graph.save_session(file_path) / graph.load_session(file_path) when available.
+- Falls back gracefully and logs descriptive errors.
 """
 
 from __future__ import annotations
-from typing import Optional, Any
+from typing import Any, Dict
 import logging
+import json
+import os
+import tempfile
 
 try:
-    # Not strictly needed in Phase 1, but we type-reference for later phases.
     from NodeGraphQt import NodeGraph  # type: ignore
 except Exception:
     NodeGraph = Any  # type: ignore
 
 
+def _has_method(obj: Any, name: str) -> bool:
+    return hasattr(obj, name) and callable(getattr(obj, name))
+
+
+def _clear_graph(graph: NodeGraph) -> None:
+    """Best-effort clear of all nodes if load requires an empty scene."""
+    try:
+        if _has_method(graph, "clear_session"):
+            graph.clear_session()
+            return
+    except Exception:
+        pass
+    try:
+        nodes = list(getattr(graph, "all_nodes", lambda: [])())
+        for n in nodes:
+            try:
+                if _has_method(graph, "delete_node"):
+                    graph.delete_node(n)
+                elif hasattr(n, "delete"):
+                    n.delete()  # type: ignore
+            except Exception as e:
+                logging.error(f"[Flow Serializer] Failed to delete node: {e}")
+    except Exception as e:
+        logging.error(f"[Flow Serializer] Failed to enumerate nodes: {e}")
+
+
 def save_session(graph: NodeGraph, file_path: str) -> bool:
-    """Phase 1 stub: log intent and return False."""
-    logging.info(
-        f"[Flow Serializer] save_session called for: {file_path} (Phase 1 stub)")
-    return False
+    """Save the current graph session to JSON file."""
+    try:
+        if not graph:
+            logging.error("[Flow Serializer] save_session: graph is None")
+            return False
+        os.makedirs(os.path.dirname(file_path) or ".", exist_ok=True)
+        if _has_method(graph, "save_session"):
+            graph.save_session(file_path)  # type: ignore
+            logging.info(f"[Flow Serializer] Saved session to: {file_path}")
+            return True
+        logging.error(
+            "[Flow Serializer] save_session: graph.save_session not available")
+        return False
+    except Exception as e:
+        logging.error(f"[Flow Serializer] save_session failed: {e}")
+        return False
 
 
 def load_session(graph: NodeGraph, file_path: str) -> bool:
-    """Phase 1 stub: log intent and return False."""
-    logging.info(
-        f"[Flow Serializer] load_session called for: {file_path} (Phase 1 stub)")
-    return False
+    """Load a graph session from JSON file, replacing current graph."""
+    try:
+        if not graph:
+            logging.error("[Flow Serializer] load_session: graph is None")
+            return False
+        if not os.path.isfile(file_path):
+            logging.error(
+                f"[Flow Serializer] load_session: file not found: {file_path}")
+            return False
+        if _has_method(graph, "load_session"):
+            # Many versions auto-clear on load; ensure a clean state anyway.
+            _clear_graph(graph)
+            graph.load_session(file_path)  # type: ignore
+            logging.info(f"[Flow Serializer] Loaded session from: {file_path}")
+            return True
+        logging.error(
+            "[Flow Serializer] load_session: graph.load_session not available")
+        return False
+    except Exception as e:
+        logging.error(f"[Flow Serializer] load_session failed: {e}")
+        return False
+
+
+def _redact_in_place(data: Any) -> Any:
+    """
+    Recursively remove sensitive fields from a NodeGraphQt session dict.
+    Conservative: strip keys commonly used for secrets/headers.
+    """
+    if isinstance(data, dict):
+        redacted: Dict[str, Any] = {}
+        for k, v in data.items():
+            lk = str(k).lower()
+            if lk in {"api_key", "apikey", "secret", "secrets"}:
+                continue
+            # Optionally strip raw headers if present
+            if lk in {"headers", "headers_json"}:
+                continue
+            redacted[k] = _redact_in_place(v)
+        return redacted
+    if isinstance(data, list):
+        return [_redact_in_place(x) for x in data]
+    return data
 
 
 def export_to_json(graph: NodeGraph, file_path: str, redact: bool = True) -> bool:
-    """Phase 1 stub: log intent and return False."""
-    logging.info(
-        f"[Flow Serializer] export_to_json called for: {file_path}, redact={redact} (Phase 1 stub)")
-    return False
+    """
+    Export the current graph to JSON on disk.
+    If redact=True, write to a temp file first, then remove sensitive keys and write the final file.
+    """
+    try:
+        if not graph:
+            logging.error("[Flow Serializer] export_to_json: graph is None")
+            return False
+
+        if not redact:
+            return save_session(graph, file_path)
+
+        # Save into a temp file first
+        with tempfile.TemporaryDirectory() as td:
+            tmp_path = os.path.join(td, "flow_session.json")
+            if not save_session(graph, tmp_path):
+                logging.error(
+                    "[Flow Serializer] export_to_json: save to temp failed")
+                return False
+            try:
+                with open(tmp_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            except Exception as e:
+                logging.error(
+                    f"[Flow Serializer] export_to_json: failed reading temp JSON: {e}")
+                return False
+
+            data = _redact_in_place(data)
+
+            try:
+                os.makedirs(os.path.dirname(file_path) or ".", exist_ok=True)
+                with open(file_path, "w", encoding="utf-8") as f:
+                    json.dump(data, f, indent=2)
+                logging.info(
+                    f"[Flow Serializer] Exported (redacted) JSON to: {file_path}")
+                return True
+            except Exception as e:
+                logging.error(
+                    f"[Flow Serializer] export_to_json: failed writing final JSON: {e}")
+                return False
+    except Exception as e:
+        logging.error(f"[Flow Serializer] export_to_json failed: {e}")
+        return False
 
 
 def import_from_json(graph: NodeGraph, file_path: str) -> bool:
-    """Phase 1 stub: log intent and return False."""
-    logging.info(
-        f"[Flow Serializer] import_from_json called for: {file_path} (Phase 1 stub)")
-    return False
+    """
+    Import a graph from a JSON session file (same as load_session).
+    """
+    return load_session(graph, file_path)

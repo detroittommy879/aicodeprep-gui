@@ -32,8 +32,9 @@ class FilePreviewDock(QtWidgets.QDockWidget):
         layout.addWidget(self.status_label)
 
         self.setWidget(content)
-        self.setMinimumWidth(300)
-        self.setMaximumWidth(600)
+        self.setMinimumWidth(200)
+        # Remove maximum width restriction to allow unlimited expansion
+        # self.setMaximumWidth(600)
 
         # Hide initially
         self.hide()
