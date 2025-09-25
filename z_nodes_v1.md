@@ -1,8 +1,9 @@
-Feature Add-on PRD: “Flow Studio” (Node-Graph, dockable, pro-editable)
+Feature Add-on PRD: “AI Context Router Pro” (Node-Graph, rete.js or similar, pro-editable)
 
 Overview
 
-- Goal: Add a dockable “Flow Studio” that lets users compose node-based flows to route prompt/context and model outputs (similar to n8n). Include model nodes (GPT-5, GLM-4.5, Gemini 2.5 Pro), multiple API providers (OpenAI-compatible and native), and output nodes (clipboard, file, display).
+- Goal:Create a web app for a “AI Context Router Pro” app that lets users compose node-based flows to route prompt/context and model outputs (similar to n8n). Include model nodes (GPT-5, GLM-4.5, Gemini 2.5 Pro), multiple API providers (OpenAI-compatible and native, openrouter, cerebras, qwen3, z.ai, chutes.ai, and more), and output nodes (clipboard, file, display, input of a text combiner). I could do things like arrange blocks of API endpoints/AI models and route one large context block into a combiner which combines another block of text to the end, and sends it onto its output, which i could have go to a splitter/several of them go to a lot of separate api endpoints for processing. The outputs of those will automatically be waiting and send the outputs onto the next step(s).. like a new round of api processing with more combiners etc. It will automate away a lot of what people sometimes manually do when doing hard coding problems/troubleshooting. I want to be able to add more types of blocks or things as we go, or as they come up. There can be some outputs like for clipboard, write_to_file, etc. and any others you can think of make a note of it in ideas/ folder
+
 - Default: Ship a read-only default flow that exactly mirrors current behavior: Generate Context! → write fullcode.txt → copy to clipboard. Non-Pro users can see the flow but cannot edit; Pro users can edit and create/import/export flows.
 - Persistence: Store flows as JSON (using NodeGraphQt’s session save/load). Allow import/export from disk. Project-level default flow stored alongside `.aicodeprep-gui` preferences, with API keys stored in QSettings (not in flow JSON).
 
