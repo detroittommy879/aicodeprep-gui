@@ -1,4 +1,4 @@
-"""I/O nodes for Flow Studio (Phase 1 - visual scaffold only)."""
+"""I/O nodes for Flow Studio (Phase 1 - executable)."""
 
 # Guard NodeGraphQt import so non-installed environments still launch the app.
 try:
@@ -12,6 +12,13 @@ except Exception as e:  # pragma: no cover
             )
 
 from .base import BaseExecNode
+from typing import Any, Dict, Optional
+import os
+
+try:
+    from PySide6 import QtWidgets
+except ImportError:
+    QtWidgets = None
 
 
 class ContextOutputNode(BaseExecNode):
@@ -26,12 +33,32 @@ class ContextOutputNode(BaseExecNode):
         except Exception:
             pass
 
-        # Properties (UI placeholders for Phase 1)
+        # Properties
         try:
             self.create_property("path", "fullcode.txt")
             self.create_property("use_latest_generated", True)
         except Exception:
             pass
+
+    def run(self, inputs: Dict[str, Any], settings: Optional[Dict] = None) -> Dict[str, Any]:
+        """
+        Read the context text from path (default: fullcode.txt).
+        In future we could regenerate context on-demand.
+        """
+        path = self.get_property("path") or "fullcode.txt"
+        abspath = os.path.join(os.getcwd(), path)
+        if not os.path.isfile(abspath):
+            if QtWidgets is not None:
+                QtWidgets.QMessageBox.warning(None, self.NODE_NAME, f"Context file not found: {abspath}")
+            return {}
+        try:
+            with open(abspath, "r", encoding="utf-8", errors="ignore") as f:
+                content = f.read()
+            return {"text": content}
+        except Exception as e:
+            if QtWidgets is not None:
+                QtWidgets.QMessageBox.warning(None, self.NODE_NAME, f"Error reading context file: {e}")
+            return {}
 
 
 class ClipboardNode(BaseExecNode):
@@ -44,6 +71,19 @@ class ClipboardNode(BaseExecNode):
             self.add_input("text")
         except Exception:
             pass
+
+    def run(self, inputs: Dict[str, Any], settings: Optional[Dict] = None) -> Dict[str, Any]:
+        """Copy input text to system clipboard."""
+        text = inputs.get("text") or ""
+        if not text:
+            return {}
+        try:
+            if QtWidgets is not None:
+                clip = QtWidgets.QApplication.clipboard()
+                clip.setText(text)
+        except Exception:
+            pass
+        return {}
 
 
 class FileWriteNode(BaseExecNode):
@@ -62,6 +102,19 @@ class FileWriteNode(BaseExecNode):
         except Exception:
             pass
 
+    def run(self, inputs: Dict[str, Any], settings: Optional[Dict] = None) -> Dict[str, Any]:
+        """Write input text to configured file path."""
+        text = inputs.get("text") or ""
+        path = self.get_property("path") or "output.txt"
+        abspath = os.path.join(os.getcwd(), path)
+        try:
+            with open(abspath, "w", encoding="utf-8") as f:
+                f.write(text)
+        except Exception as e:
+            if QtWidgets is not None:
+                QtWidgets.QMessageBox.warning(None, self.NODE_NAME, f"Failed writing file: {e}")
+        return {}
+
 
 class OutputDisplayNode(BaseExecNode):
     __identifier__ = "aicp.flow"
@@ -71,11 +124,16 @@ class OutputDisplayNode(BaseExecNode):
         super().__init__()
         try:
             self.add_input("text")
-        except Exception:
-            pass
-
-        # For Phase 1, store a placeholder last_result property for display via Properties Bin later
-        try:
             self.create_property("last_result", "")
         except Exception:
             pass
+
+    def run(self, inputs: Dict[str, Any], settings: Optional[Dict] = None) -> Dict[str, Any]:
+        """Store text in property for display in Properties Bin."""
+        text = inputs.get("text") or ""
+        # Store it so Properties Bin can show it
+        try:
+            self.set_property("last_result", text)
+        except Exception:
+            pass
+        return {}

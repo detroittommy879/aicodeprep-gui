@@ -1,0 +1,130 @@
+
+(venv) PS C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app> python -m aicodeprep_gui.main
+2025-09-28 12:45:27,982 - INFO - Loaded font: JetBrains Mono from JetBrainsMono-VariableFont_wght.ttf
+2025-09-28 12:45:27,994 - INFO - Loaded font: Fira Code from FiraCode-VariableFont_wght.ttf
+2025-09-28 12:45:28,006 - INFO - Loaded font: Space Mono from SpaceMono-Regular.ttf
+2025-09-28 12:45:28,006 - INFO - All loaded custom fonts: JetBrains Mono, Fira Code, Space Mono
+2025-09-28 12:45:28,008 - INFO - Loaded custom fonts: JetBrains Mono, Fira Code, Space Mono
+2025-09-28 12:45:28,008 - INFO - Target directory: .
+2025-09-28 12:45:28,008 - INFO - Starting code concatenation...
+2025-09-28 12:45:28,008 - INFO - Starting initial fast scan in: C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app
+2025-09-28 12:45:29,528 - INFO - Initial scan collected 201 items.
+2025-09-28 12:45:29,656 - INFO - Sent metric event: open
+2025-09-28 12:45:29,675 - INFO - Loaded font: JetBrains Mono from JetBrainsMono-VariableFont_wght.ttf
+2025-09-28 12:45:29,680 - INFO - Loaded font: Fira Code from FiraCode-VariableFont_wght.ttf
+2025-09-28 12:45:29,680 - INFO - Loaded font: Space Mono from SpaceMono-Regular.ttf
+2025-09-28 12:45:29,680 - INFO - All loaded custom fonts: JetBrains Mono, Fira Code, Space Mono
+Font debug info: Loaded font families: ['JetBrains Mono', 'Fira Code', 'Space Mono']
+2025-09-28 12:45:31,547 - INFO - SyntaxHighlightedTextEdit: Using font family 'JetBrains Mono' (requested: 'JetBrains Mono')
+2025-09-28 12:45:31,552 - INFO - Loaded preview window state from preferences: True
+2025-09-28 12:45:31,552 - INFO - Loaded syntax highlighting state from preferences: True
+2025-09-28 12:45:32,188 - INFO - Application is up to date. (current: 1.2.0, latest: 1.2.0)
+2025-09-28 12:45:39,242 - INFO - NodeGraph type: <class 'NodeGraphQt.base.graph.NodeGraph'>
+2025-09-28 12:45:39,243 - INFO - NodeGraph attributes: ['acyclic', 'add_node', 'add_properties_bin', 'all_nodes', 'auto_layout_nodes', 'background_color', 'begin_undo', 'blockSignals', 'center_on', 'center_selection', 'childEvent', 'children', 'clear_selection', 'clear_session', 'clear_undo_stack', 'close', 'collapse_group_node', 'connect', 'connectNotify', 'context_menu', 'context_menu_prompt', 'context_nodes_menu', 'copy_nodes', 'create_node', 'current_session', 'cursor_pos', 'customEvent', 'cut_nodes', 'data_dropped', 'deleteLater', 'delete_node', 'delete_nodes', 'deserialize_session', 'destroyed', 'disable_context_menu', 'disable_nodes', 'disconnect', 'disconnectNotify', 'dumpObjectInfo', 'dumpObjectTree', 'duplicate_nodes', 'dynamicPropertyNames', 'emit', 'end_undo', 'event', 'eventFilter', 'expand_group_node', 'extract_nodes', 'findChild', 'findChildren', 'fit_to_selection', 'get_context_menu', 'get_node_by_id', 'get_node_by_name', 'get_nodes_by_type', 'get_unique_name', 'get_zoom', 'grid_color', 'import_session', 'inherits', 'installEventFilter', 'invert_selection', 'isQuickItemType', 'isSignalConnected', 'isWidgetType', 'isWindowType', 'is_root', 'killTimer', 'layout_direction', 'load_dialog', 'load_session', 'message_dialog', 'metaObject', 'model', 'moveToThread', 'node_created', 'node_double_clicked', 'node_factory', 'node_selected', 'node_selection_changed', 'nodes_deleted', 'nodes_registered', 'objectName', 'objectNameChanged', 'parent', 'paste_nodes', 'pipe_collision', 'pipe_slicing', 'pipe_style', 'port_connected', 'port_disconnected', 'property', 'property_changed', 'question_dialog', 'receivers', 'register_node', 'register_nodes', 'registered_nodes', 'removeEventFilter', 'remove_node', 'reset_zoom', 'save_dialog', 'save_session', 'scene', 'select_all', 'selected_nodes', 'sender', 'senderSignalIndex', 'serialize_session', 'session_changed', 'setObjectName', 'setParent', 'setProperty', 'set_acyclic', 'set_background_color', 'set_context_menu', 'set_context_menu_from_file', 'set_grid_color', 'set_grid_mode', 'set_layout_direction', 'set_pipe_collision', 'set_pipe_slicing', 'set_pipe_style', 'set_zoom', 'show', 'signalsBlocked', 'startTimer', 'staticMetaObject', 'sub_graphs', 'thread', 'timerEvent', 'toggle_node_search', 'tr', 'undo_stack', 'undo_view', 'use_OpenGL', 'viewer', 'widget']
+2025-09-28 12:45:39,243 - INFO - Widget type: <class 'NodeGraphQt.widgets.node_graph.NodeGraphWidget'>
+2025-09-28 12:45:39,244 - INFO - Widget attributes: ['PaintDeviceMetric', 'RenderFlag', 'TabPosition', 'TabShape', 'acceptDrops', 'accessibleDescription', 'accessibleIdentifier', 'accessibleName', 'actionEvent', 'actions', 'activateWindow', 'addAction', 'addActions', 'addTab', 'add_viewer', 'adjustSize', 'autoFillBackground', 'backgroundRole', 'backingStore', 'baseSize', 'blockSignals', 'changeEvent', 'childAt', 'childEvent', 'children', 'childrenRect', 'childrenRegion', 'clear', 'clearFocus', 'clearMask', 'close', 'closeEvent', 'colorCount', 'connect', 'connectNotify', 'contentsMargins', 'contentsRect', 'contextMenuEvent', 'contextMenuPolicy', 'cornerWidget', 'count', 'create', 'createWinId', 'createWindowContainer', 'currentChanged', 'currentIndex', 'currentWidget', 'cursor', 'customContextMenuRequested', 'customEvent', 'deleteLater', 'depth', 'destroy', 'destroyed', 'devType', 'devicePixelRatio', 'devicePixelRatioF', 'devicePixelRatioFScale', 'disconnect', 'disconnectNotify', 'documentMode', 'dragEnterEvent', 'dragLeaveEvent', 'dragMoveEvent', 'dropEvent', 'dumpObjectInfo', 'dumpObjectTree', 'dynamicPropertyNames', 'effectiveWinId', 'elideMode', 'emit', 'encodeMetricF', 'ensurePolished', 'enterEvent', 'event', 'eventFilter', 'find', 'findChild', 'findChildren', 'focusInEvent', 'focusNextChild', 'focusNextPrevChild', 'focusOutEvent', 'focusPolicy', 'focusPreviousChild', 'focusProxy', 'focusWidget', 'font', 'fontInfo', 'fontMetrics', 'foregroundRole', 'frameGeometry', 'frameSize', 'geometry', 'grab', 'grabGesture', 'grabKeyboard', 'grabMouse', 'grabShortcut', 'graphicsEffect', 'graphicsProxyWidget', 'hasFocus', 'hasHeightForWidth', 'hasMouseTracking', 'hasTabletTracking', 'height', 'heightForWidth', 'heightMM', 'hide', 'hideEvent', 'iconSize', 'indexOf', 'inherits', 'initPainter', 'initStyleOption', 'inputMethodEvent', 'inputMethodHints', 'inputMethodQuery', 'insertAction', 'insertActions', 'insertTab', 'installEventFilter', 'internalWinId', 'isActiveWindow', 'isAncestorOf', 'isEnabled', 'isEnabledTo', 'isFullScreen', 'isHidden', 'isLeftToRight', 'isMaximized', 'isMinimized', 'isModal', 'isMovable', 'isQuickItemType', 'isRightToLeft', 'isSignalConnected', 'isTabEnabled', 'isTabVisible', 'isTopLevel', 'isVisible', 'isVisibleTo', 'isWidgetType', 'isWindow', 'isWindowModified', 'isWindowType', 'keyPressEvent', 'keyReleaseEvent', 'keyboardGrabber', 'killTimer', 'layout', 'layoutDirection', 'leaveEvent', 'locale', 'logicalDpiX', 'logicalDpiY', 'lower', 'mapFrom', 'mapFromGlobal', 'mapFromParent', 'mapTo', 'mapToGlobal', 'mapToParent', 'mask', 'maximumHeight', 'maximumSize', 'maximumWidth', 'metaObject', 'metric', 'minimumHeight', 'minimumSize', 'minimumSizeHint', 'minimumWidth', 'mouseDoubleClickEvent', 'mouseGrabber', 'mouseMoveEvent', 'mousePressEvent', 'mouseReleaseEvent', 'move', 'moveEvent', 'moveToThread', 'nativeEvent', 'nativeParentWidget', 'nextInFocusChain', 'normalGeometry', 'objectName', 'objectNameChanged', 'overrideWindowFlags', 'overrideWindowState', 'paintEngine', 'paintEvent', 'painters', 'paintingActive', 'palette', 'parent', 'parentWidget', 'physicalDpiX', 'physicalDpiY', 'pos', 'previousInFocusChain', 'property', 'raise_', 'receivers', 'rect', 'redirected', 'releaseKeyboard', 'releaseMouse', 'releaseShortcut', 'removeAction', 'removeEventFilter', 'removeTab', 'remove_viewer', 'render', 'repaint', 'resize', 'resizeEvent', 'restoreGeometry', 'saveGeometry', 'screen', 'scroll', 'sender', 'senderSignalIndex', 'setAcceptDrops', 'setAccessibleDescription', 'setAccessibleIdentifier', 'setAccessibleName', 'setAttribute', 'setAutoFillBackground', 'setBackgroundRole', 'setBaseSize', 'setContentsMargins', 'setContextMenuPolicy', 'setCornerWidget', 'setCurrentIndex', 'setCurrentWidget', 'setCursor', 'setDisabled', 'setDocumentMode', 'setElideMode', 'setEnabled', 'setFixedHeight', 'setFixedSize', 'setFixedWidth', 'setFocus', 'setFocusPolicy', 'setFocusProxy', 'setFont', 'setForegroundRole', 'setGeometry', 'setGraphicsEffect', 'setHidden', 'setIconSize', 'setInputMethodHints', 'setLayout', 'setLayoutDirection', 'setLocale', 'setMask', 'setMaximumHeight', 'setMaximumSize', 'setMaximumWidth', 'setMinimumHeight', 'setMinimumSize', 'setMinimumWidth', 'setMouseTracking', 'setMovable', 'setObjectName', 'setPalette', 'setParent', 'setProperty', 'setScreen', 'setShortcutAutoRepeat', 'setShortcutEnabled', 'setSizeIncrement', 'setSizePolicy', 'setStatusTip', 'setStyle', 'setStyleSheet', 'setTabBar', 'setTabBarAutoHide', 'setTabEnabled', 'setTabIcon', 'setTabOrder', 'setTabPosition', 'setTabShape', 'setTabText', 'setTabToolTip', 'setTabVisible', 'setTabWhatsThis', 'setTabletTracking', 'setTabsClosable', 'setToolTip', 'setToolTipDuration', 'setUpdatesEnabled', 'setUsesScrollButtons', 'setVisible', 'setWhatsThis', 'setWindowFilePath', 'setWindowFlag', 'setWindowFlags', 'setWindowIcon', 'setWindowIconText', 'setWindowModality', 'setWindowModified', 'setWindowOpacity', 'setWindowRole', 'setWindowState', 'setWindowTitle', 'sharedPainter', 'show', 'showEvent', 'showFullScreen', 'showMaximized', 'showMinimized', 'showNormal', 'signalsBlocked', 'size', 'sizeHint', 'sizeIncrement', 'sizePolicy', 'stackUnder', 'startTimer', 'staticMetaObject', 'statusTip', 'style', 'styleSheet', 'tabBar', 'tabBarAutoHide', 'tabBarClicked', 'tabBarDoubleClicked', 'tabCloseRequested', 'tabIcon', 'tabInserted', 'tabPosition', 'tabRemoved', 'tabShape', 'tabText', 'tabToolTip', 'tabWhatsThis', 'tabletEvent', 'tabsClosable', 'testAttribute', 'thread', 'timerEvent', 'toolTip', 'toolTipDuration', 'topLevelWidget', 'tr', 'underMouse', 'ungrabGesture', 'unsetCursor', 'unsetLayoutDirection', 'unsetLocale', 'update', 'updateGeometry', 'updateMicroFocus', 'updatesEnabled', 'usesScrollButtons', 'visibleRegion', 'whatsThis', 'wheelEvent', 'widget', 'width', 'widthMM', 'winId', 'window', 'windowFilePath', 'windowFlags', 'windowHandle', 'windowIcon', 'windowIconChanged', 'windowIconText', 'windowIconTextChanged', 'windowModality', 'windowOpacity', 'windowRole', 'windowState', 'windowTitle', 'windowTitleChanged', 'windowType', 'x', 'y']
+2025-09-28 12:45:39,244 - INFO - Found graph.viewer: <class 'method'> - callable: True
+2025-09-28 12:45:39,244 - INFO - Called viewer() -> <class 'NodeGraphQt.widgets.viewer.NodeViewer'>
+2025-09-28 12:45:39,244 - INFO - Found graph._viewer: <class 'NodeGraphQt.widgets.viewer.NodeViewer'> - callable: False
+2025-09-28 12:45:39,244 - INFO - Direct access to _viewer: <class 'NodeGraphQt.widgets.viewer.NodeViewer'>
+2025-09-28 12:45:39,244 - INFO - Found QGraphicsView in widget hierarchy: <class 'NodeGraphQt.widgets.viewer.NodeViewer'>
+2025-09-28 12:45:39,244 - INFO - Evaluating graph.viewer(): dragMode=True, scene=True, viewport=True
+2025-09-28 12:45:39,244 - INFO - Selected viewer from: graph.viewer()
+2025-09-28 12:45:39,245 - INFO - Final viewer: <class 'NodeGraphQt.widgets.viewer.NodeViewer'>
+2025-09-28 12:45:39,245 - INFO - Pan/drag methods: ['DragMode', '_set_viewer_pan', 'dragEnterEvent', 'dragLeaveEvent', 'dragMode', 'dragMoveEvent', 'setDragMode']
+2025-09-28 12:45:39,245 - INFO - Mode/state methods: ['ALT_state', 'COLLIDING_state', 'CTRL_state', 'CacheModeFlag', 'DragMode', 'LMB_state', 'MMB_state', 'RMB_state', 'SHIFT_state', 'ViewportUpdateMode', 'cacheMode', 'clear_key_state', 'dragMode', 'grabMouse', 'hasMouseTracking', 'mouseDoubleClickEvent', 'mouseGrabber', 'mouseMoveEvent', 'mousePressEvent', 'mouseReleaseEvent', 'overrideWindowState', 'releaseMouse', 'rubberBandSelectionMode', 'sceneMouseMoveEvent', 'sceneMousePressEvent', 'sceneMouseReleaseEvent', 'setCacheMode', 'setDragMode', 'setMouseTracking', 'setRubberBandSelectionMode', 'setViewportUpdateMode', 'setWindowState', 'underMouse', 'viewportUpdateMode', 'windowHandle', 'windowState']
+2025-09-28 12:45:39,246 - INFO - Pan event filter installed on viewer and graph widget
+2025-09-28 12:45:42,485 - INFO - [Flow Serializer] Loaded session from: C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app\.aicodeprep-flow.json
+2025-09-28 12:45:57,565 - INFO - Created context node: <ContextOutputNode("Context Output") object at 0x2b210fd9d50>
+2025-09-28 12:45:57,565 - INFO - Context node outputs: ['text']
+2025-09-28 12:45:57,565 - INFO -   Output port: text, name: N/A, type: <class 'str'>
+2025-09-28 12:45:57,567 - INFO - Created OpenRouter node 0: <OpenRouterNode("OpenRouter LLM") object at 0x2b21c9aff90>
+2025-09-28 12:45:57,567 - INFO - OpenRouter 0 inputs: ['text', 'system']
+2025-09-28 12:45:57,567 - INFO -   Input port: text, name: N/A, type: <class 'str'>
+2025-09-28 12:45:57,567 - INFO -   Input port: system, name: N/A, type: <class 'str'>
+2025-09-28 12:45:57,569 - INFO - Created OpenRouter node 1: <OpenRouterNode("OpenRouter LLM 1") object at 0x2b21c9b5e10>
+2025-09-28 12:45:57,569 - INFO - OpenRouter 1 inputs: ['text', 'system']
+2025-09-28 12:45:57,569 - INFO -   Input port: text, name: N/A, type: <class 'str'>
+2025-09-28 12:45:57,569 - INFO -   Input port: system, name: N/A, type: <class 'str'>
+2025-09-28 12:45:57,571 - INFO - Created OpenRouter node 2: <OpenRouterNode("OpenRouter LLM 2") object at 0x2b21c9b5dd0>
+2025-09-28 12:45:57,571 - INFO - OpenRouter 2 inputs: ['text', 'system']
+2025-09-28 12:45:57,571 - INFO -   Input port: text, name: N/A, type: <class 'str'>
+2025-09-28 12:45:57,571 - INFO -   Input port: system, name: N/A, type: <class 'str'>
+2025-09-28 12:45:57,573 - INFO - Created OpenRouter node 3: <OpenRouterNode("OpenRouter LLM 3") object at 0x2b21c9af650>
+2025-09-28 12:45:57,573 - INFO - OpenRouter 3 inputs: ['text', 'system']
+2025-09-28 12:45:57,573 - INFO -   Input port: text, name: N/A, type: <class 'str'>
+2025-09-28 12:45:57,573 - INFO -   Input port: system, name: N/A, type: <class 'str'>
+2025-09-28 12:45:57,575 - INFO - Created OpenRouter node 4: <OpenRouterNode("OpenRouter LLM 4") object at 0x2b21c9b42d0>
+2025-09-28 12:45:57,575 - INFO - OpenRouter 4 inputs: ['text', 'system']
+2025-09-28 12:45:57,575 - INFO -   Input port: text, name: N/A, type: <class 'str'>
+2025-09-28 12:45:57,575 - INFO -   Input port: system, name: N/A, type: <class 'str'>
+2025-09-28 12:45:57,578 - INFO - Created BestOfN node: <BestOfNNode("Best-of-N Synthesizer") object at 0x2b21c9c6650>
+2025-09-28 12:45:57,579 - INFO - BestOfN inputs: ['context', 'candidate1', 'candidate2', 'candidate3', 'candidate4', 'candidate5']
+2025-09-28 12:45:57,579 - INFO -   Input port: context, name: N/A, type: <class 'str'>
+2025-09-28 12:45:57,579 - INFO -   Input port: candidate1, name: N/A, type: <class 'str'>
+2025-09-28 12:45:57,579 - INFO -   Input port: candidate2, name: N/A, type: <class 'str'>
+2025-09-28 12:45:57,579 - INFO -   Input port: candidate3, name: N/A, type: <class 'str'>
+2025-09-28 12:45:57,579 - INFO -   Input port: candidate4, name: N/A, type: <class 'str'>
+2025-09-28 12:45:57,579 - INFO -   Input port: candidate5, name: N/A, type: <class 'str'>
+2025-09-28 12:45:57,580 - INFO - Created Clipboard node: <ClipboardNode("Clipboard") object at 0x2b21c9c9dd0>
+2025-09-28 12:45:57,580 - INFO - Clipboard inputs: ['text']
+2025-09-28 12:45:57,581 - INFO -   Input port: text, name: N/A, type: <class 'str'>
+2025-09-28 12:45:57,583 - INFO - Created FileWrite node: <FileWriteNode("File Write") object at 0x2b21c9cb150>
+2025-09-28 12:45:57,583 - INFO - FileWrite inputs: ['text']
+2025-09-28 12:45:57,583 - INFO -   Input port: text, name: N/A, type: <class 'str'>
+2025-09-28 12:45:57,583 - INFO - Found context output port via dict: <Port("text") object at 0x2b21c9ac5d0>
+2025-09-28 12:45:57,583 - INFO - Context output port: <Port("text") object at 0x2b21c9ac5d0>
+2025-09-28 12:45:57,583 - INFO - Found OpenRouter 0 input port via dict: <Port("text") object at 0x2b21c9b43d0>
+2025-09-28 12:45:57,583 - INFO - OpenRouter 0 input port: <Port("text") object at 0x2b21c9b43d0>
+2025-09-28 12:45:57,583 - ERROR - Failed to connect ctx -> OpenRouter 0: 'NodeGraph' object has no attribute 'connect_ports'
+2025-09-28 12:45:57,583 - INFO - Found OpenRouter 1 input port via dict: <Port("text") object at 0x2b21c9a6750>
+2025-09-28 12:45:57,583 - INFO - OpenRouter 1 input port: <Port("text") object at 0x2b21c9a6750>
+2025-09-28 12:45:57,583 - ERROR - Failed to connect ctx -> OpenRouter 1: 'NodeGraph' object has no attribute 'connect_ports'
+2025-09-28 12:45:57,584 - INFO - Found OpenRouter 2 input port via dict: <Port("text") object at 0x2b21c9a7b90>
+2025-09-28 12:45:57,584 - INFO - OpenRouter 2 input port: <Port("text") object at 0x2b21c9a7b90>
+2025-09-28 12:45:57,584 - ERROR - Failed to connect ctx -> OpenRouter 2: 'NodeGraph' object has no attribute 'connect_ports'
+2025-09-28 12:45:57,584 - INFO - Found OpenRouter 3 input port via dict: <Port("text") object at 0x2b21c9acdd0>
+2025-09-28 12:45:57,584 - INFO - OpenRouter 3 input port: <Port("text") object at 0x2b21c9acdd0>
+2025-09-28 12:45:57,584 - ERROR - Failed to connect ctx -> OpenRouter 3: 'NodeGraph' object has no attribute 'connect_ports'
+2025-09-28 12:45:57,584 - INFO - Found OpenRouter 4 input port via dict: <Port("text") object at 0x2b21c9b6110>
+2025-09-28 12:45:57,584 - INFO - OpenRouter 4 input port: <Port("text") object at 0x2b21c9b6110>
+2025-09-28 12:45:57,584 - ERROR - Failed to connect ctx -> OpenRouter 4: 'NodeGraph' object has no attribute 'connect_ports'
+2025-09-28 12:45:57,584 - INFO - Found best context input port via dict: <Port("context") object at 0x2b21b9cf2d0>
+2025-09-28 12:45:57,584 - INFO - Best context input port: <Port("context") object at 0x2b21b9cf2d0>
+2025-09-28 12:45:57,584 - ERROR - Failed to connect ctx->best.context: 'NodeGraph' object has no attribute 'connect_ports'
+2025-09-28 12:45:57,585 - INFO - Found OpenRouter 1 output port via dict: <Port("text") object at 0x2b21c9a4bd0>
+2025-09-28 12:45:57,585 - INFO - Found best candidate1 input port via dict: <Port("candidate1") object at 0x2b21c9b7790>
+2025-09-28 12:45:57,585 - INFO - OpenRouter 1 output port: <Port("text") object at 0x2b21c9a4bd0>
+2025-09-28 12:45:57,585 - INFO - Best candidate1 input port: <Port("candidate1") object at 0x2b21c9b7790>
+2025-09-28 12:45:57,585 - ERROR - Failed to connect OpenRouter 1->best.candidate1: 'NodeGraph' object has no attribute 'connect_ports'
+2025-09-28 12:45:57,585 - INFO - Found OpenRouter 2 output port via dict: <Port("text") object at 0x2b213c7e850>
+2025-09-28 12:45:57,585 - INFO - Found best candidate2 input port via dict: <Port("candidate2") object at 0x2b21c9afa10>
+2025-09-28 12:45:57,585 - INFO - OpenRouter 2 output port: <Port("text") object at 0x2b213c7e850>
+2025-09-28 12:45:57,585 - INFO - Best candidate2 input port: <Port("candidate2") object at 0x2b21c9afa10>
+2025-09-28 12:45:57,585 - ERROR - Failed to connect OpenRouter 2->best.candidate2: 'NodeGraph' object has no attribute 'connect_ports'
+2025-09-28 12:45:57,585 - INFO - Found OpenRouter 3 output port via dict: <Port("text") object at 0x2b21c9b7e90>
+2025-09-28 12:45:57,586 - INFO - Found best candidate3 input port via dict: <Port("candidate3") object at 0x2b21b9cfc10>
+2025-09-28 12:45:57,586 - INFO - OpenRouter 3 output port: <Port("text") object at 0x2b21c9b7e90>
+2025-09-28 12:45:57,586 - INFO - Best candidate3 input port: <Port("candidate3") object at 0x2b21b9cfc10>
+2025-09-28 12:45:57,586 - ERROR - Failed to connect OpenRouter 3->best.candidate3: 'NodeGraph' object has no attribute 'connect_ports'
+2025-09-28 12:45:57,586 - INFO - Found OpenRouter 4 output port via dict: <Port("text") object at 0x2b21c9c4e90>
+2025-09-28 12:45:57,586 - INFO - Found best candidate4 input port via dict: <Port("candidate4") object at 0x2b21c9b7dd0>
+2025-09-28 12:45:57,586 - INFO - OpenRouter 4 output port: <Port("text") object at 0x2b21c9c4e90>
+2025-09-28 12:45:57,586 - INFO - Best candidate4 input port: <Port("candidate4") object at 0x2b21c9b7dd0>
+2025-09-28 12:45:57,586 - ERROR - Failed to connect OpenRouter 4->best.candidate4: 'NodeGraph' object has no attribute 'connect_ports'
+2025-09-28 12:45:57,586 - INFO - Found OpenRouter 5 output port via dict: <Port("text") object at 0x2b21c9b6550>
+2025-09-28 12:45:57,586 - INFO - Found best candidate5 input port via dict: <Port("candidate5") object at 0x2b21c9c7e50>
+2025-09-28 12:45:57,586 - INFO - OpenRouter 5 output port: <Port("text") object at 0x2b21c9b6550>
+2025-09-28 12:45:57,586 - INFO - Best candidate5 input port: <Port("candidate5") object at 0x2b21c9c7e50>
+2025-09-28 12:45:57,586 - ERROR - Failed to connect OpenRouter 5->best.candidate5: 'NodeGraph' object has no attribute 'connect_ports'
+2025-09-28 12:45:57,586 - INFO - Found best output port via dict: <Port("text") object at 0x2b21c9c8050>
+2025-09-28 12:45:57,587 - INFO - Found clipboard input port via dict: <Port("text") object at 0x2b21c9c7410>
+2025-09-28 12:45:57,587 - INFO - Found filewrite input port via dict: <Port("text") object at 0x2b21c9cb450>
+2025-09-28 12:45:57,587 - INFO - Best output port: <Port("text") object at 0x2b21c9c8050>
+2025-09-28 12:45:57,587 - INFO - Clipboard input port: <Port("text") object at 0x2b21c9c7410>
+2025-09-28 12:45:57,587 - INFO - FileWrite input port: <Port("text") object at 0x2b21c9cb450>
+2025-09-28 12:45:57,587 - ERROR - Failed to connect best->Clipboard: 'NodeGraph' object has no attribute 'connect_ports'
+2025-09-28 12:45:57,587 - ERROR - Failed to connect best->FileWrite: 'NodeGraph' object has no attribute 'connect_ports'
+
+As you can see in the screenshot - i manually connected the context output to the first two LLM blocks (it did not print anything more to the terminal when i did this) but when 
+i loaded the flow it was not connected at all. It is supposed to be all connected up correctly. 

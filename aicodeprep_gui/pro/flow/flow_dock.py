@@ -375,7 +375,8 @@ class FlowStudioDock(QtWidgets.QDockWidget):
         toolbar.addSeparator()
 
         self._act_run = toolbar.addAction("Run Flow")
-        self._act_run.setEnabled(False)
+        self._act_run.setEnabled(True)
+        self._act_run.triggered.connect(self._on_run_clicked)
         toolbar.addSeparator()
         self._act_import = toolbar.addAction("Import…")
         self._act_export = toolbar.addAction("Export…")
@@ -494,11 +495,26 @@ class FlowStudioDock(QtWidgets.QDockWidget):
                 FileWriteNode,
                 OutputDisplayNode,
             )
+            from .nodes.llm_nodes import (
+                OpenRouterNode,
+                OpenAINode,
+                GeminiNode,
+                OpenAICompatibleNode,
+            )
+            from .nodes.aggregate_nodes import BestOfNNode
+
             # Register custom nodes with the graph
             self.graph.register_node(ContextOutputNode)
             self.graph.register_node(ClipboardNode)
             self.graph.register_node(FileWriteNode)
             self.graph.register_node(OutputDisplayNode)
+
+            self.graph.register_node(OpenRouterNode)
+            self.graph.register_node(OpenAINode)
+            self.graph.register_node(GeminiNode)
+            self.graph.register_node(OpenAICompatibleNode)
+
+            self.graph.register_node(BestOfNNode)
         except Exception as e:
             logging.error(f"Failed to register Flow Studio nodes: {e}")
 
@@ -545,6 +561,39 @@ class FlowStudioDock(QtWidgets.QDockWidget):
         except Exception as e:
             logging.error(f"Failed to instantiate/add node {cls}: {e}")
         logging.error(f"Could not create node via any method: {ident_str}")
+        return None
+
+    def _find_port(self, node, port_name, port_type="output"):
+        """
+        Find a port by its label name across different NodeGraphQt versions.
+
+        Args:
+            node: The node to search for ports
+            port_name: The label name of the port (e.g., "text", "candidate1")
+            port_type: "output" or "input"
+
+        Returns:
+            The port object or None if not found
+        """
+        getter = getattr(node, "port_by_name", None)
+        if callable(getter):
+            port = getter(port_name, port_type)
+            if port:
+                return port
+
+        ports = node.outputs() if port_type == "output" else node.inputs()
+        if hasattr(ports, "values"):
+            iterable = ports.values()
+        else:
+            iterable = ports
+
+        for port in iterable:
+            name = getattr(port, "port_name", None)
+            if callable(name) and name() == port_name:
+                return port
+            label = getattr(port, "name", None)
+            if callable(label) and label() == port_name:
+                return port
         return None
 
     def _get_project_flow_path(self) -> str:
@@ -613,9 +662,9 @@ class FlowStudioDock(QtWidgets.QDockWidget):
                     in_fwr = fwr.input_port("text")
 
                 if out_text and in_clip:
-                    self.graph.connect_ports(out_text, in_clip)
+                    out_text.connect_to(in_clip)
                 if out_text and in_fwr:
-                    self.graph.connect_ports(out_text, in_fwr)
+                    out_text.connect_to(in_fwr)
             except Exception as e:
                 logging.error(f"Failed to connect default flow ports: {e}")
 
@@ -801,10 +850,235 @@ class FlowStudioDock(QtWidgets.QDockWidget):
             logging.error(f"Flow reset failed: {e}")
             QtWidgets.QMessageBox.warning(self, "Reset Flow", f"Error: {e}")
 
-    # Placeholder for Phase 3
+    def _on_run_clicked(self):
+        """Handle Run Flow button click."""
+        try:
+            from .engine import execute_graph
+            execute_graph(self.graph, parent_widget=self)
+        except Exception as e:
+            QtWidgets.QMessageBox.warning(
+                self, "Run Flow", f"Execution failed: {e}")
+
+    def load_template_best_of_5_openrouter(self):
+        """
+        Build:
+            ContextOutput -> [5x OpenRouter LLM nodes] -> BestOfNNode -> Clipboard + FileWrite(best_of_n.txt)
+        """
+        try:
+            # Clear graph first (best-effort)
+            try:
+                if hasattr(self.graph, "clear_session"):
+                    self.graph.clear_session()
+                else:
+                    for n in list(getattr(self.graph, "all_nodes", lambda: [])()):
+                        try:
+                            if hasattr(self.graph, "delete_node"):
+                                self.graph.delete_node(n)
+                        except Exception:
+                            continue
+            except Exception:
+                pass
+
+            # Create nodes
+            from .nodes.io_nodes import ContextOutputNode, ClipboardNode, FileWriteNode
+            from .nodes.llm_nodes import OpenRouterNode
+            from .nodes.aggregate_nodes import BestOfNNode
+
+            ctx = self._create_node_compat(
+                ContextOutputNode, "aicp.flow", "Context Output", (0, 0))
+            logging.info(f"Created context node: {ctx}")
+            if ctx:
+                try:
+                    outputs = list(ctx.outputs())
+                    logging.info(f"Context node outputs: {outputs}")
+                    for out in outputs:
+                        logging.info(
+                            f"  Output port: {out}, name: {getattr(out, 'name', 'N/A')}, type: {type(out)}")
+                except Exception as e:
+                    logging.error(f"Failed to get context outputs: {e}")
+
+            or_nodes = []
+            x = 350
+            y = -200
+            for i in range(5):
+                n = self._create_node_compat(
+                    OpenRouterNode, "aicp.flow", "OpenRouter LLM", (x, y + i * 100))
+                if n and hasattr(n, "set_property"):
+                    n.set_property("model_mode", "random_free")
+                    # left blank, random_free will pick
+                    n.set_property("model", "")
+                logging.info(f"Created OpenRouter node {i}: {n}")
+                if n:
+                    try:
+                        inputs = list(n.inputs())
+                        logging.info(f"OpenRouter {i} inputs: {inputs}")
+                        for inp in inputs:
+                            logging.info(
+                                f"  Input port: {inp}, name: {getattr(inp, 'name', 'N/A')}, type: {type(inp)}")
+                    except Exception as e:
+                        logging.error(
+                            f"Failed to get OpenRouter {i} inputs: {e}")
+                or_nodes.append(n)
+
+            best = self._create_node_compat(
+                BestOfNNode, "aicp.flow", "Best-of-N Synthesizer", (700, 0))
+            if best and hasattr(best, "set_property"):
+                best.set_property("provider", "openrouter")
+                best.set_property("model_mode", "random_free")
+                # base_url already defaulted to OpenRouter
+            logging.info(f"Created BestOfN node: {best}")
+            if best:
+                try:
+                    inputs = list(best.inputs())
+                    logging.info(f"BestOfN inputs: {inputs}")
+                    for inp in inputs:
+                        logging.info(
+                            f"  Input port: {inp}, name: {getattr(inp, 'name', 'N/A')}, type: {type(inp)}")
+                except Exception as e:
+                    logging.error(f"Failed to get BestOfN inputs: {e}")
+
+            clip = self._create_node_compat(
+                ClipboardNode, "aicp.flow", "Clipboard", (1050, -60))
+            logging.info(f"Created Clipboard node: {clip}")
+            if clip:
+                try:
+                    inputs = list(clip.inputs())
+                    logging.info(f"Clipboard inputs: {inputs}")
+                    for inp in inputs:
+                        logging.info(
+                            f"  Input port: {inp}, name: {getattr(inp, 'name', 'N/A')}, type: {type(inp)}")
+                except Exception as e:
+                    logging.error(f"Failed to get Clipboard inputs: {e}")
+
+            fwr = self._create_node_compat(
+                FileWriteNode, "aicp.flow", "File Write", (1050, 60))
+            if fwr and hasattr(fwr, "set_property"):
+                fwr.set_property("path", "best_of_n.txt")
+            logging.info(f"Created FileWrite node: {fwr}")
+            if fwr:
+                try:
+                    inputs = list(fwr.inputs())
+                    logging.info(f"FileWrite inputs: {inputs}")
+                    for inp in inputs:
+                        logging.info(
+                            f"  Input port: {inp}, name: {getattr(inp, 'name', 'N/A')}, type: {type(inp)}")
+                except Exception as e:
+                    logging.error(f"Failed to get FileWrite inputs: {e}")
+
+            # Wire: ctx.text -> each OpenRouter input.text
+            try:
+                out_text = self._find_port(ctx, "text", "output")
+                logging.info(f"Context output port: {out_text}")
+
+                # Connect each OpenRouter node
+                for i, or_node in enumerate(or_nodes):
+                    if or_node and out_text:
+                        in_text = self._find_port(or_node, "text", "input")
+                        logging.info(f"OpenRouter {i} input port: {in_text}")
+
+                        if out_text and in_text:
+                            try:
+                                out_text.connect_to(in_text)
+                                logging.info(
+                                    f"Connected ctx -> OpenRouter {i}")
+                            except Exception as e:
+                                logging.error(
+                                    f"Failed to connect ctx -> OpenRouter {i}: {e}")
+                        else:
+                            logging.warning(
+                                f"Missing ports for ctx->OpenRouter {i}: out_text={out_text}, in_text={in_text}")
+                    else:
+                        logging.warning(
+                            f"Missing nodes for ctx->OpenRouter {i}: ctx={ctx}, or_node={or_node}")
+            except Exception as e:
+                logging.error(
+                    f"Failed connecting ctx->OpenRouter: {e}", exc_info=True)
+
+            # Wire: ctx.text -> best.context
+            try:
+                best_in_ctx = self._find_port(best, "context", "input")
+                logging.info(f"Best context input port: {best_in_ctx}")
+                if out_text and best_in_ctx:
+                    try:
+                        out_text.connect_to(best_in_ctx)
+                        logging.info(
+                            "Successfully connected ctx->best.context")
+                    except Exception as conn_err:
+                        logging.error(
+                            f"Failed to connect ctx->best.context: {conn_err}")
+                else:
+                    logging.warning(
+                        f"Missing ports for ctx->best.context: out_text={out_text}, best_in_ctx={best_in_ctx}")
+            except Exception as e:
+                logging.error(
+                    f"Failed connecting ctx->best.context: {e}", exc_info=True)
+
+            # Wire: each OR.text -> best.candidate{i}
+            try:
+                for i, n in enumerate(or_nodes, 1):
+                    if not n:
+                        continue
+
+                    or_out = self._find_port(n, "text", "output")
+                    candidate_name = f'candidate{i}'
+                    best_in = self._find_port(best, candidate_name, "input")
+
+                    logging.info(f"OpenRouter {i} output port: {or_out}")
+                    logging.info(f"Best candidate{i} input port: {best_in}")
+                    if or_out and best_in:
+                        try:
+                            or_out.connect_to(best_in)
+                            logging.info(
+                                f"Successfully connected OpenRouter {i}->best.candidate{i}")
+                        except Exception as conn_err:
+                            logging.error(
+                                f"Failed to connect OpenRouter {i}->best.candidate{i}: {conn_err}")
+                    else:
+                        logging.warning(
+                            f"Missing ports for OpenRouter {i}->best.candidate{i}: or_out={or_out}, best_in={best_in}")
+            except Exception as e:
+                logging.error(
+                    f"Failed connecting OpenRouter->best candidates: {e}", exc_info=True)
+
+            # Wire: best.text -> Clipboard + FileWrite.text
+            try:
+                best_out = self._find_port(best, "text", "output")
+                in_clip = self._find_port(clip, "text", "input")
+                in_fwr = self._find_port(fwr, "text", "input")
+
+                logging.info(f"Best output port: {best_out}")
+                logging.info(f"Clipboard input port: {in_clip}")
+                logging.info(f"FileWrite input port: {in_fwr}")
+
+                if best_out and in_clip:
+                    try:
+                        best_out.connect_to(in_clip)
+                        logging.info("Successfully connected best->Clipboard")
+                    except Exception as conn_err:
+                        logging.error(
+                            f"Failed to connect best->Clipboard: {conn_err}")
+                if best_out and in_fwr:
+                    try:
+                        best_out.connect_to(in_fwr)
+                        logging.info("Successfully connected best->FileWrite")
+                    except Exception as conn_err:
+                        logging.error(
+                            f"Failed to connect best->FileWrite: {conn_err}")
+            except Exception as e:
+                logging.error(
+                    f"Failed connecting best->outputs: {e}", exc_info=True)
+
+            # Optional auto-layout
+            try:
+                if hasattr(self.graph, "auto_layout_nodes"):
+                    self.graph.auto_layout_nodes()
+            except Exception:
+                pass
+
+        except Exception as e:
+            logging.error(f"load_template_best_of_5_openrouter failed: {e}")
+
+    # Phase 1: Run flow execution
     def run(self):
-        QtWidgets.QMessageBox.information(
-            self,
-            "Run Flow",
-            "Execution engine arrives in Phase 3.",
-        )
+        """Execute the current flow graph."""
+        self._on_run_clicked()

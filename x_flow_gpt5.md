@@ -7,14 +7,12 @@ Goal (high-level)
 - Add a “Best-of-N” synthesis node that takes N outputs and generates a best version by prompting another LLM.
 - Provide a ready-to-run built-in flow template: ContextOutput -> 5x OpenRouter model nodes -> BestOfN synthesis -> Clipboard + FileWrite(best_of_n.txt).
 - Allow selecting models from dropdowns (with special “random” and “random_free” on OpenRouter).
-- Use QSettings-backed API keys by default; show a popup if missing at run-time.
-- Keep it simple and synchronous (sequential) for now; context window checks can be added later.
+- We should about using a common style of storing settings for similar apps: ~\.aicodeprep-gui\different file names for different storage or api settings etc.. can we do this where it works on mac, windows, linux?
 
 Important notes
 
 - We will not use the LiteLLM proxy. Only the Python library.
-- We’ll keep Pro-vs-Free gating relaxed: Run Flow should work for everyone so you can test. (Read-only edit gating can remain in Free).
-- Execution is single-threaded in Phase 1 to keep code simple.
+
 - We add a small “simple flow language” loader for easy AI/typed graph generation later (optional), and a built-in loader function that programmatically builds the best-of-5 OpenRouter graph.
 
 Task 0 – Create a new branch
@@ -33,7 +31,8 @@ Example patch:
 - Find the [project] section with `dependencies = [` and add a new line before the closing `]`:
   "litellm>=1.40.0"
 
-2. Run `pip install -e .` or ensure the environment picks up the dependency.
+2. ensure the environment picks up the dependency - when we test locally i just activate the venv, and run
+   python -m aicodeprep_gui.main so i can just manually install or update to make sure all the libraries are installed
 
 Task 2 – Add a unified LiteLLM client wrapper
 File: aicodeprep_gui/pro/llm/litellm_client.py (new)

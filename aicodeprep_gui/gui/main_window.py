@@ -280,6 +280,33 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         flow_menu.addSeparator()
 
+        flow_bestof5_act = QtGui.QAction("Load Built-in: Best-of-5 (OpenRouter)", self)
+        def _load_bestof5():
+            if not self._ensure_flow_dock():
+                QtWidgets.QMessageBox.warning(self, "Flow Studio", "Flow Studio could not be initialized.")
+                return
+            if hasattr(self.flow_dock, "load_template_best_of_5_openrouter"):
+                self.flow_dock.load_template_best_of_5_openrouter()
+                self.flow_dock.show()
+            else:
+                QtWidgets.QMessageBox.warning(self, "Flow Studio", "Dock missing 'load_template_best_of_5_openrouter'.")
+
+        flow_bestof5_act.triggered.connect(_load_bestof5)
+        flow_menu.addAction(flow_bestof5_act)
+
+        flow_run_act = QtGui.QAction("Run Current Flow", self)
+        def _run_current_flow():
+            if not self._ensure_flow_dock():
+                QtWidgets.QMessageBox.warning(self, "Flow Studio", "Flow Studio could not be initialized.")
+                return
+            if hasattr(self.flow_dock, "_on_run_clicked"):
+                self.flow_dock._on_run_clicked()
+                self.flow_dock.show()
+            else:
+                QtWidgets.QMessageBox.warning(self, "Flow Studio", "Dock missing '_on_run_clicked'.")
+        flow_run_act.triggered.connect(_run_current_flow)
+        flow_menu.addAction(flow_run_act)
+
         help_menu = mb.addMenu("&Help")
         links_act = QtGui.QAction("Help / Links and Guides", self)
         links_act.triggered.connect(self.open_links_dialog)

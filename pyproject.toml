@@ -31,7 +31,8 @@ dependencies = [
     "pathspec",
     "requests", # for your network check
     "packaging",
-    "Pygments>=2.18.0" # for syntax highlighting in preview window
+    "Pygments>=2.18.0", # for syntax highlighting in preview window
+    "litellm>=1.40.0" # for LLM provider integration in flow studio
 ]
 requires-python = ">=3.8" # PySide6 requires Python 3.8+
 
