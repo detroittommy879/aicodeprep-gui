@@ -14,6 +14,7 @@ except Exception as e:  # pragma: no cover
 from .base import BaseExecNode
 from typing import Any, Dict, Optional
 import os
+import logging
 
 try:
     from PySide6 import QtWidgets
@@ -47,17 +48,30 @@ class ContextOutputNode(BaseExecNode):
         """
         path = self.get_property("path") or "fullcode.txt"
         abspath = os.path.join(os.getcwd(), path)
+        logging.info("[ContextOutputNode] Resolving context path %s", abspath)
         if not os.path.isfile(abspath):
+            logging.warning(
+                "[ContextOutputNode] Context file missing at %s", abspath)
             if QtWidgets is not None:
-                QtWidgets.QMessageBox.warning(None, self.NODE_NAME, f"Context file not found: {abspath}")
+                QtWidgets.QMessageBox.warning(None, self.NODE_NAME,
+                                              f"Context file not found: {abspath}\n\n"
+                                              "To generate a context file:\n"
+                                              "1. Go to File → Generate Code Context\n"
+                                              "2. Select files and generate fullcode.txt\n"
+                                              "3. Then run the flow again")
             return {}
         try:
             with open(abspath, "r", encoding="utf-8", errors="ignore") as f:
                 content = f.read()
+            logging.info(
+                "[ContextOutputNode] Loaded %d characters from context", len(content))
             return {"text": content}
         except Exception as e:
+            logging.error(
+                "[ContextOutputNode] Failed reading %s: %s", abspath, e)
             if QtWidgets is not None:
-                QtWidgets.QMessageBox.warning(None, self.NODE_NAME, f"Error reading context file: {e}")
+                QtWidgets.QMessageBox.warning(
+                    None, self.NODE_NAME, f"Error reading context file: {e}")
             return {}
 
 
@@ -112,7 +126,8 @@ class FileWriteNode(BaseExecNode):
                 f.write(text)
         except Exception as e:
             if QtWidgets is not None:
-                QtWidgets.QMessageBox.warning(None, self.NODE_NAME, f"Failed writing file: {e}")
+                QtWidgets.QMessageBox.warning(
+                    None, self.NODE_NAME, f"Failed writing file: {e}")
         return {}
 
 

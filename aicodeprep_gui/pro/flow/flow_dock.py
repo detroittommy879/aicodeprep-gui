@@ -355,6 +355,9 @@ class FlowStudioDock(QtWidgets.QDockWidget):
         self._register_nodes()
         self._load_default_flow_or_build()
 
+        # Show config instructions if no API keys are configured
+        self._check_and_show_config_instructions()
+
         if read_only:
             self._apply_read_only()
 
@@ -1077,6 +1080,43 @@ class FlowStudioDock(QtWidgets.QDockWidget):
 
         except Exception as e:
             logging.error(f"load_template_best_of_5_openrouter failed: {e}")
+
+    def _check_and_show_config_instructions(self):
+        """Check if API keys are configured and show instructions if not."""
+        try:
+            from aicodeprep_gui.config import load_api_config, get_config_dir
+            config = load_api_config()
+
+            # Check if any provider has an API key configured
+            has_keys = False
+            for provider, provider_config in config.items():
+                if provider_config.get("api_key", "").strip():
+                    has_keys = True
+                    break
+
+            if not has_keys:
+                config_dir = get_config_dir()
+                config_file = config_dir / "api-keys.toml"
+                message = f"""Flow Studio Configuration
+
+To use AI nodes, please configure your API keys:
+
+1. Open: {config_file}
+2. Add your API keys to the appropriate sections
+
+Example:
+[openrouter]
+api_key = "sk-or-v1-your-key-here"
+
+[openai] 
+api_key = "sk-your-openai-key-here"
+
+The config file has been created with default settings."""
+
+                QtWidgets.QMessageBox.information(
+                    self, "Flow Studio Setup", message)
+        except Exception as e:
+            logging.error(f"Failed to check config: {e}")
 
     # Phase 1: Run flow execution
     def run(self):

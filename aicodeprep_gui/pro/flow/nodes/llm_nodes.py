@@ -33,8 +33,10 @@ class LLMBaseNode(BaseExecNode):
             self.create_property("api_key", "")
             self.create_property("base_url", "")
             self.create_property("model", "")
-            self.create_property("model_mode", "choose")  # 'choose' | 'random' | 'random_free'
-            self.create_property("provider", "generic")   # openrouter|openai|gemini|compatible|generic
+            # 'choose' | 'random' | 'random_free'
+            self.create_property("model_mode", "choose")
+            # openrouter|openai|gemini|compatible|generic
+            self.create_property("provider", "generic")
         except Exception:
             pass
 
@@ -42,11 +44,14 @@ class LLMBaseNode(BaseExecNode):
     def _warn(self, msg: str):
         if QtWidgets is not None:
             try:
-                QtWidgets.QMessageBox.warning(None, getattr(self, 'NODE_NAME', 'LLM Node'), msg)
+                QtWidgets.QMessageBox.warning(
+                    None, getattr(self, 'NODE_NAME', 'LLM Node'), msg)
             except Exception:
-                logging.warning(f"[{getattr(self, 'NODE_NAME', 'LLM Node')}] {msg}")
+                logging.warning(
+                    f"[{getattr(self, 'NODE_NAME', 'LLM Node')}] {msg}")
         else:
-            logging.warning(f"[{getattr(self, 'NODE_NAME', 'LLM Node')}] {msg}")
+            logging.warning(
+                f"[{getattr(self, 'NODE_NAME', 'LLM Node')}] {msg}")
 
     # Child classes can override to set sensible defaults
     def default_provider(self) -> str:
@@ -57,7 +62,7 @@ class LLMBaseNode(BaseExecNode):
 
     def resolve_api_key(self) -> str:
         """
-        Resolve API key from node prop or QSettings fallback.
+        Resolve API key from node prop or config file fallback.
         """
         try:
             # Node property preference
@@ -68,15 +73,11 @@ class LLMBaseNode(BaseExecNode):
         if ak:
             return ak
 
-        # QSettings fallback by provider name
+        # Config file fallback by provider name
         try:
-            from PySide6 import QtCore
-            settings = QtCore.QSettings("aicodeprep-gui", "APIKeys")
+            from aicodeprep_gui.config import get_api_key
             provider = self.get_property("provider") or self.default_provider()
-            group = f"{provider}"
-            settings.beginGroup(group)
-            ak = settings.value("api_key", "", type=str)
-            settings.endGroup()
+            ak = get_api_key(provider)
             if ak:
                 return ak
         except Exception:
@@ -85,10 +86,23 @@ class LLMBaseNode(BaseExecNode):
 
     def resolve_base_url(self) -> str:
         try:
-            bu = self.get_property("base_url") or self.default_base_url()
+            # Node property first
+            bu = self.get_property("base_url") or ""
+            if bu:
+                return bu
+
+            # Config file fallback
+            from aicodeprep_gui.config import get_provider_config
+            provider = self.get_property("provider") or self.default_provider()
+            config = get_provider_config(provider)
+            bu = config.get("base_url", "")
+            if bu:
+                return bu
+
+            # Default fallback
+            return self.default_base_url()
         except Exception:
-            bu = self.default_base_url()
-        return bu
+            return self.default_base_url()
 
     def resolve_model(self, api_key: str) -> Optional[str]:
         """
@@ -96,7 +110,8 @@ class LLMBaseNode(BaseExecNode):
         Subclasses may override to implement 'random' / 'random_free'.
         """
         try:
-            mode = (self.get_property("model_mode") or "choose").strip().lower()
+            mode = (self.get_property("model_mode")
+                    or "choose").strip().lower()
             model = (self.get_property("model") or "").strip()
         except Exception:
             mode, model = "choose", ""
@@ -115,35 +130,68 @@ class LLMBaseNode(BaseExecNode):
             self._warn("No input 'text' provided.")
             return {}
 
-        provider = (self.get_property("provider") or self.default_provider()).strip().lower()
+        provider = (self.get_property("provider")
+                    or self.default_provider()).strip().lower()
         api_key = self.resolve_api_key()
         if not api_key:
-            self._warn(f"Missing API key for provider '{provider}'. Please set it in node or in Settings (APIKeys).")
+            from aicodeprep_gui.config import get_config_dir
+            config_dir = get_config_dir()
+            self._warn(
+                f"Missing API key for provider '{provider}'.\n\nPlease edit: {config_dir / 'api-keys.toml'}\n\nAdd your API key under [{provider}] section.")
             return {}
 
         base_url = self.resolve_base_url()
         model = self.resolve_model(api_key)
 
+        # Debug logging
+        logging.info(
+            f"[{self.NODE_NAME}] Provider: {provider}, Model: {model}, Base URL: {base_url}")
+
         if provider == "openrouter":
             # Random or random_free modes handled here
             try:
-                mode = (self.get_property("model_mode") or "choose").strip().lower()
+                mode = (self.get_property("model_mode")
+                        or "choose").strip().lower()
             except Exception:
                 mode = "choose"
+
+            logging.info(f"[{self.NODE_NAME}] OpenRouter mode: {mode}")
+
             if mode in ("random", "random_free"):
                 from aicodeprep_gui.pro.llm.litellm_client import LLMClient
-                models = LLMClient.list_models_openrouter(api_key)
-                pick = LLMClient.openrouter_pick_model(models, free_only=(mode == "random_free"))
-                if not pick:
-                    self._warn("Could not pick a model from OpenRouter. Check API key or connectivity.")
+                try:
+                    models = LLMClient.list_models_openrouter(api_key)
+                    logging.info(
+                        f"[{self.NODE_NAME}] Found {len(models)} OpenRouter models")
+                    pick = LLMClient.openrouter_pick_model(
+                        models, free_only=(mode == "random_free"))
+                    if not pick:
+                        self._warn(
+                            "Could not pick a model from OpenRouter. Check API key or connectivity.")
+                        return {}
+                    model = pick
+                    logging.info(f"[{self.NODE_NAME}] Selected model: {model}")
+                except Exception as e:
+                    self._warn(f"Failed to get OpenRouter models: {e}")
                     return {}
-                model = pick
+            elif not model:
+                # If no model specified and not in random mode, default to a known free model
+                model = "openai/gpt-3.5-turbo:free"
+                logging.info(
+                    f"[{self.NODE_NAME}] Using default model: {model}")
 
         if provider == "compatible" and not base_url:
             self._warn("OpenAI-compatible provider requires a base_url.")
             return {}
 
+        if not model:
+            self._warn(
+                f"No model specified for provider '{provider}'. Please set a model or use random mode.")
+            return {}
+
         try:
+            logging.info(
+                f"[{self.NODE_NAME}] Making LLM call with model: {model}")
             out = LLMClient.chat(
                 model=model,
                 user_content=text,
@@ -152,18 +200,42 @@ class LLMBaseNode(BaseExecNode):
                 extra_headers=self._extra_headers_for_provider(provider),
                 system_content=system
             )
+            logging.info(
+                f"[{self.NODE_NAME}] LLM call successful, response length: {len(out) if out else 0}")
             return {"text": out}
         except LLMError as e:
-            self._warn(str(e))
+            self._warn(f"LLM Error: {str(e)}")
+            logging.error(f"[{self.NODE_NAME}] LLM Error: {str(e)}")
+            return {}
+        except Exception as e:
+            self._warn(f"Unexpected error: {str(e)}")
+            logging.error(f"[{self.NODE_NAME}] Unexpected error: {str(e)}")
             return {}
 
     def _extra_headers_for_provider(self, provider: str) -> Dict[str, str]:
         """
-        OpenRouter requires Accept and optionally HTTP-Referer/Title. We'll provide minimal Accept.
+        OpenRouter requires specific headers for proper functionality.
         """
         provider = provider.lower()
         if provider == "openrouter":
-            return {"Accept": "application/json"}
+            try:
+                from aicodeprep_gui.config import get_provider_config
+                config = get_provider_config("openrouter")
+                site_url = config.get(
+                    "site_url", "https://github.com/detroittommy879/aicodeprep-gui")
+                app_name = config.get("app_name", "aicodeprep-gui")
+
+                return {
+                    "Accept": "application/json",
+                    "HTTP-Referer": site_url,
+                    "X-Title": app_name
+                }
+            except Exception:
+                return {
+                    "Accept": "application/json",
+                    "HTTP-Referer": "https://github.com/detroittommy879/aicodeprep-gui",
+                    "X-Title": "aicodeprep-gui"
+                }
         return {}
 
 
@@ -177,8 +249,13 @@ class OpenRouterNode(LLMBaseNode):
         try:
             self.set_property("provider", "openrouter")
             self.set_property("base_url", "https://openrouter.ai/api/v1")
+            # Default to random_free mode for easy testing
+            self.set_property("model_mode", "random_free")
+            # Leave model empty for random modes
+            self.set_property("model", "")
             # Provide hints for UI
-            self.create_property("ui_hint_models", "Choose a model id, or set model_mode to 'random' or 'random_free'")
+            self.create_property(
+                "ui_hint_models", "Choose a model id, or set model_mode to 'random' or 'random_free'")
         except Exception:
             pass
 
@@ -202,7 +279,8 @@ class OpenAINode(LLMBaseNode):
         super().__init__()
         try:
             self.set_property("provider", "openai")
-            self.set_property("base_url", "")  # OpenAI official does not need base_url
+            # OpenAI official does not need base_url
+            self.set_property("base_url", "")
         except Exception:
             pass
 
