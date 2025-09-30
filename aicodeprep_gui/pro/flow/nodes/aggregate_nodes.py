@@ -43,11 +43,14 @@ class BestOfNNode(BaseExecNode):
             self.add_output("text")
 
             # Properties for the LLM used for synthesis
-            self.create_property("provider", "openrouter")   # openrouter | openai | gemini | compatible
+            # openrouter | openai | gemini | compatible
+            self.create_property("provider", "openrouter")
             self.create_property("api_key", "")
             self.create_property("base_url", "https://openrouter.ai/api/v1")
-            self.create_property("model", "")                # if provider=openrouter, supports 'random'/'random_free' via model_mode
-            self.create_property("model_mode", "random_free")# choose | random | random_free
+            # if provider=openrouter, supports 'random'/'random_free' via model_mode
+            self.create_property("model", "")
+            # choose | random | random_free
+            self.create_property("model_mode", "random_free")
             self.create_property("extra_prompt", BEST_OF_DEFAULT_PROMPT)
         except Exception:
             pass
@@ -81,41 +84,52 @@ class BestOfNNode(BaseExecNode):
             self._warn("No candidate inputs provided.")
             return {}
 
-        provider = (self.get_property("provider") or "openrouter").strip().lower()
+        provider = (self.get_property("provider")
+                    or "openrouter").strip().lower()
         api_key = self.get_property("api_key") or ""
         base_url = self.get_property("base_url") or ""
         model = self.get_property("model") or ""
-        mode = (self.get_property("model_mode") or "random_free").strip().lower()
-        extra_prompt = self.get_property("extra_prompt") or BEST_OF_DEFAULT_PROMPT
+        mode = (self.get_property("model_mode")
+                or "random_free").strip().lower()
+        extra_prompt = self.get_property(
+            "extra_prompt") or BEST_OF_DEFAULT_PROMPT
 
-        # Resolve API key from QSettings if missing
+        # Resolve API key from config if missing
         if not api_key:
             try:
-                from PySide6 import QtCore
-                settings = QtCore.QSettings("aicodeprep-gui", "APIKeys")
-                settings.beginGroup(provider)
-                api_key = settings.value("api_key", "", type=str)
-                settings.endGroup()
+                from aicodeprep_gui.config import get_api_key
+                api_key = get_api_key(provider)
             except Exception:
                 pass
 
         if not api_key:
-            self._warn("Missing API key for synthesis. Set in node or via Settings (APIKeys).")
+            from aicodeprep_gui.config import get_config_dir
+            config_dir = get_config_dir()
+            self._warn(
+                f"Missing API key for provider '{provider}'.\n\nPlease edit: {config_dir / 'api-keys.toml'}\n\nAdd your API key under [{provider}] section.")
             return {}
 
         # Resolve model for OpenRouter random/random_free if needed
-        if provider == "openrouter" and (mode in ("random", "random_free")):
-            from aicodeprep_gui.pro.llm.litellm_client import LLMClient
-            models = LLMClient.list_models_openrouter(api_key)
-            pick = LLMClient.openrouter_pick_model(models, free_only=(mode == "random_free"))
-            if not pick:
-                self._warn("Could not pick a model from OpenRouter for synthesis.")
-                return {}
-            model = pick
+        if provider == "openrouter":
+            if mode in ("random", "random_free"):
+                from aicodeprep_gui.pro.llm.litellm_client import LLMClient
+                models = LLMClient.list_models_openrouter(api_key)
+                pick = LLMClient.openrouter_pick_model(
+                    models, free_only=(mode == "random_free"))
+                if not pick:
+                    self._warn(
+                        "Could not pick a model from OpenRouter for synthesis.")
+                    return {}
+                # LiteLLM requires 'openrouter/' prefix
+                model = f"openrouter/{pick}"
+            elif model and not model.startswith("openrouter/"):
+                # User provided a model - add prefix if not present
+                model = f"openrouter/{model}"
 
         # Build synthesis prompt
         # We'll pass in everything as user content; system message left empty
-        lines = [extra_prompt, "\n---\nOriginal Context:\n", context, "\n---\nCandidate Answers:\n"]
+        lines = [extra_prompt, "\n---\nOriginal Context:\n",
+                 context, "\n---\nCandidate Answers:\n"]
         for idx, c in enumerate(candidates, 1):
             lines.append(f"\n[Candidate {idx}]\n{c}\n")
         user_text = "".join(lines)
@@ -125,8 +139,10 @@ class BestOfNNode(BaseExecNode):
                 model=model,
                 user_content=user_text,
                 api_key=api_key,
-                base_url=(base_url if provider in ("openrouter", "compatible") else None),
-                extra_headers={"Accept": "application/json"} if provider == "openrouter" else None,
+                base_url=(base_url if provider in (
+                    "openrouter", "compatible") else None),
+                extra_headers={
+                    "Accept": "application/json"} if provider == "openrouter" else None,
                 system_content=None
             )
             return {"text": out}

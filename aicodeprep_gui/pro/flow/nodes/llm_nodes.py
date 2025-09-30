@@ -169,16 +169,23 @@ class LLMBaseNode(BaseExecNode):
                         self._warn(
                             "Could not pick a model from OpenRouter. Check API key or connectivity.")
                         return {}
-                    model = pick
+                    # LiteLLM requires 'openrouter/' prefix
+                    model = f"openrouter/{pick}"
                     logging.info(f"[{self.NODE_NAME}] Selected model: {model}")
                 except Exception as e:
                     self._warn(f"Failed to get OpenRouter models: {e}")
                     return {}
             elif not model:
                 # If no model specified and not in random mode, default to a known free model
-                model = "openai/gpt-3.5-turbo:free"
+                model = "openrouter/openai/gpt-3.5-turbo:free"
                 logging.info(
                     f"[{self.NODE_NAME}] Using default model: {model}")
+            else:
+                # User provided a model in choose mode - add prefix if not present
+                if not model.startswith("openrouter/"):
+                    model = f"openrouter/{model}"
+                    logging.info(
+                        f"[{self.NODE_NAME}] Added openrouter prefix: {model}")
 
         if provider == "compatible" and not base_url:
             self._warn("OpenAI-compatible provider requires a base_url.")
