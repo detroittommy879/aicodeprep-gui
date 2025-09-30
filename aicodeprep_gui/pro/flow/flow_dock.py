@@ -1,115 +1,54 @@
 """Flow Studio Dock (Phase 1: visual, read-only for Free, no execution).
 
-- Embeds a NodeGraphQt graph widget in a QDockWidget.
-- Registers IO nodes and builds a default graph:
-  ContextOutputNode -> ClipboardNode
-  ContextOutputNode -> FileWriteNode(path='fullcode.txt')
-- Toolbar buttons:
-  - Run Flow (disabled in Phase 1)
-  - Import / Export (stubbed; Phase 2 will implement)
-- Graceful fallback if NodeGraphQt is not installed.
+Provides node graph UI for building AI processing flows.
 """
 
-from PySide6 import QtWidgets, QtCore
+from __future__ import annotations
 import logging
 import os
+from typing import Any
 
-# Try to import NodeGraphQt; fallback to a placeholder dock if missing.
+from PySide6 import QtWidgets, QtCore
+from PySide6.QtWidgets import QGraphicsView
+from PySide6.QtCore import Qt, QEvent, QObject
+
 try:
-    from NodeGraphQt import NodeGraph  # type: ignore
+    from NodeGraphQt import NodeGraph
     NG_AVAILABLE = True
+    _NG_IMPORT_ERROR = None
 except Exception as e:
+    NodeGraph = Any  # type: ignore
     NG_AVAILABLE = False
     _NG_IMPORT_ERROR = e
 
 
-class _ReadOnlyEventFilter(QtCore.QObject):
-    """
-    Blocks destructive edit shortcuts (del/cut/paste/copy) and certain gestures in read-only mode.
-    """
+class _ReadOnlyEventFilter(QObject):
+    """Event filter that blocks editing operations in read-only mode."""
 
-    def eventFilter(self, obj, event):  # noqa: N802
-        try:
-            et = event.type()
-            if et in (QtCore.QEvent.KeyPress, QtCore.QEvent.ShortcutOverride):
-                key = event.key()
-                mods = int(event.modifiers()) if hasattr(
-                    event, "modifiers") else 0
-                # Block delete/backspace
-                if key in (QtCore.Qt.Key_Delete, QtCore.Qt.Key_Backspace):
-                    return True
-                # Block copy/cut/paste (Ctrl/Command combinations)
-                ctrl = (mods & int(QtCore.Qt.ControlModifier)) or (
-                    mods & int(QtCore.Qt.MetaModifier))
-                if ctrl and key in (QtCore.Qt.Key_C, QtCore.Qt.Key_X, QtCore.Qt.Key_V):
-                    return True
-            # Block drag/drop edits
-            if et in (QtCore.QEvent.DragEnter, QtCore.QEvent.Drop, QtCore.QEvent.DragMove):
+    def __init__(self, dock_widget):
+        super().__init__()
+        self.dock_widget = dock_widget
+
+    def eventFilter(self, obj, event):
+        # Block delete key, context menu, etc.
+        if event.type() == QEvent.KeyPress:
+            key = event.key()
+            if key in (Qt.Key_Delete, Qt.Key_Backspace):
                 return True
-        except Exception:
-            pass
-        return False
+        return super().eventFilter(obj, event)
 
 
-class _PanEventFilter(QtCore.QObject):
-    """
-    Event filter to temporarily enable pan mode with the spacebar.
-    """
+class _PanEventFilter(QObject):
+    """Event filter for temporary spacebar-based panning."""
 
     def __init__(self, viewer, dock_widget):
         super().__init__()
         self.viewer = viewer
         self.dock_widget = dock_widget
-        self._previous_drag_mode = None
         self._space_pressed = False
+        self._previous_pan_state = False
 
     def eventFilter(self, obj, event):
-        from PySide6.QtWidgets import QGraphicsView
-        from PySide6.QtCore import Qt
-
-        # Remap LMB to MMB when pan mode is active (toolbar toggle or spacebar)
-        try:
-            pan_active = getattr(
-                self.dock_widget, "_pan_active", False) or self._space_pressed
-            if pan_active and event.type() in (QtCore.QEvent.MouseButtonPress, QtCore.QEvent.MouseMove, QtCore.QEvent.MouseButtonRelease):
-                if hasattr(event, "buttons") and hasattr(event, "button"):
-                    if event.button() == Qt.LeftButton or (event.type() == QtCore.QEvent.MouseMove and (event.buttons() & Qt.LeftButton)):
-                        from PySide6.QtGui import QMouseEvent
-                        from PySide6.QtWidgets import QApplication
-                        # Build synthetic MMB event
-                        btn = Qt.MiddleButton if event.type() != QtCore.QEvent.MouseMove else Qt.NoButton
-                        buttons = event.buttons()
-                        if buttons & Qt.LeftButton:
-                            buttons = (
-                                buttons & ~Qt.LeftButton) | Qt.MiddleButton
-                        ev2 = QMouseEvent(
-                            event.type(),
-                            getattr(event, "position",
-                                    lambda: event.localPos())(),
-                            getattr(event, "globalPosition",
-                                    lambda: event.globalPos())(),
-                            btn,
-                            buttons,
-                            event.modifiers(),
-                        )
-                        target = self.viewer.viewport() if hasattr(
-                            self.viewer, "viewport") and self.viewer.viewport() else self.viewer
-                        QApplication.sendEvent(target, ev2)
-                        # Update cursor to hand while panning
-                        try:
-                            cur = Qt.ClosedHandCursor if event.type() == QtCore.QEvent.MouseButtonPress or (
-                                event.type() == QtCore.QEvent.MouseMove and (buttons & Qt.MiddleButton)) else Qt.OpenHandCursor
-                            if hasattr(self.viewer, "setCursor"):
-                                self.viewer.setCursor(cur)
-                            if hasattr(self.viewer, "viewport") and self.viewer.viewport():
-                                self.viewer.viewport().setCursor(cur)
-                            logging.info("Remapped LMB->MMB for panning")
-                        except Exception:
-                            pass
-                        return True
-        except Exception:
-            pass
-
         try:
             if event.type() == QtCore.QEvent.KeyPress and event.key() == Qt.Key_Space and not event.isAutoRepeat():
                 if not self._space_pressed:
@@ -189,6 +128,123 @@ class _PanEventFilter(QtCore.QObject):
             logging.error(f"Error in pan event filter: {e}")
 
         return super().eventFilter(obj, event)
+
+
+class LLMModelConfigDialog(QtWidgets.QDialog):
+    """Dialog to edit model settings for selected LLM nodes."""
+
+    def __init__(self, parent, nodes):
+        super().__init__(parent)
+        self._nodes = nodes
+        self.setWindowTitle("Configure LLM Models")
+        self.setModal(True)
+        self.setMinimumWidth(420)
+
+        layout = QtWidgets.QVBoxLayout(self)
+        node_names = ", ".join(
+            getattr(node, "NODE_NAME", node.__class__.__name__) for node in nodes)
+        layout.addWidget(QtWidgets.QLabel(
+            f"Updating {len(nodes)} node(s): {node_names}"))
+
+        provider = self._common_property("provider")
+        if not provider and hasattr(nodes[0], "default_provider"):
+            try:
+                provider = nodes[0].default_provider()
+            except Exception:
+                provider = ""
+        layout.addWidget(QtWidgets.QLabel(f"Provider: {provider or '-'}"))
+
+        form = QtWidgets.QFormLayout()
+        self._mode_combo = QtWidgets.QComboBox()
+        self._mode_combo.addItems(["choose", "random_free", "random"])
+        initial_mode = (self._common_property("model_mode")
+                        or "choose").strip().lower()
+        if initial_mode not in ("choose", "random", "random_free"):
+            initial_mode = "choose"
+        self._mode_combo.setCurrentText(initial_mode)
+        form.addRow("Model mode", self._mode_combo)
+
+        self._model_text = QtWidgets.QPlainTextEdit()
+        self._model_text.setPlaceholderText(
+            "Enter model ids, one per line (e.g., openrouter/anthropic/claude-3-haiku)"
+        )
+        self._model_text.setTabChangesFocus(True)
+        self._model_text.setFixedHeight(110)
+
+        existing_models = []
+        for node in nodes:
+            try:
+                existing_models.append(
+                    (node.get_property("model") or "").strip())
+            except Exception:
+                existing_models.append("")
+        if any(existing_models):
+            unique = {m for m in existing_models if m}
+            if len(unique) > 1 and len(nodes) > 1:
+                seed_lines = [existing_models[i]
+                              or "" for i in range(len(nodes))]
+                self._model_text.setPlainText("\n".join(seed_lines))
+            else:
+                first_value = next((m for m in existing_models if m), "")
+                self._model_text.setPlainText(first_value)
+
+        form.addRow("Model id(s)", self._model_text)
+        layout.addLayout(form)
+
+        mode_help = QtWidgets.QLabel(
+            "Modes:\n"
+            "- choose: call the exact model id you provide.\n"
+            "- random_free: fetches OpenRouter free ':free' models and picks one per run.\n"
+            "- random: like random_free but allows paid models tied to your account."
+        )
+        mode_help.setWordWrap(True)
+        layout.addWidget(mode_help)
+
+        self._mode_combo.currentTextChanged.connect(self._on_mode_changed)
+        self._on_mode_changed(self._mode_combo.currentText())
+
+        buttons = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel
+        )
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+
+    def _common_property(self, name: str):
+        value = None
+        for node in self._nodes:
+            try:
+                current = node.get_property(name)
+            except Exception:
+                current = None
+            if value is None:
+                value = current
+            elif current != value:
+                return None
+        return value
+
+    def _on_mode_changed(self, mode: str):
+        enabled = (mode or "").strip().lower() == "choose"
+        self._model_text.setEnabled(enabled)
+
+    @property
+    def selected_mode(self) -> str:
+        return (self._mode_combo.currentText() or "").strip().lower()
+
+    def model_entries(self) -> list[str]:
+        text = self._model_text.toPlainText()
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
+        return lines
+
+    def models_for_nodes(self, count: int) -> list[str]:
+        entries = self.model_entries()
+        if not entries:
+            return [""] * count
+        if len(entries) >= count:
+            return entries[:count]
+        last = entries[-1]
+        entries.extend([last] * (count - len(entries)))
+        return entries
 
 
 class FlowStudioDock(QtWidgets.QDockWidget):
@@ -374,6 +430,13 @@ class FlowStudioDock(QtWidgets.QDockWidget):
         self._pan_button.setCheckable(True)
         self._pan_button.clicked.connect(self._toggle_pan_mode)
         toolbar.addWidget(self._pan_button)
+
+        toolbar.addSeparator()
+
+        self._act_models = toolbar.addAction("Set Models…")
+        self._act_models.setToolTip(
+            "Edit model mode or id for the selected LLM nodes.")
+        self._act_models.triggered.connect(self._on_set_models_clicked)
 
         toolbar.addSeparator()
 
@@ -572,7 +635,7 @@ class FlowStudioDock(QtWidgets.QDockWidget):
 
         Args:
             node: The node to search for ports
-            port_name: The label name of the port (e.g., "text", "candidate1")
+            port_name: The label name of the port(e.g., "text", "candidate1")
             port_type: "output" or "input"
 
         Returns:
@@ -610,7 +673,7 @@ class FlowStudioDock(QtWidgets.QDockWidget):
 
     # ---- Default flow ----
     def _load_default_flow_or_build(self):
-        """Phase 1: Just build in-memory default graph."""
+        """Phase 1: Just build in -memory default graph."""
         try:
             # Phase 2: try to load project-level default if present
             try:
@@ -747,7 +810,7 @@ class FlowStudioDock(QtWidgets.QDockWidget):
 
     # ---- Toolbar handlers (Phase 1: stubs) ----
     def _on_import_clicked(self):
-        """Phase 2: Import a flow JSON, replacing current graph (Pro only)."""
+        """Phase 2: Import a flow JSON, replacing current graph(Pro only)."""
         try:
             if self.read_only:
                 QtWidgets.QMessageBox.information(
@@ -779,7 +842,7 @@ class FlowStudioDock(QtWidgets.QDockWidget):
             QtWidgets.QMessageBox.warning(self, "Flow Import", f"Error: {e}")
 
     def _on_export_clicked(self):
-        """Phase 2: Export current flow JSON (redacted). Pro-only."""
+        """Phase 2: Export current flow JSON(redacted). Pro-only."""
         try:
             if self.read_only:
                 QtWidgets.QMessageBox.information(
@@ -1082,7 +1145,7 @@ class FlowStudioDock(QtWidgets.QDockWidget):
             logging.error(f"load_template_best_of_5_openrouter failed: {e}")
 
     def _check_and_show_config_instructions(self):
-        """Check if API keys are configured and show instructions if not."""
+        """Check if API keys are configured and show instructions if not ."""
         try:
             from aicodeprep_gui.config import load_api_config, get_config_dir
             config = load_api_config()
@@ -1108,7 +1171,7 @@ Example:
 [openrouter]
 api_key = "sk-or-v1-your-key-here"
 
-[openai] 
+[openai]
 api_key = "sk-your-openai-key-here"
 
 The config file has been created with default settings."""
@@ -1122,3 +1185,82 @@ The config file has been created with default settings."""
     def run(self):
         """Execute the current flow graph."""
         self._on_run_clicked()
+
+    def _on_set_models_clicked(self):
+        """Open a dialog to configure model settings for selected LLM nodes."""
+        if not NG_AVAILABLE:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "LLM Models",
+                "Flow Studio is running in fallback mode. Install NodeGraphQt to configure LLM nodes.",
+            )
+            return
+
+        try:
+            from .nodes.llm_nodes import LLMBaseNode
+        except Exception as err:
+            logging.error(f"Failed to import LLM nodes: {err}")
+            QtWidgets.QMessageBox.warning(
+                self,
+                "LLM Models",
+                "LLM node classes are unavailable. Check your installation.",
+            )
+            return
+
+        selected_nodes = []
+        for attr_name in ("selected_nodes", "get_selected_nodes", "selection"):
+            attr = getattr(self.graph, attr_name, None)
+            try:
+                if callable(attr):
+                    selected_nodes = list(attr())
+                elif isinstance(attr, (list, tuple, set)):
+                    selected_nodes = list(attr)
+                if selected_nodes:
+                    break
+            except Exception:
+                continue
+
+        llm_nodes = [
+            node for node in selected_nodes if isinstance(node, LLMBaseNode)]
+        if not llm_nodes:
+            QtWidgets.QMessageBox.information(
+                self,
+                "LLM Models",
+                "Select one or more LLM nodes in the graph, then open this dialog again.",
+            )
+            return
+
+        dialog = LLMModelConfigDialog(self, llm_nodes)
+        if dialog.exec() != QtWidgets.QDialog.Accepted:
+            return
+
+        mode = dialog.selected_mode or "choose"
+        summary_rows = []
+
+        if mode == "choose":
+            models = dialog.models_for_nodes(len(llm_nodes))
+        else:
+            models = []
+
+        for index, node in enumerate(llm_nodes):
+            label = getattr(node, "NODE_NAME", node.__class__.__name__)
+            try:
+                node.set_property("model_mode", mode)
+                if mode == "choose":
+                    chosen_model = models[index] if index < len(models) else ""
+                    node.set_property("model", chosen_model)
+                    summary_rows.append(
+                        f"- {label}: {chosen_model or '(blank)'}")
+                else:
+                    node.set_property("model", "")
+                    summary_rows.append(f"- {label}: {mode}")
+            except Exception as err:
+                logging.error(
+                    f"Failed to update model for node {label}: {err}")
+                summary_rows.append(f"- {label}: error ({err})")
+
+        QtWidgets.QMessageBox.information(
+            self,
+            "LLM Models Updated",
+            "Updated model settings:\n" + "\n".join(summary_rows),
+        )

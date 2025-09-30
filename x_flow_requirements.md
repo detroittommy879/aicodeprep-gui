@@ -1,5 +1,3 @@
-Please come up with a task list I can give to a AI coding agent like Cline to make the changes to get this working (the flow graph visuals already work good, it just doesn't do much currently). Give enough details to get the subtasks done like "in file xyz.py, find the section that starts with blah blah and replace that entire function with abcblahblahblah" - it helps to give a little explanation as to why we are doing these edits / what our high level purpose is.
-
 REQUIREMENTS doc for the new flow feature where people can send the context block to multiple api endpoints and draw a graph of it (or type what they want, with AI, and it tries to auto-generate it) and route the outputs of that into custom things like prompts and more api endpoints, instead of the default which is to copy it to clipboard and write it to fullcode.txt. For example, I want a built in graph option they can load, where it shows a graph of context output going to 5 different openrouter models. It sends the prompt/question just like normal but instead of to the clipboard/fullcode.txt, it sends using litellm to 5 openrouter models, then the outputs of each one goes to a node that combines it with text/prompt that asks "can you analyze all the different outputs, and also the original code, and come up with a "best of N" best version? try to think of the pros and cons of each, and come up with something better than all of them using all of them as help". There should be a way to set the nodes to "openrouter, but random free" where it will use openrouter api endpoint / auth info but just picks some random free models
 
 use litellm library - with just the python part, not the proxy server. Just openai compatible api endpoints and gemini for now (want to allow people to use openrouter, chutes ai, openai official api, gemini api, add any other openai compatible endpoints etc - but maybe allow them to "lazy load" / add on extras if possible later (not worried for now)? so that every user doesn't have to be bloated from what a few users might want to add to litellm)
@@ -16,7 +14,9 @@ Try to split this main big task up into a few phases where I could test after ea
 
 ---
 
-Please come up with a task list and enclose it in a single code tag so i can copy and paste it into Cline.
+---
+
+can you read x_flow_requirements.md from the attached document, and then analyze all the rest of the code files for this app, and come up with a plan for AI agent to implement a real working system (for the flow graph stuff)? including having a simple graph available that will send the context block to 5 LLMs like it discusses in x_flow_requirements or x_flow_gpt5.md etc. those were some other AI suggestions as how to do it, try to come up with a better one using all the available information.
 
 ---
 

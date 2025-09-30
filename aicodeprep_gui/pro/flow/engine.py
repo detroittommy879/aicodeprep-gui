@@ -65,7 +65,13 @@ def _port_name(port) -> str:
     for name_attr in ("name", "port_name", "label"):
         if hasattr(port, name_attr):
             try:
-                return str(getattr(port, name_attr))
+                attr = getattr(port, name_attr)
+                # Try calling it if it's a method
+                if callable(attr):
+                    result = attr()
+                    return str(result)
+                else:
+                    return str(attr)
             except Exception:
                 continue
     return f"port_{id(port)}"
@@ -187,7 +193,8 @@ def execute_graph(graph, parent_widget=None) -> None:
         nodes = graph.all_nodes()
     except Exception as e:
         if QtWidgets is not None:
-            QtWidgets.QMessageBox.warning(parent_widget, "Run Flow", f"Graph error: {e}")
+            QtWidgets.QMessageBox.warning(
+                parent_widget, "Run Flow", f"Graph error: {e}")
         return
 
     order = topological_order(nodes)
@@ -204,9 +211,11 @@ def execute_graph(graph, parent_widget=None) -> None:
         try:
             out = node.run(in_data, settings=None) or {}
         except Exception as e:
-            logging.error(f"Node '{getattr(node, 'NODE_NAME', 'node')}' failed: {e}")
+            logging.error(
+                f"Node '{getattr(node, 'NODE_NAME', 'node')}' failed: {e}")
             if QtWidgets is not None:
-                QtWidgets.QMessageBox.warning(parent_widget, "Run Flow", f"Node failed: {e}")
+                QtWidgets.QMessageBox.warning(
+                    parent_widget, "Run Flow", f"Node failed: {e}")
             out = {}
 
         # Store outputs
