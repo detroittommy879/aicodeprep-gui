@@ -112,7 +112,12 @@ class FileWriteNode(BaseExecNode):
             pass
 
         try:
-            self.create_property("path", "fullcode.txt")
+            # Use text widget with clear label for file path
+            self.create_property("path", "fullcode.txt",
+                                 widget_type="file_save")
+            # If file_save not available, fallback to regular text
+            if not self.has_property("path"):
+                self.create_property("path", "fullcode.txt")
         except Exception:
             pass
 

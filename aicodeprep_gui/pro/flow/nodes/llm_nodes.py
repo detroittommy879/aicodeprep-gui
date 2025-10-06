@@ -28,15 +28,14 @@ class LLMBaseNode(BaseExecNode):
             self.add_input("system")  # optional
             self.add_output("text")
 
-            # UI properties
-            # Storing as string properties for session; we can also add embedded widgets if needed.
-            self.create_property("api_key", "")
-            self.create_property("base_url", "")
-            self.create_property("model", "")
-            # 'choose' | 'random' | 'random_free'
-            self.create_property("model_mode", "choose")
-            # openrouter|openai|gemini|compatible|generic
-            self.create_property("provider", "generic")
+            # UI properties with proper widget types for better editing
+            self.create_property("provider", "generic", widget_type="list",
+                                 items=["openrouter", "openai", "gemini", "compatible", "generic"])
+            self.create_property("model_mode", "choose", widget_type="list",
+                                 items=["choose", "random", "random_free"])
+            self.create_property("model", "", widget_type="text")
+            self.create_property("api_key", "", widget_type="text")
+            self.create_property("base_url", "", widget_type="text")
         except Exception:
             pass
 

@@ -1,11 +1,13 @@
 """
 Flow execution engine for NodeGraphQt-based workflows.
-Provides topological sorting and sequential execution of executable nodes.
+Provides topological sorting and parallel execution of executable nodes.
 """
 
 from __future__ import annotations
 from typing import Any, Dict, List, Tuple, Set, Optional
 import logging
+import asyncio
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Qt for popups
 try:
@@ -185,9 +187,99 @@ def _gather_inputs_for_node(graph, node, results: Dict[Tuple[str, str], Any]) ->
     return inputs
 
 
-def execute_graph(graph, parent_widget=None) -> None:
+def _set_node_state(node, state: str):
     """
-    Execute the entire graph once in topological order.
+    Set visual state of a node: 'pending', 'running', 'completed', 'error'.
+    Uses node coloring to show execution state.
+    """
+    if not hasattr(node, 'set_color'):
+        return
+
+    try:
+        # Color scheme for execution states
+        colors = {
+            'pending': (100, 100, 100),      # Gray
+            'running': (255, 200, 0),        # Yellow/amber
+            'completed': (50, 200, 100),     # Green
+            'error': (255, 50, 50)           # Red
+        }
+
+        if state in colors:
+            r, g, b = colors[state]
+            node.set_color(r, g, b)
+    except Exception as e:
+        logging.debug(f"Failed to set node color: {e}")
+
+
+def _group_nodes_by_level(order: List[Any], nodes_list: List[Any]) -> List[List[Any]]:
+    """
+    Group nodes into execution levels based on dependencies.
+    Nodes at the same level can be executed in parallel.
+    """
+    if not order:
+        return []
+
+    # Build dependency map
+    depends_on: Dict[str, Set[str]] = {}
+    for node in order:
+        nid = _safe_node_id(node)
+        depends_on[nid] = set()
+
+        for ip in _input_ports(node):
+            for (src_node, src_port) in _connected_input_sources(ip):
+                if src_node:
+                    sid = _safe_node_id(src_node)
+                    if sid != nid:
+                        depends_on[nid].add(sid)
+
+    # Assign levels
+    levels: List[List[Any]] = []
+    remaining = set(order)
+    completed: Set[str] = set()
+
+    while remaining:
+        # Find nodes with all dependencies satisfied
+        current_level = []
+        for node in list(remaining):
+            nid = _safe_node_id(node)
+            if depends_on[nid].issubset(completed):
+                current_level.append(node)
+
+        if not current_level:
+            # Cycle detected or error - add remaining nodes to final level
+            current_level = list(remaining)
+
+        levels.append(current_level)
+        for node in current_level:
+            remaining.discard(node)
+            completed.add(_safe_node_id(node))
+
+    return levels
+
+
+def _execute_node_worker(node, in_data: Dict[str, Any]) -> Tuple[Any, Dict[str, Any], Optional[Exception]]:
+    """
+    Worker function to execute a single node. Returns (node, output, error).
+    """
+    try:
+        node_name = getattr(node, 'NODE_NAME', 'node')
+        logging.info(f"Executing node: {node_name}")
+        out = node.run(in_data, settings=None) or {}
+        return (node, out, None)
+    except Exception as e:
+        logging.error(
+            f"Node '{getattr(node, 'NODE_NAME', 'node')}' failed: {e}")
+        return (node, {}, e)
+
+
+def execute_graph(graph, parent_widget=None, show_progress: bool = True) -> None:
+    """
+    Execute the entire graph with parallel execution for nodes at the same level.
+
+    Args:
+        graph: The NodeGraphQt graph to execute
+        parent_widget: Parent widget for dialogs
+        show_progress: Whether to show progress dialog
     """
     try:
         nodes = graph.all_nodes()
@@ -198,28 +290,152 @@ def execute_graph(graph, parent_widget=None) -> None:
         return
 
     order = topological_order(nodes)
+
+    # Filter to executable nodes only
+    exec_nodes = [n for n in order if hasattr(
+        n, "run") and callable(getattr(n, "run"))]
+
+    # Create progress dialog if requested
+    progress_dialog = None
+    if show_progress and QtWidgets is not None:
+        try:
+            from .progress_dialog import FlowProgressDialog
+            progress_dialog = FlowProgressDialog(
+                parent_widget, total_nodes=len(exec_nodes))
+            progress_dialog.show()
+            progress_dialog.set_status("Preparing to execute flow...")
+            QtCore.QCoreApplication.processEvents()
+        except Exception as e:
+            logging.warning(f"Could not create progress dialog: {e}")
+
+    # Mark all executable nodes as pending
+    for node in exec_nodes:
+        _set_node_state(node, 'pending')
+        if progress_dialog:
+            node_name = getattr(node, 'NODE_NAME', 'node')
+            progress_dialog.add_node_status(node_name, "Pending", "gray")
+
+    # Process QT events to update UI
+    if QtWidgets is not None and QtCore is not None:
+        QtCore.QCoreApplication.processEvents()
+
+    # Group nodes by dependency level for parallel execution
+    levels = _group_nodes_by_level(exec_nodes, nodes)
     results: Dict[Tuple[str, str], Any] = {}
 
-    for node in order:
-        # Some nodes are BaseExecNode; check for run()
-        if not hasattr(node, "run") or not callable(getattr(node, "run")):
-            # Skip non-exec nodes (cosmetic)
-            continue
+    for level_idx, level_nodes in enumerate(levels):
+        # Check for cancellation
+        if progress_dialog and progress_dialog.is_cancelled():
+            logging.info("Flow execution cancelled by user")
+            if progress_dialog:
+                progress_dialog.execution_complete(success=False)
+            return
 
-        # Build inputs from upstream outputs
-        in_data = _gather_inputs_for_node(graph, node, results)
-        try:
-            out = node.run(in_data, settings=None) or {}
-        except Exception as e:
-            logging.error(
-                f"Node '{getattr(node, 'NODE_NAME', 'node')}' failed: {e}")
-            if QtWidgets is not None:
-                QtWidgets.QMessageBox.warning(
-                    parent_widget, "Run Flow", f"Node failed: {e}")
-            out = {}
+        logging.info(
+            f"Executing level {level_idx + 1}/{len(levels)} with {len(level_nodes)} node(s)")
 
-        # Store outputs
-        for op in _output_ports(node):
-            oname = _port_name(op)
-            if oname in out:
-                results[(_safe_node_id(node), oname)] = out[oname]
+        if progress_dialog:
+            if len(level_nodes) == 1:
+                progress_dialog.set_status(
+                    f"Executing node {level_idx + 1}/{len(exec_nodes)}...")
+            else:
+                progress_dialog.set_status(
+                    f"Executing {len(level_nodes)} nodes in parallel (level {level_idx + 1}/{len(levels)})...")
+
+        if len(level_nodes) == 1:
+            # Single node - execute directly
+            node = level_nodes[0]
+            node_name = getattr(node, 'NODE_NAME', 'node')
+
+            _set_node_state(node, 'running')
+            if progress_dialog:
+                progress_dialog.update_node_status(
+                    node_name, "Running...", "orange")
+            if QtWidgets is not None and QtCore is not None:
+                QtCore.QCoreApplication.processEvents()
+
+            in_data = _gather_inputs_for_node(graph, node, results)
+            node_obj, out, error = _execute_node_worker(node, in_data)
+
+            if error:
+                _set_node_state(node, 'error')
+                if progress_dialog:
+                    progress_dialog.update_node_status(
+                        node_name, f"✗ Error: {str(error)[:50]}", "red")
+                if QtWidgets is not None:
+                    QtWidgets.QMessageBox.warning(
+                        parent_widget, "Run Flow", f"Node '{node_name}' failed: {error}")
+            else:
+                _set_node_state(node, 'completed')
+                if progress_dialog:
+                    progress_dialog.update_node_status(
+                        node_name, "✓ Completed", "green")
+                    progress_dialog.increment_progress()
+
+            # Store outputs
+            for op in _output_ports(node):
+                oname = _port_name(op)
+                if oname in out:
+                    results[(_safe_node_id(node), oname)] = out[oname]
+        else:
+            # Multiple nodes - execute in parallel using ThreadPoolExecutor
+            logging.info(f"Executing {len(level_nodes)} nodes in parallel")
+
+            # Mark all as running
+            for node in level_nodes:
+                node_name = getattr(node, 'NODE_NAME', 'node')
+                _set_node_state(node, 'running')
+                if progress_dialog:
+                    progress_dialog.update_node_status(
+                        node_name, "Running...", "orange")
+            if QtWidgets is not None and QtCore is not None:
+                QtCore.QCoreApplication.processEvents()
+
+            # Prepare inputs for each node
+            node_inputs = [(node, _gather_inputs_for_node(
+                graph, node, results)) for node in level_nodes]
+
+            # Execute in parallel
+            with ThreadPoolExecutor(max_workers=min(len(level_nodes), 5)) as executor:
+                futures = {executor.submit(_execute_node_worker, node, in_data): node
+                           for node, in_data in node_inputs}
+
+                for future in as_completed(futures):
+                    node = futures[future]
+                    node_name = getattr(node, 'NODE_NAME', 'node')
+                    node_obj, out, error = future.result()
+
+                    if error:
+                        _set_node_state(node_obj, 'error')
+                        if progress_dialog:
+                            progress_dialog.update_node_status(
+                                node_name, f"✗ Error: {str(error)[:50]}", "red")
+                        if QtWidgets is not None:
+                            QtWidgets.QMessageBox.warning(
+                                parent_widget, "Run Flow",
+                                f"Node '{node_name}' failed: {error}")
+                    else:
+                        _set_node_state(node_obj, 'completed')
+                        if progress_dialog:
+                            progress_dialog.update_node_status(
+                                node_name, "✓ Completed", "green")
+                            progress_dialog.increment_progress()
+
+                    # Process UI events after each node completes
+                    if QtWidgets is not None and QtCore is not None:
+                        QtCore.QCoreApplication.processEvents()
+
+                    # Store outputs
+                    for op in _output_ports(node_obj):
+                        oname = _port_name(op)
+                        if oname in out:
+                            results[(_safe_node_id(node_obj), oname)
+                                    ] = out[oname]
+
+        # Process QT events after each level
+        if QtWidgets is not None and QtCore is not None:
+            QtCore.QCoreApplication.processEvents()
+
+    # Mark execution complete
+    if progress_dialog:
+        progress_dialog.execution_complete(success=True)

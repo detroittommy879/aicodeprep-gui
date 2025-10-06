@@ -44,14 +44,23 @@ class BestOfNNode(BaseExecNode):
 
             # Properties for the LLM used for synthesis
             # openrouter | openai | gemini | compatible
-            self.create_property("provider", "openrouter")
-            self.create_property("api_key", "")
-            self.create_property("base_url", "https://openrouter.ai/api/v1")
+            self.create_property("provider", "openrouter", widget_type="list",
+                                 items=["openrouter", "openai", "gemini", "compatible"])
+            self.create_property("api_key", "", widget_type="text")
+            self.create_property(
+                "base_url", "https://openrouter.ai/api/v1", widget_type="text")
             # if provider=openrouter, supports 'random'/'random_free' via model_mode
-            self.create_property("model", "")
+            self.create_property("model", "", widget_type="text")
             # choose | random | random_free
-            self.create_property("model_mode", "random_free")
-            self.create_property("extra_prompt", BEST_OF_DEFAULT_PROMPT)
+            self.create_property("model_mode", "random_free", widget_type="list",
+                                 items=["choose", "random", "random_free"])
+            # Use text_multi widget type for multiline editing (NodeGraphQt 0.6.30+)
+            try:
+                self.create_property(
+                    "extra_prompt", BEST_OF_DEFAULT_PROMPT, widget_type="text_multi")
+            except Exception:
+                # Fallback for older NodeGraphQt versions
+                self.create_property("extra_prompt", BEST_OF_DEFAULT_PROMPT)
         except Exception:
             pass
 

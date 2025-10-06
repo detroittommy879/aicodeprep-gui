@@ -75,7 +75,7 @@ can you read x_flow_requirements.md from the attached document, and then analyze
 
    - Create `aicodeprep_gui/gui/components/flow_settings_dialog.py` with a dialog that:
      - Lets user enter API keys per provider (OpenRouter, OpenAI, Gemini, “Custom OpenAI-compatible”).
-     - Persists encrypted/obfuscated values via `QSettings` (similar to existing preferences).
+     - Persists values via the ~/.aicodeprep/ folder in the api-keys.toml
    - Hook dialog under Flow menu (“Manage Provider Credentials…”).
    - Reason: runtime nodes need credentials; UI must store/retrieve them securely.
 

@@ -10,14 +10,15 @@ from typing import Any
 
 from PySide6 import QtWidgets, QtCore
 from PySide6.QtWidgets import QGraphicsView
-from PySide6.QtCore import Qt, QEvent, QObject
+from PySide6.QtCore import Qt, QEvent, QObject, QTimer
 
 try:
-    from NodeGraphQt import NodeGraph
+    from NodeGraphQt import NodeGraph, PropertiesBinWidget
     NG_AVAILABLE = True
     _NG_IMPORT_ERROR = None
 except Exception as e:
     NodeGraph = Any  # type: ignore
+    PropertiesBinWidget = None  # type: ignore
     NG_AVAILABLE = False
     _NG_IMPORT_ERROR = e
 
@@ -399,12 +400,79 @@ class FlowStudioDock(QtWidgets.QDockWidget):
         # Configure the graph viewer for better usability
         self._configure_viewer()
 
-        # Central wrapper to hold toolbar + graph widget
+        # Create the PropertiesBinWidget - this is a separate widget that needs
+        # the node graph passed to it. The constructor internally wires up signals.
+        self.properties_bin = None
+        try:
+            if PropertiesBinWidget is not None:
+                # Create the properties bin widget and pass the node graph
+                # The PropertiesBinWidget constructor will call graph.add_properties_bin()
+                self.properties_bin = PropertiesBinWidget(node_graph=self.graph)
+                logging.info("✅ PropertiesBinWidget created successfully")
+            else:
+                logging.warning("⚠️ PropertiesBinWidget not available in NodeGraphQt")
+        except Exception as e:
+            logging.error(f"❌ Failed to create PropertiesBinWidget: {e}", exc_info=True)
+
+        # Central wrapper to hold toolbar + graph widget + properties
         wrapper = QtWidgets.QWidget()
         vbox = QtWidgets.QVBoxLayout(wrapper)
         vbox.setContentsMargins(0, 0, 0, 0)
         vbox.addWidget(self._create_toolbar())
-        vbox.addWidget(self.graph_widget)
+
+        # Create horizontal splitter for graph and properties
+        splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+        splitter.addWidget(self.graph_widget)
+
+        # Add properties panel if available
+        if self.properties_bin:
+            splitter.addWidget(self.properties_bin)
+            # Set initial sizes: 70% graph, 30% properties
+            splitter.setSizes([700, 300])
+
+            # PropertiesBinWidget automatically connects to these graph signals:
+            # - node_double_clicked: adds node to properties bin when double-clicked
+            # - nodes_deleted: removes node from properties bin when deleted
+            # - property_changed: updates property widgets when properties change
+            
+            # Additionally connect node selection signal to automatically show properties
+            # when a single node is clicked (not just double-clicked)
+            try:
+                if hasattr(self.graph, 'node_selected'):
+                    self.graph.node_selected.connect(
+                        lambda node: self.properties_bin.add_node(node))
+                    logging.info("✅ Connected node_selected to show properties on single click")
+                elif hasattr(self.graph, 'node_selection_changed'):
+                    # Alternative signal name in some versions
+                    self.graph.node_selection_changed.connect(
+                        lambda nodes: self.properties_bin.add_node(nodes[0]) if nodes else None)
+                    logging.info("✅ Connected node_selection_changed to show properties")
+                else:
+                    logging.info("ℹ️ No node_selected signal - properties will show on double-click only")
+            except Exception as e:
+                logging.warning(f"⚠️ Could not connect single-click handler: {e}")
+
+            logging.info("✅ Properties panel added to layout")
+        else:
+            # Fallback: show instructions in a label
+            props_placeholder = QtWidgets.QWidget()
+            props_layout = QtWidgets.QVBoxLayout(props_placeholder)
+            props_layout.setContentsMargins(8, 8, 8, 8)
+            props_label = QtWidgets.QLabel(
+                "Properties Panel\n\n"
+                "Select a node to view and edit its properties.\n\n"
+                "Note: Properties panel requires NodeGraphQt 0.6.30+"
+            )
+            props_label.setWordWrap(True)
+            props_label.setStyleSheet("color: gray; font-style: italic;")
+            props_layout.addWidget(props_label)
+            props_layout.addStretch()
+            splitter.addWidget(props_placeholder)
+            splitter.setSizes([800, 200])
+            logging.info(
+                "Properties panel placeholder added (NodeGraphQt properties not available)")
+
+        vbox.addWidget(splitter)
         self.setWidget(wrapper)
 
         # Register I/O nodes
@@ -416,6 +484,77 @@ class FlowStudioDock(QtWidgets.QDockWidget):
 
         if read_only:
             self._apply_read_only()
+
+    def _poll_selection(self):
+        """
+        Polling timer callback to check for selection changes.
+        This is a fallback mechanism when signals don't work.
+        """
+        try:
+            # Get currently selected nodes
+            selected_nodes = self.graph.selected_nodes()
+            current_ids = set(node.id for node in selected_nodes)
+            
+            # Check if selection changed
+            if current_ids != self._last_selected_nodes:
+                self._last_selected_nodes = current_ids
+                
+                if selected_nodes:
+                    logging.info(f"� Polling detected selection change: {len(selected_nodes)} nodes")
+                    # Update properties panel
+                    self._update_properties_panel(selected_nodes)
+        except Exception as e:
+            logging.debug(f"Polling selection check error: {e}")
+    
+    def _update_properties_panel(self, nodes):
+        """
+        Update properties panel with selected nodes.
+        
+        Args:
+            nodes: List of selected nodes
+        """
+        if not self.properties_bin or not nodes:
+            return
+            
+        try:
+            if hasattr(self.properties_bin, 'add_node'):
+                # Clear existing properties
+                self.properties_bin.clear()
+                # Add all selected nodes
+                for node in nodes:
+                    self.properties_bin.add_node(node)
+                logging.info(f"✅ Properties panel updated for {len(nodes)} node(s)")
+            else:
+                logging.warning("Properties bin has no add_node method")
+        except Exception as e:
+            logging.error(f"❌ Failed to update properties panel: {e}")
+
+    def _on_node_selected(self, node):
+        """
+        Called when a single node is selected. Updates the properties panel.
+
+        Args:
+            node: The selected node object
+        """
+        logging.info(f"🔔 _on_node_selected called with node: {node}")
+        if node:
+            self._update_properties_panel([node])
+        else:
+            logging.warning(f"Node is None in _on_node_selected")
+
+    def _on_nodes_selected(self, nodes):
+        """
+        Called when multiple nodes are selected. Updates the properties panel.
+
+        Args:
+            nodes: List of selected node objects
+        """
+        logging.info(
+            f"🔔 _on_nodes_selected called with {len(nodes) if nodes else 0} nodes")
+        if nodes:
+            self._update_properties_panel(nodes)
+        else:
+            logging.warning(f"Nodes list is empty in _on_nodes_selected")
 
     def _create_toolbar(self):
         """Creates the toolbar with actions and the new pan button."""
@@ -513,6 +652,7 @@ class FlowStudioDock(QtWidgets.QDockWidget):
     def _toggle_pan_mode(self, checked):
         """Toggles the viewer's drag mode between selection and panning."""
         if not self.viewer:
+            logging.warning("Viewer not available for pan toggle")
             return
 
         from PySide6.QtWidgets import QGraphicsView
@@ -527,30 +667,65 @@ class FlowStudioDock(QtWidgets.QDockWidget):
                     self.viewer.setCursor(cur)
                 if hasattr(self.viewer, "viewport") and self.viewer.viewport():
                     self.viewer.viewport().setCursor(cur)
-            except Exception:
-                pass
+            except Exception as e:
+                logging.debug(f"Failed to set cursor: {e}")
+
             if checked:
-                # Enable pan mode - use standard QGraphicsView methods
+                # Enable pan mode - try multiple methods
+                success = False
+
+                # Method 1: Standard QGraphicsView setDragMode
                 if hasattr(self.viewer, 'setDragMode'):
-                    self.viewer.setDragMode(QGraphicsView.ScrollHandDrag)
-                    logging.info(
-                        "Pan mode enabled via setDragMode(ScrollHandDrag)")
-                elif hasattr(self.viewer, 'set_drag_mode'):
-                    self.viewer.set_drag_mode(QGraphicsView.ScrollHandDrag)
-                    logging.info(
-                        "Pan mode enabled via set_drag_mode(ScrollHandDrag)")
+                    try:
+                        self.viewer.setDragMode(QGraphicsView.ScrollHandDrag)
+                        logging.info(
+                            "Pan mode enabled via setDragMode(ScrollHandDrag)")
+                        success = True
+                    except Exception as e:
+                        logging.debug(f"setDragMode failed: {e}")
+
+                # Method 2: NodeGraphQt's set_pan_mode if available
+                if not success and hasattr(self.viewer, 'set_pan_mode'):
+                    try:
+                        self.viewer.set_pan_mode(True)
+                        logging.info("Pan mode enabled via set_pan_mode(True)")
+                        success = True
+                    except Exception as e:
+                        logging.debug(f"set_pan_mode failed: {e}")
+
+                if not success:
+                    logging.warning(
+                        "Could not enable pan mode with any available method")
             else:
-                # Enable selection mode - use standard QGraphicsView methods
+                # Enable selection mode - try multiple methods
+                success = False
+
+                # Method 1: Standard QGraphicsView setDragMode
                 if hasattr(self.viewer, 'setDragMode'):
-                    self.viewer.setDragMode(QGraphicsView.RubberBandDrag)
-                    logging.info(
-                        "Selection mode enabled via setDragMode(RubberBandDrag)")
-                elif hasattr(self.viewer, 'set_drag_mode'):
-                    self.viewer.set_drag_mode(QGraphicsView.RubberBandDrag)
-                    logging.info(
-                        "Selection mode enabled via set_drag_mode(RubberBandDrag)")
+                    try:
+                        self.viewer.setDragMode(QGraphicsView.RubberBandDrag)
+                        logging.info(
+                            "Selection mode enabled via setDragMode(RubberBandDrag)")
+                        success = True
+                    except Exception as e:
+                        logging.debug(f"setDragMode failed: {e}")
+
+                # Method 2: NodeGraphQt's set_pan_mode if available
+                if not success and hasattr(self.viewer, 'set_pan_mode'):
+                    try:
+                        self.viewer.set_pan_mode(False)
+                        logging.info(
+                            "Selection mode enabled via set_pan_mode(False)")
+                        success = True
+                    except Exception as e:
+                        logging.debug(f"set_pan_mode failed: {e}")
+
+                if not success:
+                    logging.warning(
+                        "Could not enable selection mode with any available method")
+
         except Exception as e:
-            logging.error(f"Error toggling pan mode: {e}")
+            logging.error(f"Error toggling pan mode: {e}", exc_info=True)
 
     # ---- Node registration ----
     def _register_nodes(self):

@@ -1,34 +1,204 @@
-summary from last AI agent:
-'''here’s what I suggest:
-Plan: (1) recap what’s in place, (2) call out what’s untested, (3) outline how you can exercise it.
+(there weren't errors this time and it did work but pasting the terminal output here for reference)
 
-The new Set Models… toolbar button and LLMModelConfigDialog in flow_dock.py are wired up, but I haven’t run the GUI since the changes (the quick compileall smoke test was cancelled mid-run). So functionality is ready in code, just not verified interactively.
-I recommend giving it a try: launch the app, open Flow Studio, select one or more OpenRouter LLM nodes, hit Set Models…, choose random_free or choose, and confirm the dialog updates the node properties. If you go with choose, enter explicit model IDs and run the flow to ensure the requests hit those models.
-After that manual check, the natural next steps would be: (1) confirm the default Best-of-5 template still runs with random_free, (2) try a choose run with a mix of model IDs to make sure the dialog assignments stick, and (3) if the GUI behaves, let me know so I can wrap up the documentation explaining random-free mode and the new workflow.'''
-
-terminal output:
-
-(venv) PS C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app> python -m aicodeprep_gui.main
-2025-09-29 20:52:56,934 - INFO - Loaded font: JetBrains Mono from JetBrainsMono-VariableFont_wght.ttf
-2025-09-29 20:52:56,950 - INFO - Loaded font: Fira Code from FiraCode-VariableFont_wght.ttf
-2025-09-29 20:52:56,965 - INFO - Loaded font: Space Mono from SpaceMono-Regular.ttf
-2025-09-29 20:52:56,965 - INFO - All loaded custom fonts: JetBrains Mono, Fira Code, Space Mono
-2025-09-29 20:52:56,965 - INFO - Loaded custom fonts: JetBrains Mono, Fira Code, Space Mono
-2025-09-29 20:52:56,965 - INFO - Target directory: .
-2025-09-29 20:52:56,965 - INFO - Starting code concatenation...
-2025-09-29 20:52:56,965 - INFO - Starting initial fast scan in: C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app
-2025-09-29 20:52:58,333 - INFO - Initial scan collected 202 items.
-2025-09-29 20:52:58,472 - INFO - Sent metric event: open
-2025-09-29 20:52:58,490 - INFO - Loaded font: JetBrains Mono from JetBrainsMono-VariableFont_wght.ttf
-2025-09-29 20:52:58,493 - INFO - Loaded font: Fira Code from FiraCode-VariableFont_wght.ttf
-2025-09-29 20:52:58,493 - INFO - Loaded font: Space Mono from SpaceMono-Regular.ttf
-2025-09-29 20:52:58,493 - INFO - All loaded custom fonts: JetBrains Mono, Fira Code, Space Mono
+> python -m aicodeprep_gui.main
+2025-09-29 21:16:36,905 - INFO - Loaded font: JetBrains Mono from JetBrainsMono-VariableFont_wght.ttf                                         
+2025-09-29 21:16:36,910 - INFO - Loaded font: Fira Code from FiraCode-VariableFont_wght.ttf
+2025-09-29 21:16:36,910 - INFO - Loaded font: Space Mono from SpaceMono-Regular.ttf
+2025-09-29 21:16:36,910 - INFO - All loaded custom fonts: JetBrains Mono, Fira Code, Space Mono
+2025-09-29 21:16:36,910 - INFO - Loaded custom fonts: JetBrains Mono, Fira Code, Space Mono
+2025-09-29 21:16:36,910 - INFO - Target directory: .
+2025-09-29 21:16:36,910 - INFO - Starting code concatenation...
+2025-09-29 21:16:36,911 - INFO - Starting initial fast scan in: C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app
+2025-09-29 21:16:36,964 - INFO - Initial scan collected 202 items.
+2025-09-29 21:16:37,035 - INFO - Sent metric event: open
+2025-09-29 21:16:37,051 - INFO - Loaded font: JetBrains Mono from JetBrainsMono-VariableFont_wght.ttf
+2025-09-29 21:16:37,056 - INFO - Loaded font: Fira Code from FiraCode-VariableFont_wght.ttf
+2025-09-29 21:16:37,058 - INFO - Loaded font: Space Mono from SpaceMono-Regular.ttf
+2025-09-29 21:16:37,058 - INFO - All loaded custom fonts: JetBrains Mono, Fira Code, Space Mono
 Font debug info: Loaded font families: ['JetBrains Mono', 'Fira Code', 'Space Mono']
-2025-09-29 20:52:59,924 - INFO - SyntaxHighlightedTextEdit: Using font family 'JetBrains Mono' (requested: 'JetBrains Mono')
-2025-09-29 20:52:59,928 - INFO - Loaded preview window state from preferences: False
-2025-09-29 20:52:59,928 - INFO - Loaded syntax highlighting state from preferences: True
-2025-09-29 20:53:00,560 - INFO - Application is up to date. (current: 1.2.0, latest: 1.2.0)
-2025-09-29 20:53:05,567 - ERROR - Failed to load Flow Studio dock: unterminated string literal (detected at line 463) (flow_dock.py, line 463)
-2025-09-29 20:53:05,567 - ERROR - Flow Studio dock is None after creation.
-(venv) PS C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app> 
+2025-09-29 21:16:37,388 - INFO - SyntaxHighlightedTextEdit: Using font family 'JetBrains Mono' (requested: 'JetBrains Mono')
+2025-09-29 21:16:37,390 - INFO - Loaded preview window state from preferences: False
+2025-09-29 21:16:37,390 - INFO - Loaded syntax highlighting state from preferences: True
+2025-09-29 21:16:37,740 - INFO - Application is up to date. (current: 1.2.0, latest: 1.2.0)
+2025-09-29 21:16:40,570 - INFO - NodeGraph type: <class 'NodeGraphQt.base.graph.NodeGraph'>
+2025-09-29 21:16:40,570 - INFO - NodeGraph attributes: ['acyclic', 'add_node', 'add_properties_bin', 'all_nodes', 'auto_layout_nodes', 'background_color', 'begin_undo', 'blockSignals', 'center_on', 'center_selection', 'childEvent', 'children', 'clear_selection', 'clear_session', 'clear_undo_stack', 'close', 'collapse_group_node', 'connect', 'connectNotify', 'context_menu', 'context_menu_prompt', 'context_nodes_menu', 'copy_nodes', 'create_node', 'current_session', 'cursor_pos', 'customEvent', 'cut_nodes', 'data_dropped', 'deleteLater', 'delete_node', 'delete_nodes', 'deserialize_session', 'destroyed', 'disable_context_menu', 'disable_nodes', 'disconnect', 'disconnectNotify', 'dumpObjectInfo', 'dumpObjectTree', 'duplicate_nodes', 'dynamicPropertyNames', 'emit', 'end_undo', 'event', 'eventFilter', 'expand_group_node', 'extract_nodes', 'findChild', 'findChildren', 'fit_to_selection', 'get_context_menu', 'get_node_by_id', 'get_node_by_name', 'get_nodes_by_type', 'get_unique_name', 'get_zoom', 'grid_color', 'import_session', 'inherits', 'installEventFilter', 'invert_selection', 'isQuickItemType', 'isSignalConnected', 'isWidgetType', 'isWindowType', 'is_root', 'killTimer', 'layout_direction', 'load_dialog', 'load_session', 'message_dialog', 'metaObject', 'model', 'moveToThread', 'node_created', 'node_double_clicked', 'node_factory', 'node_selected', 'node_selection_changed', 'nodes_deleted', 'nodes_registered', 'objectName', 'objectNameChanged', 'parent', 'paste_nodes', 'pipe_collision', 'pipe_slicing', 'pipe_style', 'port_connected', 'port_disconnected', 'property', 'property_changed', 'question_dialog', 'receivers', 'register_node', 'register_nodes', 'registered_nodes', 'removeEventFilter', 'remove_node', 'reset_zoom', 'save_dialog', 'save_session', 'scene', 'select_all', 'selected_nodes', 'sender', 'senderSignalIndex', 'serialize_session', 'session_changed', 'setObjectName', 'setParent', 'setProperty', 'set_acyclic', 'set_background_color', 'set_context_menu', 'set_context_menu_from_file', 'set_grid_color', 'set_grid_mode', 'set_layout_direction', 'set_pipe_collision', 'set_pipe_slicing', 'set_pipe_style', 'set_zoom', 'show', 'signalsBlocked', 'startTimer', 'staticMetaObject', 'sub_graphs', 'thread', 'timerEvent', 'toggle_node_search', 'tr', 'undo_stack', 'undo_view', 'use_OpenGL', 'viewer', 'widget']
+2025-09-29 21:16:40,570 - INFO - Widget type: <class 'NodeGraphQt.widgets.node_graph.NodeGraphWidget'>
+2025-09-29 21:16:40,570 - INFO - Widget attributes: ['PaintDeviceMetric', 'RenderFlag', 'TabPosition', 'TabShape', 'acceptDrops', 'accessibleDescription', 'accessibleIdentifier', 'accessibleName', 'actionEvent', 'actions', 'activateWindow', 'addAction', 'addActions', 'addTab', 'add_viewer', 'adjustSize', 'autoFillBackground', 'backgroundRole', 'backingStore', 'baseSize', 'blockSignals', 'changeEvent', 'childAt', 'childEvent', 'children', 'childrenRect', 'childrenRegion', 'clear', 'clearFocus', 'clearMask', 'close', 'closeEvent', 'colorCount', 'connect', 'connectNotify', 'contentsMargins', 'contentsRect', 'contextMenuEvent', 'contextMenuPolicy', 'cornerWidget', 'count', 'create', 'createWinId', 'createWindowContainer', 'currentChanged', 'currentIndex', 'currentWidget', 'cursor', 'customContextMenuRequested', 'customEvent', 'deleteLater', 'depth', 'destroy', 'destroyed', 'devType', 'devicePixelRatio', 'devicePixelRatioF', 'devicePixelRatioFScale', 'disconnect', 'disconnectNotify', 'documentMode', 'dragEnterEvent', 'dragLeaveEvent', 'dragMoveEvent', 'dropEvent', 'dumpObjectInfo', 'dumpObjectTree', 'dynamicPropertyNames', 'effectiveWinId', 'elideMode', 'emit', 'encodeMetricF', 'ensurePolished', 'enterEvent', 'event', 'eventFilter', 'find', 'findChild', 'findChildren', 'focusInEvent', 'focusNextChild', 'focusNextPrevChild', 'focusOutEvent', 'focusPolicy', 'focusPreviousChild', 'focusProxy', 'focusWidget', 'font', 'fontInfo', 'fontMetrics', 'foregroundRole', 'frameGeometry', 'frameSize', 'geometry', 'grab', 'grabGesture', 'grabKeyboard', 'grabMouse', 'grabShortcut', 'graphicsEffect', 'graphicsProxyWidget', 'hasFocus', 'hasHeightForWidth', 'hasMouseTracking', 'hasTabletTracking', 'height', 'heightForWidth', 'heightMM', 'hide', 'hideEvent', 'iconSize', 'indexOf', 'inherits', 'initPainter', 'initStyleOption', 'inputMethodEvent', 'inputMethodHints', 'inputMethodQuery', 'insertAction', 'insertActions', 'insertTab', 'installEventFilter', 'internalWinId', 'isActiveWindow', 'isAncestorOf', 'isEnabled', 'isEnabledTo', 'isFullScreen', 'isHidden', 'isLeftToRight', 'isMaximized', 'isMinimized', 'isModal', 'isMovable', 'isQuickItemType', 'isRightToLeft', 'isSignalConnected', 'isTabEnabled', 'isTabVisible', 'isTopLevel', 'isVisible', 'isVisibleTo', 'isWidgetType', 'isWindow', 'isWindowModified', 'isWindowType', 'keyPressEvent', 'keyReleaseEvent', 'keyboardGrabber', 'killTimer', 'layout', 'layoutDirection', 'leaveEvent', 'locale', 'logicalDpiX', 'logicalDpiY', 'lower', 'mapFrom', 'mapFromGlobal', 'mapFromParent', 'mapTo', 'mapToGlobal', 'mapToParent', 'mask', 'maximumHeight', 'maximumSize', 'maximumWidth', 'metaObject', 'metric', 'minimumHeight', 'minimumSize', 'minimumSizeHint', 'minimumWidth', 'mouseDoubleClickEvent', 'mouseGrabber', 'mouseMoveEvent', 'mousePressEvent', 'mouseReleaseEvent', 'move', 'moveEvent', 'moveToThread', 'nativeEvent', 'nativeParentWidget', 'nextInFocusChain', 'normalGeometry', 'objectName', 'objectNameChanged', 'overrideWindowFlags', 'overrideWindowState', 'paintEngine', 'paintEvent', 'painters', 'paintingActive', 'palette', 'parent', 'parentWidget', 'physicalDpiX', 'physicalDpiY', 'pos', 'previousInFocusChain', 'property', 'raise_', 'receivers', 'rect', 'redirected', 'releaseKeyboard', 'releaseMouse', 'releaseShortcut', 'removeAction', 'removeEventFilter', 'removeTab', 'remove_viewer', 'render', 'repaint', 'resize', 'resizeEvent', 'restoreGeometry', 'saveGeometry', 'screen', 'scroll', 'sender', 'senderSignalIndex', 'setAcceptDrops', 'setAccessibleDescription', 'setAccessibleIdentifier', 'setAccessibleName', 'setAttribute', 'setAutoFillBackground', 'setBackgroundRole', 'setBaseSize', 'setContentsMargins', 'setContextMenuPolicy', 'setCornerWidget', 'setCurrentIndex', 'setCurrentWidget', 'setCursor', 'setDisabled', 'setDocumentMode', 'setElideMode', 'setEnabled', 'setFixedHeight', 'setFixedSize', 'setFixedWidth', 'setFocus', 'setFocusPolicy', 'setFocusProxy', 'setFont', 'setForegroundRole', 'setGeometry', 'setGraphicsEffect', 'setHidden', 'setIconSize', 'setInputMethodHints', 'setLayout', 'setLayoutDirection', 'setLocale', 'setMask', 'setMaximumHeight', 'setMaximumSize', 'setMaximumWidth', 'setMinimumHeight', 'setMinimumSize', 'setMinimumWidth', 'setMouseTracking', 'setMovable', 'setObjectName', 'setPalette', 'setParent', 'setProperty', 'setScreen', 'setShortcutAutoRepeat', 'setShortcutEnabled', 'setSizeIncrement', 'setSizePolicy', 'setStatusTip', 'setStyle', 'setStyleSheet', 'setTabBar', 'setTabBarAutoHide', 'setTabEnabled', 'setTabIcon', 'setTabOrder', 'setTabPosition', 'setTabShape', 'setTabText', 'setTabToolTip', 'setTabVisible', 'setTabWhatsThis', 'setTabletTracking', 'setTabsClosable', 'setToolTip', 'setToolTipDuration', 'setUpdatesEnabled', 'setUsesScrollButtons', 'setVisible', 'setWhatsThis', 'setWindowFilePath', 'setWindowFlag', 'setWindowFlags', 'setWindowIcon', 'setWindowIconText', 'setWindowModality', 'setWindowModified', 'setWindowOpacity', 'setWindowRole', 'setWindowState', 'setWindowTitle', 'sharedPainter', 'show', 'showEvent', 'showFullScreen', 'showMaximized', 'showMinimized', 'showNormal', 'signalsBlocked', 'size', 'sizeHint', 'sizeIncrement', 'sizePolicy', 'stackUnder', 'startTimer', 'staticMetaObject', 'statusTip', 'style', 'styleSheet', 'tabBar', 'tabBarAutoHide', 'tabBarClicked', 'tabBarDoubleClicked', 'tabCloseRequested', 'tabIcon', 'tabInserted', 'tabPosition', 'tabRemoved', 'tabShape', 'tabText', 'tabToolTip', 'tabWhatsThis', 'tabletEvent', 'tabsClosable', 'testAttribute', 'thread', 'timerEvent', 'toolTip', 'toolTipDuration', 'topLevelWidget', 'tr', 'underMouse', 'ungrabGesture', 'unsetCursor', 'unsetLayoutDirection', 'unsetLocale', 'update', 'updateGeometry', 'updateMicroFocus', 'updatesEnabled', 'usesScrollButtons', 'visibleRegion', 'whatsThis', 'wheelEvent', 'widget', 'width', 'widthMM', 'winId', 'window', 'windowFilePath', 'windowFlags', 'windowHandle', 'windowIcon', 'windowIconChanged', 'windowIconText', 'windowIconTextChanged', 'windowModality', 'windowOpacity', 'windowRole', 'windowState', 'windowTitle', 'windowTitleChanged', 'windowType', 'x', 'y']        
+2025-09-29 21:16:40,571 - INFO - Found graph.viewer: <class 'method'> - callable: True
+2025-09-29 21:16:40,571 - INFO - Called viewer() -> <class 'NodeGraphQt.widgets.viewer.NodeViewer'>
+2025-09-29 21:16:40,571 - INFO - Found graph._viewer: <class 'NodeGraphQt.widgets.viewer.NodeViewer'> - callable: False
+2025-09-29 21:16:40,571 - INFO - Direct access to _viewer: <class 'NodeGraphQt.widgets.viewer.NodeViewer'>
+2025-09-29 21:16:40,571 - INFO - Found QGraphicsView in widget hierarchy: <class 'NodeGraphQt.widgets.viewer.NodeViewer'>
+2025-09-29 21:16:40,571 - INFO - Evaluating graph.viewer(): dragMode=True, scene=True, viewport=True
+2025-09-29 21:16:40,571 - INFO - Selected viewer from: graph.viewer()
+2025-09-29 21:16:40,572 - INFO - Final viewer: <class 'NodeGraphQt.widgets.viewer.NodeViewer'>
+2025-09-29 21:16:40,572 - INFO - Pan/drag methods: ['DragMode', '_set_viewer_pan', 'dragEnterEvent', 'dragLeaveEvent', 'dragMode', 'dragMoveEvent', 'setDragMode']
+2025-09-29 21:16:40,572 - INFO - Mode/state methods: ['ALT_state', 'COLLIDING_state', 'CTRL_state', 'CacheModeFlag', 'DragMode', 'LMB_state', 'MMB_state', 'RMB_state', 'SHIFT_state', 'ViewportUpdateMode', 'cacheMode', 'clear_key_state', 'dragMode', 'grabMouse', 'hasMouseTracking', 'mouseDoubleClickEvent', 'mouseGrabber', 'mouseMoveEvent', 'mousePressEvent', 'mouseReleaseEvent', 'overrideWindowState', 'releaseMouse', 'rubberBandSelectionMode', 'sceneMouseMoveEvent', 'sceneMousePressEvent', 'sceneMouseReleaseEvent', 'setCacheMode', 'setDragMode', 'setMouseTracking', 'setRubberBandSelectionMode', 'setViewportUpdateMode', 'setWindowState', 'underMouse', 'viewportUpdateMode', 'windowHandle', 'windowState']
+2025-09-29 21:16:40,573 - INFO - Pan event filter installed on viewer and graph widget
+2025-09-29 21:16:41,709 - INFO - HTTP Request: GET https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json "HTTP/1.1 200 OK"
+2025-09-29 21:16:42,327 - ERROR - [Flow Serializer] load_session failed: the JSON object must be str, bytes or bytearray, not dict
+2025-09-29 21:16:46,268 - INFO - Created context node: <ContextOutputNode("Context Output") object at 0x22bf7062850>
+2025-09-29 21:16:46,268 - INFO - Context node outputs: ['text']
+2025-09-29 21:16:46,268 - INFO -   Output port: text, name: N/A, type: <class 'str'>
+2025-09-29 21:16:46,268 - INFO - Created OpenRouter node 0: <OpenRouterNode("OpenRouter LLM") object at 0x22bf72e8790>
+2025-09-29 21:16:46,268 - INFO - OpenRouter 0 inputs: ['text', 'system']
+2025-09-29 21:16:46,268 - INFO -   Input port: text, name: N/A, type: <class 'str'>
+2025-09-29 21:16:46,268 - INFO -   Input port: system, name: N/A, type: <class 'str'>
+2025-09-29 21:16:46,271 - INFO - Created OpenRouter node 1: <OpenRouterNode("OpenRouter LLM 1") object at 0x22bf7b3ff10>
+2025-09-29 21:16:46,271 - INFO - OpenRouter 1 inputs: ['text', 'system']
+2025-09-29 21:16:46,271 - INFO -   Input port: text, name: N/A, type: <class 'str'>
+2025-09-29 21:16:46,271 - INFO -   Input port: system, name: N/A, type: <class 'str'>
+2025-09-29 21:16:46,274 - INFO - Created OpenRouter node 2: <OpenRouterNode("OpenRouter LLM 2") object at 0x22bf7b3fd50>
+2025-09-29 21:16:46,274 - INFO - OpenRouter 2 inputs: ['text', 'system']
+2025-09-29 21:16:46,274 - INFO -   Input port: text, name: N/A, type: <class 'str'>
+2025-09-29 21:16:46,274 - INFO -   Input port: system, name: N/A, type: <class 'str'>
+2025-09-29 21:16:46,276 - INFO - Created OpenRouter node 3: <OpenRouterNode("OpenRouter LLM 3") object at 0x22bf7b59690>
+2025-09-29 21:16:46,276 - INFO - OpenRouter 3 inputs: ['text', 'system']
+2025-09-29 21:16:46,277 - INFO -   Input port: text, name: N/A, type: <class 'str'>
+2025-09-29 21:16:46,277 - INFO -   Input port: system, name: N/A, type: <class 'str'>
+2025-09-29 21:16:46,279 - INFO - Created OpenRouter node 4: <OpenRouterNode("OpenRouter LLM 4") object at 0x22bf7b322d0>
+2025-09-29 21:16:46,279 - INFO - OpenRouter 4 inputs: ['text', 'system']
+2025-09-29 21:16:46,279 - INFO -   Input port: text, name: N/A, type: <class 'str'>
+2025-09-29 21:16:46,279 - INFO -   Input port: system, name: N/A, type: <class 'str'>
+2025-09-29 21:16:46,281 - INFO - Created BestOfN node: <BestOfNNode("Best-of-N Synthesizer") object at 0x22bf7b5b910>
+2025-09-29 21:16:46,281 - INFO - BestOfN inputs: ['context', 'candidate1', 'candidate2', 'candidate3', 'candidate4', 'candidate5']
+2025-09-29 21:16:46,281 - INFO -   Input port: context, name: N/A, type: <class 'str'>
+2025-09-29 21:16:46,281 - INFO -   Input port: candidate1, name: N/A, type: <class 'str'>
+2025-09-29 21:16:46,281 - INFO -   Input port: candidate2, name: N/A, type: <class 'str'>
+2025-09-29 21:16:46,281 - INFO -   Input port: candidate3, name: N/A, type: <class 'str'>
+2025-09-29 21:16:46,281 - INFO -   Input port: candidate4, name: N/A, type: <class 'str'>
+2025-09-29 21:16:46,281 - INFO -   Input port: candidate5, name: N/A, type: <class 'str'>
+2025-09-29 21:16:46,284 - INFO - Created Clipboard node: <ClipboardNode("Clipboard") object at 0x22bf7b671d0>
+2025-09-29 21:16:46,284 - INFO - Clipboard inputs: ['text']
+2025-09-29 21:16:46,284 - INFO -   Input port: text, name: N/A, type: <class 'str'>
+2025-09-29 21:16:46,285 - INFO - Created FileWrite node: <FileWriteNode("File Write") object at 0x22bf7b68190>
+2025-09-29 21:16:46,285 - INFO - FileWrite inputs: ['text']
+2025-09-29 21:16:46,285 - INFO -   Input port: text, name: N/A, type: <class 'str'>
+2025-09-29 21:16:46,285 - INFO - Context output port: <Port("text") object at 0x22bd4ab0510>
+2025-09-29 21:16:46,285 - INFO - OpenRouter 0 input port: <Port("text") object at 0x22bd296e4d0>
+2025-09-29 21:16:46,286 - INFO - Connected ctx -> OpenRouter 0
+2025-09-29 21:16:46,286 - INFO - OpenRouter 1 input port: <Port("text") object at 0x22bf7b583d0>
+2025-09-29 21:16:46,286 - INFO - Connected ctx -> OpenRouter 1
+2025-09-29 21:16:46,286 - INFO - OpenRouter 2 input port: <Port("text") object at 0x22bf7b58610>
+2025-09-29 21:16:46,287 - INFO - Connected ctx -> OpenRouter 2
+2025-09-29 21:16:46,287 - INFO - OpenRouter 3 input port: <Port("text") object at 0x22bf7b5a0d0>
+2025-09-29 21:16:46,287 - INFO - Connected ctx -> OpenRouter 3
+2025-09-29 21:16:46,287 - INFO - OpenRouter 4 input port: <Port("text") object at 0x22bf7b5bf50>
+2025-09-29 21:16:46,288 - INFO - Connected ctx -> OpenRouter 4
+2025-09-29 21:16:46,288 - INFO - Best context input port: <Port("context") object at 0x22bf6da7790>
+2025-09-29 21:16:46,288 - INFO - Successfully connected ctx->best.context
+2025-09-29 21:16:46,288 - INFO - OpenRouter 1 output port: <Port("text") object at 0x22bf7b3e710>
+2025-09-29 21:16:46,288 - INFO - Best candidate1 input port: <Port("candidate1") object at 0x22bf7b65690>
+2025-09-29 21:16:46,288 - INFO - Successfully connected OpenRouter 1->best.candidate1
+2025-09-29 21:16:46,288 - INFO - OpenRouter 2 output port: <Port("text") object at 0x22bf7b58910>
+2025-09-29 21:16:46,288 - INFO - Best candidate2 input port: <Port("candidate2") object at 0x22bf6da76d0>
+2025-09-29 21:16:46,289 - INFO - Successfully connected OpenRouter 2->best.candidate2
+2025-09-29 21:16:46,289 - INFO - OpenRouter 3 output port: <Port("text") object at 0x22bf7b59e10>
+2025-09-29 21:16:46,289 - INFO - Best candidate3 input port: <Port("candidate3") object at 0x22bf7b65b90>
+2025-09-29 21:16:46,289 - INFO - Successfully connected OpenRouter 3->best.candidate3
+2025-09-29 21:16:46,289 - INFO - OpenRouter 4 output port: <Port("text") object at 0x22bf7b5af90>
+2025-09-29 21:16:46,289 - INFO - Best candidate4 input port: <Port("candidate4") object at 0x22bf7b65e10>
+2025-09-29 21:16:46,290 - INFO - Successfully connected OpenRouter 4->best.candidate4
+2025-09-29 21:16:46,290 - INFO - OpenRouter 5 output port: <Port("text") object at 0x22bf7b64490>
+2025-09-29 21:16:46,290 - INFO - Best candidate5 input port: <Port("candidate5") object at 0x22bd4d1ced0>
+2025-09-29 21:16:46,290 - INFO - Successfully connected OpenRouter 5->best.candidate5
+2025-09-29 21:16:46,290 - INFO - Best output port: <Port("text") object at 0x22bf7b662d0>
+2025-09-29 21:16:46,292 - INFO - Clipboard input port: <Port("text") object at 0x22bf7b67490>
+2025-09-29 21:16:46,292 - INFO - FileWrite input port: <Port("text") object at 0x22bf7b68610>
+2025-09-29 21:16:46,292 - INFO - Successfully connected best->Clipboard
+2025-09-29 21:16:46,293 - INFO - Successfully connected best->FileWrite
+2025-09-29 21:16:50,275 - INFO - Sent metric event: generate_start
+2025-09-29 21:16:50,282 - INFO - Writing output to: C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app\fullcode.txt
+2025-09-29 21:16:50,283 - INFO - Processed: aicodeprep_gui\update_checker.py
+2025-09-29 21:16:50,283 - INFO - Processed: aicodeprep_gui\windows_registry.py
+2025-09-29 21:16:50,299 - INFO - Copied 10278 chars to clipboard.
+2025-09-29 21:16:50,304 - INFO - Saved preferences to C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app\.aicodeprep-gui
+2025-09-29 21:16:53,154 - INFO - [ContextOutputNode] Resolving context path C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app\fullcode.txt
+2025-09-29 21:16:53,154 - INFO - [ContextOutputNode] Loaded 10278 characters from context
+2025-09-29 21:16:53,154 - INFO - [OpenRouter LLM] Provider: openrouter, Model: None, Base URL: https://openrouter.ai/api/v1
+2025-09-29 21:16:53,154 - INFO - [OpenRouter LLM] OpenRouter mode: random_free
+2025-09-29 21:16:53,805 - INFO - [OpenRouter LLM] Found 327 OpenRouter models
+2025-09-29 21:16:53,807 - INFO - [OpenRouter LLM] Selected model: deepseek/deepseek-r1:free
+2025-09-29 21:16:53,807 - INFO - [OpenRouter LLM] Making LLM call with model: deepseek/deepseek-r1:free
+21:16:53 - LiteLLM:INFO: utils.py:2760 - 
+LiteLLM completion() model= deepseek-r1:free; provider = deepseek
+2025-09-29 21:16:53,963 - INFO - 
+LiteLLM completion() model= deepseek-r1:free; provider = deepseek
+2025-09-29 21:16:54,235 - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 400 Bad Request"
 
+Give Feedback / Get Help: https://github.com/BerriAI/litellm/issues/new
+LiteLLM.Info: If you need to debug this error, use `litellm.set_verbose=True'.
+
+
+Provider List: https://docs.litellm.ai/docs/providers
+
+2025-09-29 21:25:13,252 - ERROR - [OpenRouter LLM] LLM Error: Chat error: litellm.BadRequestError: DeepseekException - Error code: 400 - {'error': {'message': 'deepseek-r1:free is not a valid model ID', 'code': 400}, 'user_id': 'user_2nE1kab7pd1Phy1LCbaVnzWIF2w'}
+2025-09-29 21:25:13,255 - INFO - [OpenRouter LLM 1] Provider: openrouter, Model: None, Base URL: https://openrouter.ai/api/v1
+2025-09-29 21:25:13,255 - INFO - [OpenRouter LLM 1] OpenRouter mode: random_free
+2025-09-29 21:25:13,585 - INFO - [OpenRouter LLM 1] Found 327 OpenRouter models
+2025-09-29 21:25:13,585 - INFO - [OpenRouter LLM 1] Selected model: qwen/qwen3-30b-a3b:free
+2025-09-29 21:25:13,585 - INFO - [OpenRouter LLM 1] Making LLM call with model: qwen/qwen3-30b-a3b:free
+
+Provider List: https://docs.litellm.ai/docs/providers
+
+
+Provider List: https://docs.litellm.ai/docs/providers
+
+
+Provider List: https://docs.litellm.ai/docs/providers
+
+2025-09-29 21:27:27,458 - ERROR - [OpenRouter LLM 1] LLM Error: Chat error: litellm.BadRequestError: LLM Provider NOT provided. Pass in the LLM provider you are trying to call. You passed model=qwen/qwen3-30b-a3b:free
+ Pass model as E.g. For 'Huggingface' inference endpoints pass in `completion(model='huggingface/starcoder',..)` Learn more: https://docs.litellm.ai/docs/providers
+2025-09-29 21:27:27,460 - INFO - [OpenRouter LLM 2] Provider: openrouter, Model: None, Base URL: https://openrouter.ai/api/v1
+2025-09-29 21:27:27,460 - INFO - [OpenRouter LLM 2] OpenRouter mode: random_free
+2025-09-29 21:27:27,848 - INFO - [OpenRouter LLM 2] Found 327 OpenRouter models
+2025-09-29 21:27:27,849 - INFO - [OpenRouter LLM 2] Selected model: deepseek/deepseek-r1-0528:free
+2025-09-29 21:27:27,849 - INFO - [OpenRouter LLM 2] Making LLM call with model: deepseek/deepseek-r1-0528:free
+21:27:27 - LiteLLM:INFO: utils.py:2760 -
+LiteLLM completion() model= deepseek-r1-0528:free; provider = deepseek
+2025-09-29 21:27:27,849 - INFO -
+LiteLLM completion() model= deepseek-r1-0528:free; provider = deepseek
+2025-09-29 21:27:28,459 - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 400 Bad Request"
+
+Give Feedback / Get Help: https://github.com/BerriAI/litellm/issues/new
+LiteLLM.Info: If you need to debug this error, use `litellm.set_verbose=True'.
+
+
+Provider List: https://docs.litellm.ai/docs/providers
+
+2025-09-29 21:27:33,221 - ERROR - [OpenRouter LLM 2] LLM Error: Chat error: litellm.BadRequestError: DeepseekException - Error code: 400 - {'error': {'message': 'deepseek-r1-0528:free is not a valid model ID', 'code': 400}, 'user_id': 'user_2nE1kab7pd1Phy1LCbaVnzWIF2w'}
+2025-09-29 21:27:33,224 - INFO - [OpenRouter LLM 3] Provider: openrouter, Model: None, Base URL: https://openrouter.ai/api/v1
+2025-09-29 21:27:33,224 - INFO - [OpenRouter LLM 3] OpenRouter mode: random_free
+2025-09-29 21:27:33,674 - INFO - [OpenRouter LLM 3] Found 327 OpenRouter models
+2025-09-29 21:27:33,674 - INFO - [OpenRouter LLM 3] Selected model: qwen/qwen3-30b-a3b:free
+2025-09-29 21:27:33,674 - INFO - [OpenRouter LLM 3] Making LLM call with model: qwen/qwen3-30b-a3b:free
+
+Provider List: https://docs.litellm.ai/docs/providers
+
+
+Provider List: https://docs.litellm.ai/docs/providers
+Provider List: https://docs.litellm.ai/docs/providers
+
+Provider List: https://docs.litellm.ai/docs/providers
+
+2025-09-29 21:27:36,419 - ERROR - [OpenRouter LLM 3] LLM Error: Chat error: litellm.BadRequestError: LLM Provider NOT provided. Pass in the LLM provider you are trying to call. You passed model=qwen/qwen3-30b-a3b:free
+ Pass model as E.g. For 'Huggingface' inference endpoints pass in `completion(model='huggingface/starcoder',..)` Learn more: https://docs.litellm.ai/docs/providers
+2025-09-29 21:27:36,423 - INFO - [OpenRouter LLM 4] Provider: openrouter, Model: None, Base URL: https://openrouter.ai/api/v1
+2025-09-29 21:27:36,423 - INFO - [OpenRouter LLM 4] OpenRouter mode: random_free
+2025-09-29 21:27:36,839 - INFO - [OpenRouter LLM 4] Found 327 OpenRouter models
+2025-09-29 21:27:36,839 - INFO - [OpenRouter LLM 4] Selected model: qwen/qwen3-30b-a3b:free
+2025-09-29 21:27:36,839 - INFO - [OpenRouter LLM 4] Making LLM call with model: qwen/qwen3-30b-a3b:free
+
+Provider List: https://docs.litellm.ai/docs/providers
+
+
+Provider List: https://docs.litellm.ai/docs/providers
+
+
+Provider List: https://docs.litellm.ai/docs/providers
+
+2025-09-29 21:27:38,038 - ERROR - [OpenRouter LLM 4] LLM Error: Chat error: litellm.BadRequestError: LLM Provider NOT provided. Pass in the LLM provider you are trying to call. You passed model=qwen/qwen3-30b-a3b:free
+ Pass model as E.g. For 'Huggingface' inference endpoints pass in `completion(model='huggingface/starcoder',..)` Learn more: https://docs.litellm.ai/docs/providers
+2025-09-29 21:29:32,664 - INFO - Buy my cat a treat, comments, ideas for improvement appreciated:
+2025-09-29 21:29:32,664 - INFO - https://wuu73.org/hello.html
+PS C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app>
