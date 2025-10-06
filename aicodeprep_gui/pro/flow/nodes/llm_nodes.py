@@ -13,6 +13,12 @@ try:
 except ImportError:
     QtWidgets = None
 
+try:
+    from NodeGraphQt.constants import NodePropWidgetEnum
+except ImportError:
+    class NodePropWidgetEnum:
+        QLINE_EDIT = 3
+        QCOMBO_BOX = 5
 
 class LLMBaseNode(BaseExecNode):
     """
@@ -22,22 +28,19 @@ class LLMBaseNode(BaseExecNode):
 
     def __init__(self):
         super().__init__()
-        try:
-            # IO
-            self.add_input("text")
-            self.add_input("system")  # optional
-            self.add_output("text")
+        # IO
+        self.add_input("text")
+        self.add_input("system")  # optional
+        self.add_output("text")
 
-            # UI properties with proper widget types for better editing
-            self.create_property("provider", "generic", widget_type="list",
-                                 items=["openrouter", "openai", "gemini", "compatible", "generic"])
-            self.create_property("model_mode", "choose", widget_type="list",
-                                 items=["choose", "random", "random_free"])
-            self.create_property("model", "", widget_type="text")
-            self.create_property("api_key", "", widget_type="text")
-            self.create_property("base_url", "", widget_type="text")
-        except Exception:
-            pass
+        # UI properties with proper widget types for better editing
+        self.create_property("provider", "generic", widget_type=NodePropWidgetEnum.QCOMBO_BOX.value,
+                             items=["openai", "openrouter", "gemini", "generic"])
+        self.create_property("model_mode", "choose", widget_type=NodePropWidgetEnum.QCOMBO_BOX.value,
+                             items=["choose", "random", "random_free"])
+        self.create_property("model", "", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
+        self.create_property("api_key", "", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
+        self.create_property("base_url", "", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
 
     # Utility to show user-friendly error
     def _warn(self, msg: str):

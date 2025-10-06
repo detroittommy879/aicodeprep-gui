@@ -3,6 +3,7 @@
 # Guard NodeGraphQt import so non-installed environments still launch the app.
 try:
     from NodeGraphQt import BaseNode  # type: ignore
+    from NodeGraphQt.constants import NodePropWidgetEnum
 except Exception as e:  # pragma: no cover
     class BaseNode:  # minimal stub to keep imports safe; not used without NodeGraphQt
         def __init__(self, *args, **kwargs):
@@ -10,6 +11,9 @@ except Exception as e:  # pragma: no cover
                 "NodeGraphQt is required for Flow Studio nodes. "
                 f"Original import error: {e}"
             )
+    class NodePropWidgetEnum:
+        QLINE_EDIT = 3
+        FILE_SAVE = 14
 
 from .base import BaseExecNode
 from typing import Any, Dict, Optional
@@ -29,17 +33,11 @@ class ContextOutputNode(BaseExecNode):
     def __init__(self):
         super().__init__()
         # Outputs
-        try:
-            self.add_output("text")
-        except Exception:
-            pass
+        self.add_output("text")
 
         # Properties
-        try:
-            self.create_property("path", "fullcode.txt")
-            self.create_property("use_latest_generated", True)
-        except Exception:
-            pass
+        self.create_property("path", "fullcode.txt")
+        self.create_property("use_latest_generated", True)
 
     def run(self, inputs: Dict[str, Any], settings: Optional[Dict] = None) -> Dict[str, Any]:
         """
@@ -81,10 +79,7 @@ class ClipboardNode(BaseExecNode):
 
     def __init__(self):
         super().__init__()
-        try:
-            self.add_input("text")
-        except Exception:
-            pass
+        self.add_input("text")
 
     def run(self, inputs: Dict[str, Any], settings: Optional[Dict] = None) -> Dict[str, Any]:
         """Copy input text to system clipboard."""
@@ -106,20 +101,14 @@ class FileWriteNode(BaseExecNode):
 
     def __init__(self):
         super().__init__()
-        try:
-            self.add_input("text")
-        except Exception:
-            pass
+        self.add_input("text")
 
-        try:
-            # Use text widget with clear label for file path
-            self.create_property("path", "fullcode.txt",
-                                 widget_type="file_save")
-            # If file_save not available, fallback to regular text
-            if not self.has_property("path"):
-                self.create_property("path", "fullcode.txt")
-        except Exception:
-            pass
+        # Use text widget with clear label for file path
+        self.create_property("path", "fullcode.txt",
+                             widget_type=NodePropWidgetEnum.FILE_SAVE.value)
+        # If file_save not available, fallback to regular text
+        if not self.has_property("path"):
+            self.create_property("path", "fullcode.txt")
 
     def run(self, inputs: Dict[str, Any], settings: Optional[Dict] = None) -> Dict[str, Any]:
         """Write input text to configured file path."""
@@ -142,11 +131,8 @@ class OutputDisplayNode(BaseExecNode):
 
     def __init__(self):
         super().__init__()
-        try:
-            self.add_input("text")
-            self.create_property("last_result", "")
-        except Exception:
-            pass
+        self.add_input("text")
+        self.create_property("last_result", "")
 
     def run(self, inputs: Dict[str, Any], settings: Optional[Dict] = None) -> Dict[str, Any]:
         """Store text in property for display in Properties Bin."""

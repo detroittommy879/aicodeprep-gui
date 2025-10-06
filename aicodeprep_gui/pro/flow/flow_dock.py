@@ -400,6 +400,11 @@ class FlowStudioDock(QtWidgets.QDockWidget):
         # Configure the graph viewer for better usability
         self._configure_viewer()
 
+        # Register I/O nodes and load the default flow BEFORE creating the properties panel
+        # This might prevent issues where panel creation interferes with session loading.
+        self._register_nodes()
+        self._load_default_flow_or_build()
+
         # Create the PropertiesBinWidget - this is a separate widget that needs
         # the node graph passed to it. The constructor internally wires up signals.
         self.properties_bin = None
@@ -474,10 +479,6 @@ class FlowStudioDock(QtWidgets.QDockWidget):
 
         vbox.addWidget(splitter)
         self.setWidget(wrapper)
-
-        # Register I/O nodes
-        self._register_nodes()
-        self._load_default_flow_or_build()
 
         # Show config instructions if no API keys are configured
         self._check_and_show_config_instructions()

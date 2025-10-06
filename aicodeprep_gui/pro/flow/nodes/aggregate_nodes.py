@@ -7,6 +7,15 @@ import logging
 from .base import BaseExecNode
 from aicodeprep_gui.pro.llm.litellm_client import LLMClient, LLMError
 
+# Import NodeGraphQt constants for property widget types
+try:
+    from NodeGraphQt.constants import NodePropWidgetEnum
+except ImportError:
+    class NodePropWidgetEnum:
+        QLINE_EDIT = 3
+        QTEXT_EDIT = 4
+        QCOMBO_BOX = 5
+
 # Guard Qt import for popups
 try:
     from PySide6 import QtWidgets
@@ -33,36 +42,33 @@ class BestOfNNode(BaseExecNode):
 
     def __init__(self):
         super().__init__()
+        # Inputs
+        self.add_input("context")  # the original context text
+        # We'll provide 5 inputs by default: candidate1..candidate5
+        for i in range(1, 6):
+            self.add_input(f"candidate{i}")
+
+        self.add_output("text")
+
+        # Properties for the LLM used for synthesis
+        # openrouter | openai | gemini | compatible
+        self.create_property("provider", "openrouter", widget_type=NodePropWidgetEnum.QCOMBO_BOX.value,
+                             items=["openrouter", "openai", "gemini", "compatible"])
+        self.create_property("api_key", "", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
+        self.create_property(
+            "base_url", "https://openrouter.ai/api/v1", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
+        # if provider=openrouter, supports 'random'/'random_free' via model_mode
+        self.create_property("model", "", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
+        # choose | random | random_free
+        self.create_property("model_mode", "random_free", widget_type=NodePropWidgetEnum.QCOMBO_BOX.value,
+                             items=["choose", "random", "random_free"])
+        # Use QTEXT_EDIT widget type for multiline editing
         try:
-            # Inputs
-            self.add_input("context")  # the original context text
-            # We'll provide 5 inputs by default: candidate1..candidate5
-            for i in range(1, 6):
-                self.add_input(f"candidate{i}")
-
-            self.add_output("text")
-
-            # Properties for the LLM used for synthesis
-            # openrouter | openai | gemini | compatible
-            self.create_property("provider", "openrouter", widget_type="list",
-                                 items=["openrouter", "openai", "gemini", "compatible"])
-            self.create_property("api_key", "", widget_type="text")
             self.create_property(
-                "base_url", "https://openrouter.ai/api/v1", widget_type="text")
-            # if provider=openrouter, supports 'random'/'random_free' via model_mode
-            self.create_property("model", "", widget_type="text")
-            # choose | random | random_free
-            self.create_property("model_mode", "random_free", widget_type="list",
-                                 items=["choose", "random", "random_free"])
-            # Use text_multi widget type for multiline editing (NodeGraphQt 0.6.30+)
-            try:
-                self.create_property(
-                    "extra_prompt", BEST_OF_DEFAULT_PROMPT, widget_type="text_multi")
-            except Exception:
-                # Fallback for older NodeGraphQt versions
-                self.create_property("extra_prompt", BEST_OF_DEFAULT_PROMPT)
+                "extra_prompt", BEST_OF_DEFAULT_PROMPT, widget_type=NodePropWidgetEnum.QTEXT_EDIT.value)
         except Exception:
-            pass
+            # Fallback for older NodeGraphQt versions
+            self.create_property("extra_prompt", BEST_OF_DEFAULT_PROMPT)
 
     def _warn(self, msg: str):
         """Show warning message to user."""
