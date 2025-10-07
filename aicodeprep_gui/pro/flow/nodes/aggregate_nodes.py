@@ -54,11 +54,13 @@ class BestOfNNode(BaseExecNode):
         # openrouter | openai | gemini | compatible
         self.create_property("provider", "openrouter", widget_type=NodePropWidgetEnum.QCOMBO_BOX.value,
                              items=["openrouter", "openai", "gemini", "compatible"])
-        self.create_property("api_key", "", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
+        self.create_property(
+            "api_key", "", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
         self.create_property(
             "base_url", "https://openrouter.ai/api/v1", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
         # if provider=openrouter, supports 'random'/'random_free' via model_mode
-        self.create_property("model", "", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
+        self.create_property(
+            "model", "", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
         # choose | random | random_free
         self.create_property("model_mode", "random_free", widget_type=NodePropWidgetEnum.QCOMBO_BOX.value,
                              items=["choose", "random", "random_free"])
@@ -92,11 +94,23 @@ class BestOfNNode(BaseExecNode):
             if v:
                 candidates.append(v)
 
+        logging.info(
+            f"[{self.NODE_NAME}] Received {len(candidates)} candidate(s), context length: {len(context)}")
+        for idx, cand in enumerate(candidates, 1):
+            logging.info(
+                f"[{self.NODE_NAME}] Candidate {idx} length: {len(cand)}")
+
         if not context:
             self._warn("Missing 'context' input.")
             return {}
         if not candidates:
-            self._warn("No candidate inputs provided.")
+            self._warn(
+                "No candidate inputs provided. Check that LLM nodes produced output.")
+            logging.error(
+                f"[{self.NODE_NAME}] Input keys received: {list(inputs.keys())}")
+            for key, val in inputs.items():
+                logging.error(
+                    f"[{self.NODE_NAME}] {key}: {type(val)} = {repr(val)[:100]}")
             return {}
 
         provider = (self.get_property("provider")
@@ -127,7 +141,6 @@ class BestOfNNode(BaseExecNode):
         # Resolve model for OpenRouter random/random_free if needed
         if provider == "openrouter":
             if mode in ("random", "random_free"):
-                from aicodeprep_gui.pro.llm.litellm_client import LLMClient
                 models = LLMClient.list_models_openrouter(api_key)
                 pick = LLMClient.openrouter_pick_model(
                     models, free_only=(mode == "random_free"))
@@ -137,9 +150,18 @@ class BestOfNNode(BaseExecNode):
                     return {}
                 # LiteLLM requires 'openrouter/' prefix
                 model = f"openrouter/{pick}"
-            elif model and not model.startswith("openrouter/"):
-                # User provided a model - add prefix if not present
-                model = f"openrouter/{model}"
+            elif model:
+                # User provided a model - ensure proper prefix
+                if model.startswith("openrouter/openrouter/"):
+                    # User accidentally added openrouter/ prefix, remove one
+                    model = model.replace(
+                        "openrouter/openrouter/", "openrouter/", 1)
+                    logging.info(
+                        f"[{self.NODE_NAME}] Removed duplicate openrouter prefix: {model}")
+                elif not model.startswith("openrouter/"):
+                    model = f"openrouter/{model}"
+                    logging.info(
+                        f"[{self.NODE_NAME}] Added openrouter prefix: {model}")
 
         # Build synthesis prompt
         # We'll pass in everything as user content; system message left empty

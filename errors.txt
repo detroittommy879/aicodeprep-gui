@@ -1,44 +1,160 @@
-s\aicpgui\aicodeprep-gui-main-app> python -m aicodeprep_gui.main
-2025-10-05 21:30:32,186 - INFO - Loaded font: JetBrains Mono from JetBrainsMono-VariableFont_wght.ttf
-2025-10-05 21:30:32,190 - INFO - Loaded font: Fira Code from FiraCode-VariableFont_wght.ttf
-2025-10-05 21:30:32,191 - INFO - Loaded font: Space Mono from SpaceMono-Regular.ttf
-2025-10-05 21:30:32,191 - INFO - All loaded custom fonts: JetBrains Mono, Fira Code, Space Mono
-2025-10-05 21:30:32,191 - INFO - Loaded custom fonts: JetBrains Mono, Fira Code, Space Mono
-2025-10-05 21:30:32,191 - INFO - Target directory: .
-2025-10-05 21:30:32,191 - INFO - Starting code concatenation...
-2025-10-05 21:30:32,191 - INFO - Starting initial fast scan in: C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app
-2025-10-05 21:30:32,282 - INFO - Initial scan collected 212 items.
-2025-10-05 21:30:32,388 - INFO - Sent metric event: open
-2025-10-05 21:30:32,405 - INFO - Loaded font: JetBrains Mono from JetBrainsMono-VariableFont_wght.ttf
-2025-10-05 21:30:32,408 - INFO - Loaded font: Fira Code from FiraCode-VariableFont_wght.ttf
-2025-10-05 21:30:32,409 - INFO - Loaded font: Space Mono from SpaceMono-Regular.ttf
-2025-10-05 21:30:32,410 - INFO - All loaded custom fonts: JetBrains Mono, Fira Code, Space Mono
+
+(venv) PS C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app> python -m aicodeprep_gui.main
+2025-10-05 22:20:07,912 - INFO - Loaded font: JetBrains Mono from JetBrainsMono-VariableFont_wght.ttf
+2025-10-05 22:20:07,924 - INFO - Loaded font: Fira Code from FiraCode-VariableFont_wght.ttf
+2025-10-05 22:20:07,939 - INFO - Loaded font: Space Mono from SpaceMono-Regular.ttf
+2025-10-05 22:20:07,939 - INFO - All loaded custom fonts: JetBrains Mono, Fira Code, Space Mono
+2025-10-05 22:20:07,940 - INFO - Loaded custom fonts: JetBrains Mono, Fira Code, Space Mono
+2025-10-05 22:20:07,940 - INFO - Target directory: .
+2025-10-05 22:20:07,940 - INFO - Starting code concatenation...
+2025-10-05 22:20:07,940 - INFO - Starting initial fast scan in: C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app
+2025-10-05 22:20:09,284 - INFO - Initial scan collected 213 items.
+2025-10-05 22:20:09,358 - INFO - Sent metric event: open
+2025-10-05 22:20:09,367 - INFO - Loaded font: JetBrains Mono from JetBrainsMono-VariableFont_wght.ttf
+2025-10-05 22:20:09,371 - INFO - Loaded font: Fira Code from FiraCode-VariableFont_wght.ttf
+2025-10-05 22:20:09,371 - INFO - Loaded font: Space Mono from SpaceMono-Regular.ttf
+2025-10-05 22:20:09,371 - INFO - All loaded custom fonts: JetBrains Mono, Fira Code, Space Mono
 Font debug info: Loaded font families: ['JetBrains Mono', 'Fira Code', 'Space Mono']
-2025-10-05 21:30:33,527 - INFO - SyntaxHighlightedTextEdit: Using font family 'JetBrains Mono' (requested: 'JetBrains Mono')
-2025-10-05 21:30:33,531 - INFO - Loaded preview window state from preferences: False
-2025-10-05 21:30:33,531 - INFO - Loaded syntax highlighting state from preferences: True
-2025-10-05 21:30:33,997 - INFO - Application is up to date. (current: 1.2.0, latest: 1.2.0)
-2025-10-05 21:30:36,104 - INFO - NodeGraph type: <class 'NodeGraphQt.base.graph.NodeGraph'>
-2025-10-05 21:30:36,104 - INFO - NodeGraph attributes: ['acyclic', 'add_node', 'add_properties_bin', 'all_nodes', 'auto_layout_nodes', 'background_color', 'begin_undo', 'blockSignals', 'center_on', 'center_selection', 'childEvent', 'children', 'clear_selection', 'clear_session', 'clear_undo_stack', 'close', 'collapse_group_node', 'connect', 'connectNotify', 'context_menu', 'context_menu_prompt', 'context_nodes_menu', 'copy_nodes', 'create_node', 'current_session', 'cursor_pos', 'customEvent', 'cut_nodes', 'data_dropped', 'deleteLater', 'delete_node', 'delete_nodes', 'deserialize_session', 'destroyed', 'disable_context_menu', 'disable_nodes', 'disconnect', 'disconnectNotify', 'dumpObjectInfo', 'dumpObjectTree', 'duplicate_nodes', 'dynamicPropertyNames', 'emit', 'end_undo', 'event', 'eventFilter', 'expand_group_node', 'extract_nodes', 'findChild', 'findChildren', 'fit_to_selection', 'get_context_menu', 'get_node_by_id', 'get_node_by_name', 'get_nodes_by_type', 'get_unique_name', 'get_zoom', 'grid_color', 'import_session', 'inherits', 'installEventFilter', 'invert_selection', 'isQuickItemType', 'isSignalConnected', 'isWidgetType', 'isWindowType', 'is_root', 'killTimer', 'layout_direction', 'load_dialog', 'load_session', 'message_dialog', 'metaObject', 'model', 'moveToThread', 'node_created', 'node_double_clicked', 'node_factory', 'node_selected', 'node_selection_changed', 'nodes_deleted', 'nodes_registered', 'objectName', 'objectNameChanged', 'parent', 'paste_nodes', 'pipe_collision', 'pipe_slicing', 'pipe_style', 'port_connected', 'port_disconnected', 'property', 'property_changed', 'question_dialog', 'receivers', 'register_node', 'register_nodes', 'registered_nodes', 'removeEventFilter', 'remove_node', 'reset_zoom', 'save_dialog', 'save_session', 'scene', 'select_all', 'selected_nodes', 'sender', 'senderSignalIndex', 'serialize_session', 'session_changed', 'setObjectName', 'setParent', 'setProperty', 'set_acyclic', 'set_background_color', 'set_context_menu', 'set_context_menu_from_file', 'set_grid_color', 'set_grid_mode', 'set_layout_direction', 'set_pipe_collision', 'set_pipe_slicing', 'set_pipe_style', 'set_zoom', 'show', 'signalsBlocked', 'startTimer', 'staticMetaObject', 'sub_graphs', 'thread', 'timerEvent', 'toggle_node_search', 'tr', 'undo_stack', 'undo_view', 'use_OpenGL', 'viewer', 'widget']
-2025-10-05 21:30:36,104 - INFO - Widget type: <class 'NodeGraphQt.widgets.node_graph.NodeGraphWidget'>
-2025-10-05 21:30:36,104 - INFO - Widget attributes: ['PaintDeviceMetric', 'RenderFlag', 'TabPosition', 'TabShape', 'acceptDrops', 'accessibleDescription', 'accessibleIdentifier', 'accessibleName', 'actionEvent', 'actions', 'activateWindow', 'addAction', 'addActions', 'addTab', 'add_viewer', 'adjustSize', 'autoFillBackground', 'backgroundRole', 'backingStore', 'baseSize', 'blockSignals', 'changeEvent', 'childAt', 'childEvent', 'children', 'childrenRect', 'childrenRegion', 'clear', 'clearFocus', 'clearMask', 'close', 'closeEvent', 'colorCount', 'connect', 'connectNotify', 'contentsMargins', 'contentsRect', 'contextMenuEvent', 'contextMenuPolicy', 'cornerWidget', 'count', 'create', 'createWinId', 'createWindowContainer', 'currentChanged', 'currentIndex', 'currentWidget', 'cursor', 'customContextMenuRequested', 'customEvent', 'deleteLater', 'depth', 'destroy', 'destroyed', 'devType', 'devicePixelRatio', 'devicePixelRatioF', 'devicePixelRatioFScale', 'disconnect', 'disconnectNotify', 'documentMode', 'dragEnterEvent', 'dragLeaveEvent', 'dragMoveEvent', 'dropEvent', 'dumpObjectInfo', 'dumpObjectTree', 'dynamicPropertyNames', 'effectiveWinId', 'elideMode', 'emit', 'encodeMetricF', 'ensurePolished', 'enterEvent', 'event', 'eventFilter', 'find', 'findChild', 'findChildren', 'focusInEvent', 'focusNextChild', 'focusNextPrevChild', 'focusOutEvent', 'focusPolicy', 'focusPreviousChild', 'focusProxy', 'focusWidget', 'font', 'fontInfo', 'fontMetrics', 'foregroundRole', 'frameGeometry', 'frameSize', 'geometry', 'grab', 'grabGesture', 'grabKeyboard', 'grabMouse', 'grabShortcut', 'graphicsEffect', 'graphicsProxyWidget', 'hasFocus', 'hasHeightForWidth', 'hasMouseTracking', 'hasTabletTracking', 'height', 'heightForWidth', 'heightMM', 'hide', 'hideEvent', 'iconSize', 'indexOf', 'inherits', 'initPainter', 'initStyleOption', 'inputMethodEvent', 'inputMethodHints', 'inputMethodQuery', 'insertAction', 'insertActions', 'insertTab', 'installEventFilter', 'internalWinId', 'isActiveWindow', 'isAncestorOf', 'isEnabled', 'isEnabledTo', 'isFullScreen', 'isHidden', 'isLeftToRight', 'isMaximized', 'isMinimized', 'isModal', 'isMovable', 'isQuickItemType', 'isRightToLeft', 'isSignalConnected', 'isTabEnabled', 'isTabVisible', 'isTopLevel', 'isVisible', 'isVisibleTo', 'isWidgetType', 'isWindow', 'isWindowModified', 'isWindowType', 'keyPressEvent', 'keyReleaseEvent', 'keyboardGrabber', 'killTimer', 'layout', 'layoutDirection', 'leaveEvent', 'locale', 'logicalDpiX', 'logicalDpiY', 'lower', 'mapFrom', 'mapFromGlobal', 'mapFromParent', 'mapTo', 'mapToGlobal', 'mapToParent', 'mask', 'maximumHeight', 'maximumSize', 'maximumWidth', 'metaObject', 'metric', 'minimumHeight', 'minimumSize', 'minimumSizeHint', 'minimumWidth', 'mouseDoubleClickEvent', 'mouseGrabber', 'mouseMoveEvent', 'mousePressEvent', 'mouseReleaseEvent', 'move', 'moveEvent', 'moveToThread', 'nativeEvent', 'nativeParentWidget', 'nextInFocusChain', 'normalGeometry', 'objectName', 'objectNameChanged', 'overrideWindowFlags', 'overrideWindowState', 'paintEngine', 'paintEvent', 'painters', 'paintingActive', 'palette', 'parent', 'parentWidget', 'physicalDpiX', 'physicalDpiY', 'pos', 'previousInFocusChain', 'property', 'raise_', 'receivers', 'rect', 'redirected', 'releaseKeyboard', 'releaseMouse', 'releaseShortcut', 'removeAction', 'removeEventFilter', 'removeTab', 'remove_viewer', 'render', 'repaint', 'resize', 'resizeEvent', 'restoreGeometry', 'saveGeometry', 'screen', 'scroll', 'sender', 'senderSignalIndex', 'setAcceptDrops', 'setAccessibleDescription', 'setAccessibleIdentifier', 'setAccessibleName', 'setAttribute', 'setAutoFillBackground', 'setBackgroundRole', 'setBaseSize', 'setContentsMargins', 'setContextMenuPolicy', 'setCornerWidget', 'setCurrentIndex', 'setCurrentWidget', 'setCursor', 'setDisabled', 'setDocumentMode', 'setElideMode', 'setEnabled', 'setFixedHeight', 'setFixedSize', 'setFixedWidth', 'setFocus', 'setFocusPolicy', 'setFocusProxy', 'setFont', 'setForegroundRole', 'setGeometry', 'setGraphicsEffect', 'setHidden', 'setIconSize', 'setInputMethodHints', 'setLayout', 'setLayoutDirection', 'setLocale', 'setMask', 'setMaximumHeight', 'setMaximumSize', 'setMaximumWidth', 'setMinimumHeight', 'setMinimumSize', 'setMinimumWidth', 'setMouseTracking', 'setMovable', 'setObjectName', 'setPalette', 'setParent', 'setProperty', 'setScreen', 'setShortcutAutoRepeat', 'setShortcutEnabled', 'setSizeIncrement', 'setSizePolicy', 'setStatusTip', 'setStyle', 'setStyleSheet', 'setTabBar', 'setTabBarAutoHide', 'setTabEnabled', 'setTabIcon', 'setTabOrder', 'setTabPosition', 'setTabShape', 'setTabText', 'setTabToolTip', 'setTabVisible', 'setTabWhatsThis', 'setTabletTracking', 'setTabsClosable', 'setToolTip', 'setToolTipDuration', 'setUpdatesEnabled', 'setUsesScrollButtons', 'setVisible', 'setWhatsThis', 'setWindowFilePath', 'setWindowFlag', 'setWindowFlags', 'setWindowIcon', 'setWindowIconText', 'setWindowModality', 'setWindowModified', 'setWindowOpacity', 'setWindowRole', 'setWindowState', 'setWindowTitle', 'sharedPainter', 'show', 'showEvent', 'showFullScreen', 'showMaximized', 'showMinimized', 'showNormal', 'signalsBlocked', 'size', 'sizeHint', 'sizeIncrement', 'sizePolicy', 'stackUnder', 'startTimer', 'staticMetaObject', 'statusTip', 'style', 'styleSheet', 'tabBar', 'tabBarAutoHide', 'tabBarClicked', 'tabBarDoubleClicked', 'tabCloseRequested', 'tabIcon', 'tabInserted', 'tabPosition', 'tabRemoved', 'tabShape', 'tabText', 'tabToolTip', 'tabWhatsThis', 'tabletEvent', 'tabsClosable', 'testAttribute', 'thread', 'timerEvent', 'toolTip', 'toolTipDuration', 'topLevelWidget', 'tr', 'underMouse', 'ungrabGesture', 'unsetCursor', 'unsetLayoutDirection', 'unsetLocale', 'update', 'updateGeometry', 'updateMicroFocus', 'updatesEnabled', 'usesScrollButtons', 'visibleRegion', 'whatsThis', 'wheelEvent', 'widget', 'width', 'widthMM', 'winId', 'window', 'windowFilePath', 'windowFlags', 'windowHandle', 'windowIcon', 'windowIconChanged', 'windowIconText', 'windowIconTextChanged', 'windowModality', 'windowOpacity', 'windowRole', 'windowState', 'windowTitle', 'windowTitleChanged', 'windowType', 'x', 'y']
-2025-10-05 21:30:36,104 - INFO - Found graph.viewer: <class 'method'> - callable: True
-2025-10-05 21:30:36,104 - INFO - Called viewer() -> <class 'NodeGraphQt.widgets.viewer.NodeViewer'>
-2025-10-05 21:30:36,104 - INFO - Found graph._viewer: <class 'NodeGraphQt.widgets.viewer.NodeViewer'> - callable: False
-2025-10-05 21:30:36,104 - INFO - Direct access to _viewer: <class 'NodeGraphQt.widgets.viewer.NodeViewer'>
-2025-10-05 21:30:36,104 - INFO - Found QGraphicsView in widget hierarchy: <class 'NodeGraphQt.widgets.viewer.NodeViewer'>
-2025-10-05 21:30:36,104 - INFO - Evaluating graph.viewer(): dragMode=True, scene=True, viewport=True
-2025-10-05 21:30:36,104 - INFO - Selected viewer from: graph.viewer()
-2025-10-05 21:30:36,106 - INFO - Final viewer: <class 'NodeGraphQt.widgets.viewer.NodeViewer'>
-2025-10-05 21:30:36,106 - INFO - Pan/drag methods: ['DragMode', '_set_viewer_pan', 'dragEnterEvent', 'dragLeaveEvent', 'dragMode', 'dragMoveEvent', 'setDragMode']
-2025-10-05 21:30:36,106 - INFO - Mode/state methods: ['ALT_state', 'COLLIDING_state', 'CTRL_state', 'CacheModeFlag', 'DragMode', 'LMB_state', 'MMB_state', 'RMB_state', 'SHIFT_state', 'ViewportUpdateMode', 'cacheMode', 'clear_key_state', 'dragMode', 'grabMouse', 'hasMouseTracking', 'mouseDoubleClickEvent', 'mouseGrabber', 'mouseMoveEvent', 'mousePressEvent', 'mouseReleaseEvent', 'overrideWindowState', 'releaseMouse', 'rubberBandSelectionMode', 'sceneMouseMoveEvent', 'sceneMousePressEvent', 'sceneMouseReleaseEvent', 'setCacheMode', 'setDragMode', 'setMouseTracking', 'setRubberBandSelectionMode', 'setViewportUpdateMode', 'setWindowState', 'underMouse', 'viewportUpdateMode', 'windowHandle', 'windowState']
-2025-10-05 21:30:36,106 - INFO - Pan event filter installed on viewer and graph widget
-2025-10-05 21:30:38,458 - INFO - [Flow Serializer] Loaded session from: C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app\.aicodeprep-flow.json
-2025-10-05 21:30:38,467 - INFO - ✅ PropertiesBinWidget created successfully
-2025-10-05 21:30:38,479 - INFO - ✅ Connected node_selected to show properties on single click
-2025-10-05 21:30:38,479 - INFO - ✅ Properties panel added to layout
-2025-10-05 21:30:42,663 - INFO - Created context node: <ContextOutputNode("Context Output") object at 0x23e30a9d390>
-2025-10-05 21:30:42,663 - INFO - Context node outputs: ['text']
-2025-10-05 21:30:42,664 - INFO -   Output port: text, name: N/A, type: <class 'str'>
-2025-10-05 21:30:42,666 - ERROR - load_template_best_of_5_openrouter failed: Error calling Python override of QUndoCommand::redo(): No property "model_mode"    
+2025-10-05 22:20:09,671 - INFO - SyntaxHighlightedTextEdit: Using font family 'JetBrains Mono' (requested: 'JetBrains Mono')
+2025-10-05 22:20:09,674 - INFO - Loaded preview window state from preferences: False
+2025-10-05 22:20:09,674 - INFO - Loaded syntax highlighting state from preferences: True
+2025-10-05 22:20:10,119 - INFO - Application is up to date. (current: 1.2.0, latest: 1.2.0)
+2025-10-05 22:20:38,042 - INFO - NodeGraph type: <class 'NodeGraphQt.base.graph.NodeGraph'>
+2025-10-05 22:20:38,042 - INFO - NodeGraph attributes: ['acyclic', 'add_node', 'add_properties_bin', 'all_nodes', 'auto_layout_nodes', 'background_color', 'begin_undo', 'blockSignals', 'center_on', 'center_selection', 'childEvent', 'children', 'clear_selection', 'clear_session', 'clear_undo_stack', 'close', 'collapse_group_node', 'connect', 'connectNotify', 'context_menu', 'context_menu_prompt', 'context_nodes_menu', 'copy_nodes', 'create_node', 'current_session', 'cursor_pos', 'customEvent', 'cut_nodes', 'data_dropped', 'deleteLater', 'delete_node', 'delete_nodes', 'deserialize_session', 'destroyed', 'disable_context_menu', 'disable_nodes', 'disconnect', 'disconnectNotify', 'dumpObjectInfo', 'dumpObjectTree', 'duplicate_nodes', 'dynamicPropertyNames', 'emit', 'end_undo', 'event', 'eventFilter', 'expand_group_node', 'extract_nodes', 'findChild', 'findChildren', 'fit_to_selection', 'get_context_menu', 'get_node_by_id', 'get_node_by_name', 'get_nodes_by_type', 'get_unique_name', 'get_zoom', 'grid_color', 'import_session', 'inherits', 'installEventFilter', 'invert_selection', 'isQuickItemType', 'isSignalConnected', 'isWidgetType', 'isWindowType', 'is_root', 'killTimer', 'layout_direction', 'load_dialog', 'load_session', 'message_dialog', 'metaObject', 'model', 'moveToThread', 'node_created', 'node_double_clicked', 'node_factory', 'node_selected', 'node_selection_changed', 'nodes_deleted', 'nodes_registered', 'objectName', 'objectNameChanged', 'parent', 'paste_nodes', 'pipe_collision', 'pipe_slicing', 'pipe_style', 'port_connected', 'port_disconnected', 'property', 'property_changed', 'question_dialog', 'receivers', 'register_node', 'register_nodes', 'registered_nodes', 'removeEventFilter', 'remove_node', 'reset_zoom', 'save_dialog', 'save_session', 'scene', 'select_all', 'selected_nodes', 'sender', 'senderSignalIndex', 'serialize_session', 'session_changed', 'setObjectName', 'setParent', 'setProperty', 'set_acyclic', 'set_background_color', 'set_context_menu', 'set_context_menu_from_file', 'set_grid_color', 'set_grid_mode', 'set_layout_direction', 'set_pipe_collision', 'set_pipe_slicing', 'set_pipe_style', 'set_zoom', 'show', 'signalsBlocked', 'startTimer', 'staticMetaObject', 'sub_graphs', 'thread', 'timerEvent', 'toggle_node_search', 'tr', 'undo_stack', 'undo_view', 'use_OpenGL', 'viewer', 'widget']
+2025-10-05 22:20:38,043 - INFO - Widget type: <class 'NodeGraphQt.widgets.node_graph.NodeGraphWidget'>
+2025-10-05 22:20:38,043 - INFO - Widget attributes: ['PaintDeviceMetric', 'RenderFlag', 'TabPosition', 'TabShape', 'acceptDrops', 'accessibleDescription', 'accessibleIdentifier', 'accessibleName', 'actionEvent', 'actions', 'activateWindow', 'addAction', 'addActions', 'addTab', 'add_viewer', 'adjustSize', 'autoFillBackground', 'backgroundRole', 'backingStore', 'baseSize', 'blockSignals', 'changeEvent', 'childAt', 'childEvent', 'children', 'childrenRect', 'childrenRegion', 'clear', 'clearFocus', 'clearMask', 'close', 'closeEvent', 'colorCount', 'connect', 'connectNotify', 'contentsMargins', 'contentsRect', 'contextMenuEvent', 'contextMenuPolicy', 'cornerWidget', 'count', 'create', 'createWinId', 'createWindowContainer', 'currentChanged', 'currentIndex', 'currentWidget', 'cursor', 'customContextMenuRequested', 'customEvent', 'deleteLater', 'depth', 'destroy', 'destroyed', 'devType', 'devicePixelRatio', 'devicePixelRatioF', 'devicePixelRatioFScale', 'disconnect', 'disconnectNotify', 'documentMode', 'dragEnterEvent', 'dragLeaveEvent', 'dragMoveEvent', 'dropEvent', 'dumpObjectInfo', 'dumpObjectTree', 'dynamicPropertyNames', 'effectiveWinId', 'elideMode', 'emit', 'encodeMetricF', 'ensurePolished', 'enterEvent', 'event', 'eventFilter', 'find', 'findChild', 'findChildren', 'focusInEvent', 'focusNextChild', 'focusNextPrevChild', 'focusOutEvent', 'focusPolicy', 'focusPreviousChild', 'focusProxy', 'focusWidget', 'font', 'fontInfo', 'fontMetrics', 'foregroundRole', 'frameGeometry', 'frameSize', 'geometry', 'grab', 'grabGesture', 'grabKeyboard', 'grabMouse', 'grabShortcut', 'graphicsEffect', 'graphicsProxyWidget', 'hasFocus', 'hasHeightForWidth', 'hasMouseTracking', 'hasTabletTracking', 'height', 'heightForWidth', 'heightMM', 'hide', 'hideEvent', 'iconSize', 'indexOf', 'inherits', 'initPainter', 'initStyleOption', 'inputMethodEvent', 'inputMethodHints', 'inputMethodQuery', 'insertAction', 'insertActions', 'insertTab', 'installEventFilter', 'internalWinId', 'isActiveWindow', 'isAncestorOf', 'isEnabled', 'isEnabledTo', 'isFullScreen', 'isHidden', 'isLeftToRight', 'isMaximized', 'isMinimized', 'isModal', 'isMovable', 'isQuickItemType', 'isRightToLeft', 'isSignalConnected', 'isTabEnabled', 'isTabVisible', 'isTopLevel', 'isVisible', 'isVisibleTo', 'isWidgetType', 'isWindow', 'isWindowModified', 'isWindowType', 'keyPressEvent', 'keyReleaseEvent', 'keyboardGrabber', 'killTimer', 'layout', 'layoutDirection', 'leaveEvent', 'locale', 'logicalDpiX', 'logicalDpiY', 'lower', 'mapFrom', 'mapFromGlobal', 'mapFromParent', 'mapTo', 'mapToGlobal', 'mapToParent', 'mask', 'maximumHeight', 'maximumSize', 'maximumWidth', 'metaObject', 'metric', 'minimumHeight', 'minimumSize', 'minimumSizeHint', 'minimumWidth', 'mouseDoubleClickEvent', 'mouseGrabber', 'mouseMoveEvent', 'mousePressEvent', 'mouseReleaseEvent', 'move', 'moveEvent', 'moveToThread', 'nativeEvent', 'nativeParentWidget', 'nextInFocusChain', 'normalGeometry', 'objectName', 'objectNameChanged', 'overrideWindowFlags', 'overrideWindowState', 'paintEngine', 'paintEvent', 'painters', 'paintingActive', 'palette', 'parent', 'parentWidget', 'physicalDpiX', 'physicalDpiY', 'pos', 'previousInFocusChain', 'property', 'raise_', 'receivers', 'rect', 'redirected', 'releaseKeyboard', 'releaseMouse', 'releaseShortcut', 'removeAction', 'removeEventFilter', 'removeTab', 'remove_viewer', 'render', 'repaint', 'resize', 'resizeEvent', 'restoreGeometry', 'saveGeometry', 'screen', 'scroll', 'sender', 'senderSignalIndex', 'setAcceptDrops', 'setAccessibleDescription', 'setAccessibleIdentifier', 'setAccessibleName', 'setAttribute', 'setAutoFillBackground', 'setBackgroundRole', 'setBaseSize', 'setContentsMargins', 'setContextMenuPolicy', 'setCornerWidget', 'setCurrentIndex', 'setCurrentWidget', 'setCursor', 'setDisabled', 'setDocumentMode', 'setElideMode', 'setEnabled', 'setFixedHeight', 'setFixedSize', 'setFixedWidth', 'setFocus', 'setFocusPolicy', 'setFocusProxy', 'setFont', 'setForegroundRole', 'setGeometry', 'setGraphicsEffect', 'setHidden', 'setIconSize', 'setInputMethodHints', 'setLayout', 'setLayoutDirection', 'setLocale', 'setMask', 'setMaximumHeight', 'setMaximumSize', 'setMaximumWidth', 'setMinimumHeight', 'setMinimumSize', 'setMinimumWidth', 'setMouseTracking', 'setMovable', 'setObjectName', 'setPalette', 'setParent', 'setProperty', 'setScreen', 'setShortcutAutoRepeat', 'setShortcutEnabled', 'setSizeIncrement', 'setSizePolicy', 'setStatusTip', 'setStyle', 'setStyleSheet', 'setTabBar', 'setTabBarAutoHide', 'setTabEnabled', 'setTabIcon', 'setTabOrder', 'setTabPosition', 'setTabShape', 'setTabText', 'setTabToolTip', 'setTabVisible', 'setTabWhatsThis', 'setTabletTracking', 'setTabsClosable', 'setToolTip', 'setToolTipDuration', 'setUpdatesEnabled', 'setUsesScrollButtons', 'setVisible', 'setWhatsThis', 'setWindowFilePath', 'setWindowFlag', 'setWindowFlags', 'setWindowIcon', 'setWindowIconText', 'setWindowModality', 'setWindowModified', 'setWindowOpacity', 'setWindowRole', 'setWindowState', 'setWindowTitle', 'sharedPainter', 'show', 'showEvent', 'showFullScreen', 'showMaximized', 'showMinimized', 'showNormal', 'signalsBlocked', 'size', 'sizeHint', 'sizeIncrement', 'sizePolicy', 'stackUnder', 'startTimer', 'staticMetaObject', 'statusTip', 'style', 'styleSheet', 'tabBar', 'tabBarAutoHide', 'tabBarClicked', 'tabBarDoubleClicked', 'tabCloseRequested', 'tabIcon', 'tabInserted', 'tabPosition', 'tabRemoved', 'tabShape', 'tabText', 'tabToolTip', 'tabWhatsThis', 'tabletEvent', 'tabsClosable', 'testAttribute', 'thread', 'timerEvent', 'toolTip', 'toolTipDuration', 'topLevelWidget', 'tr', 'underMouse', 'ungrabGesture', 'unsetCursor', 'unsetLayoutDirection', 'unsetLocale', 'update', 'updateGeometry', 'updateMicroFocus', 'updatesEnabled', 'usesScrollButtons', 'visibleRegion', 'whatsThis', 'wheelEvent', 'widget', 'width', 'widthMM', 'winId', 'window', 'windowFilePath', 'windowFlags', 'windowHandle', 'windowIcon', 'windowIconChanged', 'windowIconText', 'windowIconTextChanged', 'windowModality', 'windowOpacity', 'windowRole', 'windowState', 'windowTitle', 'windowTitleChanged', 'windowType', 'x', 'y']
+2025-10-05 22:20:38,043 - INFO - Found graph.viewer: <class 'method'> - callable: True
+2025-10-05 22:20:38,043 - INFO - Called viewer() -> <class 'NodeGraphQt.widgets.viewer.NodeViewer'>
+2025-10-05 22:20:38,043 - INFO - Found graph._viewer: <class 'NodeGraphQt.widgets.viewer.NodeViewer'> - callable: False
+2025-10-05 22:20:38,043 - INFO - Direct access to _viewer: <class 'NodeGraphQt.widgets.viewer.NodeViewer'>
+2025-10-05 22:20:38,044 - INFO - Found QGraphicsView in widget hierarchy: <class 'NodeGraphQt.widgets.viewer.NodeViewer'>
+2025-10-05 22:20:38,044 - INFO - Evaluating graph.viewer(): dragMode=True, scene=True, viewport=True
+2025-10-05 22:20:38,044 - INFO - Selected viewer from: graph.viewer()
+2025-10-05 22:20:38,044 - INFO - Final viewer: <class 'NodeGraphQt.widgets.viewer.NodeViewer'>
+2025-10-05 22:20:38,044 - INFO - Pan/drag methods: ['DragMode', '_set_viewer_pan', 'dragEnterEvent', 'dragLeaveEvent', 'dragMode', 'dragMoveEvent', 'setDragMode']
+2025-10-05 22:20:38,044 - INFO - Mode/state methods: ['ALT_state', 'COLLIDING_state', 'CTRL_state', 'CacheModeFlag', 'DragMode', 'LMB_state', 'MMB_state', 'RMB_state', 'SHIFT_state', 'ViewportUpdateMode', 'cacheMode', 'clear_key_state', 'dragMode', 'grabMouse', 'hasMouseTracking', 'mouseDoubleClickEvent', 'mouseGrabber', 'mouseMoveEvent', 'mousePressEvent', 'mouseReleaseEvent', 'overrideWindowState', 'releaseMouse', 'rubberBandSelectionMode', 'sceneMouseMoveEvent', 'sceneMousePressEvent', 'sceneMouseReleaseEvent', 'setCacheMode', 'setDragMode', 'setMouseTracking', 'setRubberBandSelectionMode', 'setViewportUpdateMode', 'setWindowState', 'underMouse', 'viewportUpdateMode', 'windowHandle', 'windowState']
+2025-10-05 22:20:38,044 - INFO - Pan event filter installed on viewer and graph widget
+2025-10-05 22:20:39,911 - INFO - [Flow Serializer] Loaded session from: C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app\.aicodeprep-flow.json
+2025-10-05 22:20:39,912 - INFO - ✅ PropertiesBinWidget created successfully
+2025-10-05 22:20:39,915 - INFO - ✅ Connected node_selected to show properties on single click
+2025-10-05 22:20:39,915 - INFO - ✅ Properties panel added to layout
+2025-10-05 22:20:44,225 - INFO - Created context node: <ContextOutputNode("Context Output") object at 0x222610023d0>
+2025-10-05 22:20:44,225 - INFO - Context node outputs: ['text']
+2025-10-05 22:20:44,225 - INFO -   Output port: text, name: N/A, type: <class 'str'>
+2025-10-05 22:20:44,227 - INFO - Created OpenRouter node 0: <OpenRouterNode("OpenRouter LLM") object at 0x22260ffd210>
+2025-10-05 22:20:44,227 - INFO - OpenRouter 0 inputs: ['text', 'system']
+2025-10-05 22:20:44,227 - INFO -   Input port: text, name: N/A, type: <class 'str'>
+2025-10-05 22:20:44,227 - INFO -   Input port: system, name: N/A, type: <class 'str'>
+2025-10-05 22:20:44,229 - INFO - Created OpenRouter node 1: <OpenRouterNode("OpenRouter LLM 1") object at 0x2226102b990>
+2025-10-05 22:20:44,229 - INFO - OpenRouter 1 inputs: ['text', 'system']
+2025-10-05 22:20:44,229 - INFO -   Input port: text, name: N/A, type: <class 'str'>
+2025-10-05 22:20:44,229 - INFO -   Input port: system, name: N/A, type: <class 'str'>
+2025-10-05 22:20:44,231 - INFO - Created OpenRouter node 2: <OpenRouterNode("OpenRouter LLM 2") object at 0x222610393d0>
+2025-10-05 22:20:44,231 - INFO - OpenRouter 2 inputs: ['text', 'system']
+2025-10-05 22:20:44,232 - INFO -   Input port: text, name: N/A, type: <class 'str'>
+2025-10-05 22:20:44,232 - INFO -   Input port: system, name: N/A, type: <class 'str'>
+2025-10-05 22:20:44,235 - INFO - Created OpenRouter node 3: <OpenRouterNode("OpenRouter LLM 3") object at 0x22260feb9d0>
+2025-10-05 22:20:44,235 - INFO - OpenRouter 3 inputs: ['text', 'system']
+2025-10-05 22:20:44,235 - INFO -   Input port: text, name: N/A, type: <class 'str'>
+2025-10-05 22:20:44,235 - INFO -   Input port: system, name: N/A, type: <class 'str'>
+2025-10-05 22:20:44,239 - INFO - Created OpenRouter node 4: <OpenRouterNode("OpenRouter LLM 4") object at 0x22261039c50>
+2025-10-05 22:20:44,239 - INFO - OpenRouter 4 inputs: ['text', 'system']
+2025-10-05 22:20:44,239 - INFO -   Input port: text, name: N/A, type: <class 'str'>
+2025-10-05 22:20:44,239 - INFO -   Input port: system, name: N/A, type: <class 'str'>
+2025-10-05 22:20:44,242 - INFO - Created BestOfN node: <BestOfNNode("Best-of-N Synthesizer") object at 0x222610386d0>
+2025-10-05 22:20:44,242 - INFO - BestOfN inputs: ['context', 'candidate1', 'candidate2', 'candidate3', 'candidate4', 'candidate5']
+2025-10-05 22:20:44,243 - INFO -   Input port: context, name: N/A, type: <class 'str'>
+2025-10-05 22:20:44,243 - INFO -   Input port: candidate1, name: N/A, type: <class 'str'>
+2025-10-05 22:20:44,243 - INFO -   Input port: candidate2, name: N/A, type: <class 'str'>
+2025-10-05 22:20:44,243 - INFO -   Input port: candidate3, name: N/A, type: <class 'str'>
+2025-10-05 22:20:44,243 - INFO -   Input port: candidate4, name: N/A, type: <class 'str'>
+2025-10-05 22:20:44,243 - INFO -   Input port: candidate5, name: N/A, type: <class 'str'>
+2025-10-05 22:20:44,246 - INFO - Created Clipboard node: <ClipboardNode("Clipboard") object at 0x22261050110>
+2025-10-05 22:20:44,246 - INFO - Clipboard inputs: ['text']
+2025-10-05 22:20:44,246 - INFO -   Input port: text, name: N/A, type: <class 'str'>
+2025-10-05 22:20:44,250 - INFO - Created FileWrite node: <FileWriteNode("File Write") object at 0x22261050f10>
+2025-10-05 22:20:44,250 - INFO - FileWrite inputs: ['text']
+2025-10-05 22:20:44,250 - INFO -   Input port: text, name: N/A, type: <class 'str'>
+2025-10-05 22:20:44,251 - INFO - Context output port: <Port("text") object at 0x222610285d0>
+2025-10-05 22:20:44,251 - INFO - OpenRouter 0 input port: <Port("text") object at 0x222610299d0>
+2025-10-05 22:20:44,252 - INFO - Connected ctx -> OpenRouter 0
+2025-10-05 22:20:44,252 - INFO - OpenRouter 1 input port: <Port("text") object at 0x2226102bfd0>
+2025-10-05 22:20:44,252 - INFO - Connected ctx -> OpenRouter 1
+2025-10-05 22:20:44,252 - INFO - OpenRouter 2 input port: <Port("text") object at 0x2226103a310>
+2025-10-05 22:20:44,254 - INFO - Connected ctx -> OpenRouter 2
+2025-10-05 22:20:44,254 - INFO - OpenRouter 3 input port: <Port("text") object at 0x22261013f90>
+2025-10-05 22:20:44,255 - INFO - Connected ctx -> OpenRouter 3
+2025-10-05 22:20:44,255 - INFO - OpenRouter 4 input port: <Port("text") object at 0x22261041010>
+2025-10-05 22:20:44,255 - INFO - Connected ctx -> OpenRouter 4
+2025-10-05 22:20:44,255 - INFO - Best context input port: <Port("context") object at 0x22261042490>
+2025-10-05 22:20:44,255 - INFO - Successfully connected ctx->best.context
+2025-10-05 22:20:44,255 - INFO - OpenRouter 1 output port: <Port("text") object at 0x2226102a050>
+2025-10-05 22:20:44,255 - INFO - Best candidate1 input port: <Port("candidate1") object at 0x2226103a890>
+2025-10-05 22:20:44,255 - INFO - Successfully connected OpenRouter 1->best.candidate1
+2025-10-05 22:20:44,256 - INFO - OpenRouter 2 output port: <Port("text") object at 0x22261028810>
+2025-10-05 22:20:44,256 - INFO - Best candidate2 input port: <Port("candidate2") object at 0x2226103aa50>
+2025-10-05 22:20:44,257 - INFO - Successfully connected OpenRouter 2->best.candidate2
+2025-10-05 22:20:44,257 - INFO - OpenRouter 3 output port: <Port("text") object at 0x22261012e90>
+2025-10-05 22:20:44,257 - INFO - Best candidate3 input port: <Port("candidate3") object at 0x22261012890>
+2025-10-05 22:20:44,257 - INFO - Successfully connected OpenRouter 3->best.candidate3
+2025-10-05 22:20:44,257 - INFO - OpenRouter 4 output port: <Port("text") object at 0x222610382d0>
+2025-10-05 22:20:44,257 - INFO - Best candidate4 input port: <Port("candidate4") object at 0x2226103aed0>
+2025-10-05 22:20:44,258 - INFO - Successfully connected OpenRouter 4->best.candidate4
+2025-10-05 22:20:44,258 - INFO - OpenRouter 5 output port: <Port("text") object at 0x222610414d0>
+2025-10-05 22:20:44,258 - INFO - Best candidate5 input port: <Port("candidate5") object at 0x2226102b190>
+2025-10-05 22:20:44,258 - INFO - Successfully connected OpenRouter 5->best.candidate5
+2025-10-05 22:20:44,259 - INFO - Best output port: <Port("text") object at 0x22261042590>
+2025-10-05 22:20:44,259 - INFO - Clipboard input port: <Port("text") object at 0x22261038790>
+2025-10-05 22:20:44,259 - INFO - FileWrite input port: <Port("text") object at 0x22261051450>
+2025-10-05 22:20:44,259 - INFO - Successfully connected best->Clipboard
+2025-10-05 22:20:44,259 - INFO - Successfully connected best->FileWrite
+2025-10-06 14:11:17,628 - INFO - [Flow Serializer] Saved session to: C:\Users\Basic\AppData\Local\Temp\tmp3qna9qr2\flow_session.json
+2025-10-06 14:11:17,670 - INFO - [Flow Serializer] Exported (redacted) JSON to: D:/flow2.json
+2025-10-06 14:11:54,243 - INFO - Pan mode enabled via setDragMode(ScrollHandDrag)
+2025-10-06 14:11:57,251 - INFO - Space pressed - enabled pan via setDragMode(ScrollHandDrag)
+2025-10-06 14:11:58,498 - INFO - Space released - restored drag mode to DragMode.ScrollHandDrag
+Error calling Python override of QObject::eventFilter(): Traceback (most recent call last):
+  File "C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app\aicodeprep_gui\pro\flow\flow_dock.py", line 52, in eventFilter
+    def eventFilter(self, obj, event):
+
+KeyboardInterrupt
+2025-10-06 15:19:27,946 - INFO - Sent metric event: generate_start
+2025-10-06 15:19:27,952 - INFO - Writing output to: C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app\fullcode.txt
+2025-10-06 15:19:27,954 - INFO - Processed: PROPERTIES_PANEL_FIX_2025-10-05.md
+2025-10-06 15:19:27,954 - INFO - Processed: pyproject.toml
+2025-10-06 15:19:27,997 - INFO - Copied 8808 chars to clipboard.
+2025-10-06 15:19:28,003 - INFO - Saved preferences to C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app\.aicodeprep-gui
+2025-10-06 15:19:33,496 - INFO - Executing level 1/4 with 1 node(s)
+2025-10-06 15:19:33,517 - INFO - Executing node: Context Output
+2025-10-06 15:19:33,518 - INFO - [ContextOutputNode] Resolving context path C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app\fullcode.txt
+2025-10-06 15:19:33,523 - INFO - [ContextOutputNode] Loaded 8808 characters from context
+2025-10-06 15:19:33,565 - INFO - Executing level 2/4 with 5 node(s)
+2025-10-06 15:19:33,568 - INFO - Executing 5 nodes in parallel
+2025-10-06 15:19:33,763 - INFO - Executing node: OpenRouter LLM
+2025-10-06 15:19:33,767 - INFO - Executing node: OpenRouter LLM 4
+2025-10-06 15:19:33,768 - INFO - Executing node: OpenRouter LLM 3
+2025-10-06 15:19:33,771 - INFO - Executing node: OpenRouter LLM 1
+2025-10-06 15:19:33,773 - INFO - Executing node: OpenRouter LLM 2
+2025-10-06 15:19:33,815 - INFO - [OpenRouter LLM] Provider: openrouter, Model: openrouter/deepseek/deepseek-v3.2-exp, Base URL: https://openrouter.ai/api/v1
+2025-10-06 15:19:33,815 - INFO - [OpenRouter LLM 3] Provider: openrouter, Model: openrouter/qwen/qwen3-next-80b-a3b-instruct, Base URL: https://openrouter.ai/api/v1
+2025-10-06 15:19:33,816 - INFO - [OpenRouter LLM] OpenRouter mode: choose
+2025-10-06 15:19:33,816 - INFO - [OpenRouter LLM 1] Provider: openrouter, Model: openrouter/x-ai/grok-4-fast, Base URL: https://openrouter.ai/api/v1
+2025-10-06 15:19:33,816 - INFO - [OpenRouter LLM 4] Provider: openrouter, Model: openrouter/meituan/longcat-flash-chat, Base URL: https://openrouter.ai/api/v1  
+2025-10-06 15:19:33,817 - INFO - [OpenRouter LLM 2] Provider: openrouter, Model: openrouter/google/gemini-2.5-flash-lite-preview-09-2025, Base URL: https://openrouter.ai/api/v1
+2025-10-06 15:19:33,817 - INFO - [OpenRouter LLM 3] OpenRouter mode: choose
+2025-10-06 15:19:33,817 - INFO - [OpenRouter LLM] Making LLM call with model: openrouter/deepseek/deepseek-v3.2-exp
+2025-10-06 15:19:33,817 - INFO - [OpenRouter LLM 1] OpenRouter mode: choose
+2025-10-06 15:19:33,817 - INFO - [OpenRouter LLM 4] OpenRouter mode: choose
+2025-10-06 15:19:33,817 - INFO - [OpenRouter LLM 2] OpenRouter mode: choose
+2025-10-06 15:19:33,818 - INFO - [OpenRouter LLM 3] Making LLM call with model: openrouter/qwen/qwen3-next-80b-a3b-instruct
+2025-10-06 15:19:33,818 - INFO - [OpenRouter LLM 1] Making LLM call with model: openrouter/x-ai/grok-4-fast
+2025-10-06 15:19:33,819 - INFO - [OpenRouter LLM 4] Making LLM call with model: openrouter/meituan/longcat-flash-chat
+2025-10-06 15:19:33,819 - INFO - [OpenRouter LLM 2] Making LLM call with model: openrouter/google/gemini-2.5-flash-lite-preview-09-2025
 (venv) PS C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app> 
+
+I set all 5 openrouter models to custom models from openrouter, and the UI looks nice, everything looks good except just one thing:
+cannot use the hand button or spacebar to move the flow up/down/left/right, just doesn't work - can you add some buttons for that 
+on the UI somewhere? and maybe allow keyboard arrows to move it around as a temp fix or just include that for now?
+
+Now when I ran the flow, a new smaller window opened, with a progress bar, and it appeared to be working fine - but then the app just closed 
+with no explanation. I looked on my openrouter activity and do not see any new activity related to the flow run.

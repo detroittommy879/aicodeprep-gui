@@ -40,7 +40,7 @@ class _ReadOnlyEventFilter(QObject):
 
 
 class _PanEventFilter(QObject):
-    """Event filter for temporary spacebar-based panning."""
+    """Event filter for temporary spacebar-based panning and arrow key navigation."""
 
     def __init__(self, viewer, dock_widget):
         super().__init__()
@@ -48,9 +48,33 @@ class _PanEventFilter(QObject):
         self.dock_widget = dock_widget
         self._space_pressed = False
         self._previous_pan_state = False
+        self._pan_speed = 50  # pixels per arrow key press
 
     def eventFilter(self, obj, event):
         try:
+            # Handle arrow keys for panning
+            if event.type() == QtCore.QEvent.KeyPress:
+                key = event.key()
+                if key in (Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down):
+                    try:
+                        # Get current horizontal and vertical scroll bar values
+                        h_bar = self.viewer.horizontalScrollBar()
+                        v_bar = self.viewer.verticalScrollBar()
+
+                        if key == Qt.Key_Left:
+                            h_bar.setValue(h_bar.value() - self._pan_speed)
+                        elif key == Qt.Key_Right:
+                            h_bar.setValue(h_bar.value() + self._pan_speed)
+                        elif key == Qt.Key_Up:
+                            v_bar.setValue(v_bar.value() - self._pan_speed)
+                        elif key == Qt.Key_Down:
+                            v_bar.setValue(v_bar.value() + self._pan_speed)
+
+                        logging.debug(f"Arrow key pan: {key}")
+                        return True
+                    except Exception as e:
+                        logging.debug(f"Arrow key pan failed: {e}")
+
             if event.type() == QtCore.QEvent.KeyPress and event.key() == Qt.Key_Space and not event.isAutoRepeat():
                 if not self._space_pressed:
                     self._space_pressed = True
@@ -67,14 +91,26 @@ class _PanEventFilter(QObject):
                             current_mode == QGraphicsView.ScrollHandDrag)
 
                     # Enable pan mode using standard QGraphicsView methods
+                    success = False
                     if hasattr(self.viewer, 'setDragMode'):
-                        self.viewer.setDragMode(QGraphicsView.ScrollHandDrag)
-                        logging.info(
-                            "Space pressed - enabled pan via setDragMode(ScrollHandDrag)")
-                    elif hasattr(self.viewer, 'set_drag_mode'):
-                        self.viewer.set_drag_mode(QGraphicsView.ScrollHandDrag)
-                        logging.info(
-                            "Space pressed - enabled pan via set_drag_mode(ScrollHandDrag)")
+                        try:
+                            self.viewer.setDragMode(
+                                QGraphicsView.ScrollHandDrag)
+                            logging.info(
+                                "Space pressed - enabled pan via setDragMode(ScrollHandDrag)")
+                            success = True
+                        except Exception as e:
+                            logging.debug(f"setDragMode failed: {e}")
+
+                    if not success and hasattr(self.viewer, 'set_pan_mode'):
+                        try:
+                            self.viewer.set_pan_mode(True)
+                            logging.info(
+                                "Space pressed - enabled pan via set_pan_mode(True)")
+                            success = True
+                        except Exception as e:
+                            logging.debug(f"set_pan_mode failed: {e}")
+
                     # Cursor hint while space is held
                     try:
                         if hasattr(self.viewer, 'setCursor'):
@@ -97,16 +133,26 @@ class _PanEventFilter(QObject):
                     self._space_pressed = False
 
                     # Restore previous pan state using standard QGraphicsView methods
+                    success = False
                     if hasattr(self.viewer, 'setDragMode'):
-                        mode = QGraphicsView.ScrollHandDrag if self._previous_pan_state else QGraphicsView.RubberBandDrag
-                        self.viewer.setDragMode(mode)
-                        logging.info(
-                            f"Space released - restored drag mode to {mode}")
-                    elif hasattr(self.viewer, 'set_drag_mode'):
-                        mode = QGraphicsView.ScrollHandDrag if self._previous_pan_state else QGraphicsView.RubberBandDrag
-                        self.viewer.set_drag_mode(mode)
-                        logging.info(
-                            f"Space released - restored drag mode to {mode}")
+                        try:
+                            mode = QGraphicsView.ScrollHandDrag if self._previous_pan_state else QGraphicsView.RubberBandDrag
+                            self.viewer.setDragMode(mode)
+                            logging.info(
+                                f"Space released - restored drag mode to {mode}")
+                            success = True
+                        except Exception as e:
+                            logging.debug(f"setDragMode failed: {e}")
+
+                    if not success and hasattr(self.viewer, 'set_pan_mode'):
+                        try:
+                            self.viewer.set_pan_mode(self._previous_pan_state)
+                            logging.info(
+                                f"Space released - restored pan mode to {self._previous_pan_state}")
+                            success = True
+                        except Exception as e:
+                            logging.debug(f"set_pan_mode failed: {e}")
+
                     # Restore cursor to match pan state
                     try:
                         from PySide6.QtCore import Qt as _Qt
@@ -412,12 +458,15 @@ class FlowStudioDock(QtWidgets.QDockWidget):
             if PropertiesBinWidget is not None:
                 # Create the properties bin widget and pass the node graph
                 # The PropertiesBinWidget constructor will call graph.add_properties_bin()
-                self.properties_bin = PropertiesBinWidget(node_graph=self.graph)
+                self.properties_bin = PropertiesBinWidget(
+                    node_graph=self.graph)
                 logging.info("✅ PropertiesBinWidget created successfully")
             else:
-                logging.warning("⚠️ PropertiesBinWidget not available in NodeGraphQt")
+                logging.warning(
+                    "⚠️ PropertiesBinWidget not available in NodeGraphQt")
         except Exception as e:
-            logging.error(f"❌ Failed to create PropertiesBinWidget: {e}", exc_info=True)
+            logging.error(
+                f"❌ Failed to create PropertiesBinWidget: {e}", exc_info=True)
 
         # Central wrapper to hold toolbar + graph widget + properties
         wrapper = QtWidgets.QWidget()
@@ -439,23 +488,27 @@ class FlowStudioDock(QtWidgets.QDockWidget):
             # - node_double_clicked: adds node to properties bin when double-clicked
             # - nodes_deleted: removes node from properties bin when deleted
             # - property_changed: updates property widgets when properties change
-            
+
             # Additionally connect node selection signal to automatically show properties
             # when a single node is clicked (not just double-clicked)
             try:
                 if hasattr(self.graph, 'node_selected'):
                     self.graph.node_selected.connect(
                         lambda node: self.properties_bin.add_node(node))
-                    logging.info("✅ Connected node_selected to show properties on single click")
+                    logging.info(
+                        "✅ Connected node_selected to show properties on single click")
                 elif hasattr(self.graph, 'node_selection_changed'):
                     # Alternative signal name in some versions
                     self.graph.node_selection_changed.connect(
                         lambda nodes: self.properties_bin.add_node(nodes[0]) if nodes else None)
-                    logging.info("✅ Connected node_selection_changed to show properties")
+                    logging.info(
+                        "✅ Connected node_selection_changed to show properties")
                 else:
-                    logging.info("ℹ️ No node_selected signal - properties will show on double-click only")
+                    logging.info(
+                        "ℹ️ No node_selected signal - properties will show on double-click only")
             except Exception as e:
-                logging.warning(f"⚠️ Could not connect single-click handler: {e}")
+                logging.warning(
+                    f"⚠️ Could not connect single-click handler: {e}")
 
             logging.info("✅ Properties panel added to layout")
         else:
@@ -495,28 +548,29 @@ class FlowStudioDock(QtWidgets.QDockWidget):
             # Get currently selected nodes
             selected_nodes = self.graph.selected_nodes()
             current_ids = set(node.id for node in selected_nodes)
-            
+
             # Check if selection changed
             if current_ids != self._last_selected_nodes:
                 self._last_selected_nodes = current_ids
-                
+
                 if selected_nodes:
-                    logging.info(f"� Polling detected selection change: {len(selected_nodes)} nodes")
+                    logging.info(
+                        f"� Polling detected selection change: {len(selected_nodes)} nodes")
                     # Update properties panel
                     self._update_properties_panel(selected_nodes)
         except Exception as e:
             logging.debug(f"Polling selection check error: {e}")
-    
+
     def _update_properties_panel(self, nodes):
         """
         Update properties panel with selected nodes.
-        
+
         Args:
             nodes: List of selected nodes
         """
         if not self.properties_bin or not nodes:
             return
-            
+
         try:
             if hasattr(self.properties_bin, 'add_node'):
                 # Clear existing properties
@@ -524,7 +578,8 @@ class FlowStudioDock(QtWidgets.QDockWidget):
                 # Add all selected nodes
                 for node in nodes:
                     self.properties_bin.add_node(node)
-                logging.info(f"✅ Properties panel updated for {len(nodes)} node(s)")
+                logging.info(
+                    f"✅ Properties panel updated for {len(nodes)} node(s)")
             else:
                 logging.warning("Properties bin has no add_node method")
         except Exception as e:
@@ -570,6 +625,50 @@ class FlowStudioDock(QtWidgets.QDockWidget):
         self._pan_button.setCheckable(True)
         self._pan_button.clicked.connect(self._toggle_pan_mode)
         toolbar.addWidget(self._pan_button)
+
+        # Add pan control buttons
+        pan_up_btn = QtWidgets.QToolButton()
+        pan_up_btn.setText("↑")
+        pan_up_btn.setToolTip("Pan Up (or use Up Arrow key)")
+        pan_up_btn.clicked.connect(lambda: self._pan_direction('up'))
+        toolbar.addWidget(pan_up_btn)
+
+        pan_down_btn = QtWidgets.QToolButton()
+        pan_down_btn.setText("↓")
+        pan_down_btn.setToolTip("Pan Down (or use Down Arrow key)")
+        pan_down_btn.clicked.connect(lambda: self._pan_direction('down'))
+        toolbar.addWidget(pan_down_btn)
+
+        pan_left_btn = QtWidgets.QToolButton()
+        pan_left_btn.setText("←")
+        pan_left_btn.setToolTip("Pan Left (or use Left Arrow key)")
+        pan_left_btn.clicked.connect(lambda: self._pan_direction('left'))
+        toolbar.addWidget(pan_left_btn)
+
+        pan_right_btn = QtWidgets.QToolButton()
+        pan_right_btn.setText("→")
+        pan_right_btn.setToolTip("Pan Right (or use Right Arrow key)")
+        pan_right_btn.clicked.connect(lambda: self._pan_direction('right'))
+        toolbar.addWidget(pan_right_btn)
+
+        # Zoom buttons
+        zoom_in_btn = QtWidgets.QToolButton()
+        zoom_in_btn.setText("🔍+")
+        zoom_in_btn.setToolTip("Zoom In")
+        zoom_in_btn.clicked.connect(self._zoom_in)
+        toolbar.addWidget(zoom_in_btn)
+
+        zoom_out_btn = QtWidgets.QToolButton()
+        zoom_out_btn.setText("🔍-")
+        zoom_out_btn.setToolTip("Zoom Out")
+        zoom_out_btn.clicked.connect(self._zoom_out)
+        toolbar.addWidget(zoom_out_btn)
+
+        zoom_fit_btn = QtWidgets.QToolButton()
+        zoom_fit_btn.setText("⊡")
+        zoom_fit_btn.setToolTip("Fit to View")
+        zoom_fit_btn.clicked.connect(self._zoom_fit)
+        toolbar.addWidget(zoom_fit_btn)
 
         toolbar.addSeparator()
 
@@ -618,9 +717,9 @@ class FlowStudioDock(QtWidgets.QDockWidget):
             if hasattr(self.viewer, 'set_zoom_lock'):
                 self.viewer.set_zoom_lock(False)
 
-            # Enable panning with middle mouse button.
-            if hasattr(self.viewer, "set_pan_on_mouse_button"):
-                self.viewer.set_pan_on_mouse_button(True)
+            # Enable panning with middle mouse button (This might be interfering with the hand tool).
+            # if hasattr(self.viewer, "set_pan_on_mouse_button"):
+            #     self.viewer.set_pan_on_mouse_button(True)
 
             # Set a very large scene rect to allow unlimited panning.
             scene = getattr(self.viewer, "scene", lambda: None)()
@@ -632,6 +731,7 @@ class FlowStudioDock(QtWidgets.QDockWidget):
             if hasattr(self.viewer, 'setFocusPolicy'):
                 from PySide6.QtCore import Qt
                 self.viewer.setFocusPolicy(Qt.StrongFocus)
+                self.graph_widget.setFocusProxy(self.viewer)
 
             # Install event filter for temporary spacebar panning.
             self.pan_filter = _PanEventFilter(self.viewer, self)
@@ -649,6 +749,64 @@ class FlowStudioDock(QtWidgets.QDockWidget):
 
         except Exception as e:
             logging.error(f"Failed to configure NodeGraph viewer: {e}")
+
+    def _pan_direction(self, direction: str):
+        """Pan the view in the specified direction."""
+        if not self.viewer:
+            logging.warning("Viewer not available for pan")
+            return
+
+        try:
+            pan_amount = 100  # pixels
+            h_bar = self.viewer.horizontalScrollBar()
+            v_bar = self.viewer.verticalScrollBar()
+
+            if direction == 'up':
+                v_bar.setValue(v_bar.value() - pan_amount)
+            elif direction == 'down':
+                v_bar.setValue(v_bar.value() + pan_amount)
+            elif direction == 'left':
+                h_bar.setValue(h_bar.value() - pan_amount)
+            elif direction == 'right':
+                h_bar.setValue(h_bar.value() + pan_amount)
+        except Exception as e:
+            logging.error(f"Pan failed: {e}")
+
+    def _zoom_in(self):
+        """Zoom in on the flow graph."""
+        if not self.viewer:
+            return
+        try:
+            self.viewer.scale(1.2, 1.2)
+        except Exception as e:
+            logging.error(f"Zoom in failed: {e}")
+
+    def _zoom_out(self):
+        """Zoom out on the flow graph."""
+        if not self.viewer:
+            return
+        try:
+            self.viewer.scale(0.8, 0.8)
+        except Exception as e:
+            logging.error(f"Zoom out failed: {e}")
+
+    def _zoom_fit(self):
+        """Fit all nodes in view."""
+        try:
+            if hasattr(self.graph, 'fit_to_selection'):
+                # Select all nodes temporarily
+                nodes = self.graph.all_nodes()
+                if nodes:
+                    self.graph.select_all()
+                    self.graph.fit_to_selection()
+                    self.graph.clear_selection()
+            elif hasattr(self.viewer, 'fitInView'):
+                scene = self.viewer.scene()
+                if scene:
+                    self.viewer.fitInView(
+                        scene.sceneRect(), Qt.KeepAspectRatio)
+        except Exception as e:
+            logging.error(f"Zoom fit failed: {e}")
 
     def _toggle_pan_mode(self, checked):
         """Toggles the viewer's drag mode between selection and panning."""

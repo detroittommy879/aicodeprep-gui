@@ -20,6 +20,7 @@ except ImportError:
         QLINE_EDIT = 3
         QCOMBO_BOX = 5
 
+
 class LLMBaseNode(BaseExecNode):
     """
     Base LLM node: expects an input 'text' and optional 'system', produces output 'text'.
@@ -38,22 +39,20 @@ class LLMBaseNode(BaseExecNode):
                              items=["openai", "openrouter", "gemini", "generic"])
         self.create_property("model_mode", "choose", widget_type=NodePropWidgetEnum.QCOMBO_BOX.value,
                              items=["choose", "random", "random_free"])
-        self.create_property("model", "", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
-        self.create_property("api_key", "", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
-        self.create_property("base_url", "", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
+        self.create_property(
+            "model", "", widget_type=NodePropWidgetEnum.QTEXT_EDIT.value)
+        self.create_property(
+            "api_key", "", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
+        self.create_property(
+            "base_url", "", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
 
     # Utility to show user-friendly error
     def _warn(self, msg: str):
-        if QtWidgets is not None:
-            try:
-                QtWidgets.QMessageBox.warning(
-                    None, getattr(self, 'NODE_NAME', 'LLM Node'), msg)
-            except Exception:
-                logging.warning(
-                    f"[{getattr(self, 'NODE_NAME', 'LLM Node')}] {msg}")
-        else:
-            logging.warning(
-                f"[{getattr(self, 'NODE_NAME', 'LLM Node')}] {msg}")
+        # Always log the warning
+        logging.warning(f"[{getattr(self, 'NODE_NAME', 'LLM Node')}] {msg}")
+
+        # Don't show message boxes from worker threads - they can cause crashes
+        # The engine will handle showing errors to the user in the main thread
 
     # Child classes can override to set sensible defaults
     def default_provider(self) -> str:
@@ -126,99 +125,127 @@ class LLMBaseNode(BaseExecNode):
         """
         Execute the LLM call using LiteLLM.
         """
-        text = inputs.get("text") or ""
-        system = inputs.get("system") or None
-        if not text:
-            self._warn("No input 'text' provided.")
-            return {}
-
-        provider = (self.get_property("provider")
-                    or self.default_provider()).strip().lower()
-        api_key = self.resolve_api_key()
-        if not api_key:
-            from aicodeprep_gui.config import get_config_dir
-            config_dir = get_config_dir()
-            self._warn(
-                f"Missing API key for provider '{provider}'.\n\nPlease edit: {config_dir / 'api-keys.toml'}\n\nAdd your API key under [{provider}] section.")
-            return {}
-
-        base_url = self.resolve_base_url()
-        model = self.resolve_model(api_key)
-
-        # Debug logging
-        logging.info(
-            f"[{self.NODE_NAME}] Provider: {provider}, Model: {model}, Base URL: {base_url}")
-
-        if provider == "openrouter":
-            # Random or random_free modes handled here
-            try:
-                mode = (self.get_property("model_mode")
-                        or "choose").strip().lower()
-            except Exception:
-                mode = "choose"
-
-            logging.info(f"[{self.NODE_NAME}] OpenRouter mode: {mode}")
-
-            if mode in ("random", "random_free"):
-                from aicodeprep_gui.pro.llm.litellm_client import LLMClient
-                try:
-                    models = LLMClient.list_models_openrouter(api_key)
-                    logging.info(
-                        f"[{self.NODE_NAME}] Found {len(models)} OpenRouter models")
-                    pick = LLMClient.openrouter_pick_model(
-                        models, free_only=(mode == "random_free"))
-                    if not pick:
-                        self._warn(
-                            "Could not pick a model from OpenRouter. Check API key or connectivity.")
-                        return {}
-                    # LiteLLM requires 'openrouter/' prefix
-                    model = f"openrouter/{pick}"
-                    logging.info(f"[{self.NODE_NAME}] Selected model: {model}")
-                except Exception as e:
-                    self._warn(f"Failed to get OpenRouter models: {e}")
-                    return {}
-            elif not model:
-                # If no model specified and not in random mode, default to a known free model
-                model = "openrouter/openai/gpt-3.5-turbo:free"
-                logging.info(
-                    f"[{self.NODE_NAME}] Using default model: {model}")
-            else:
-                # User provided a model in choose mode - add prefix if not present
-                if not model.startswith("openrouter/"):
-                    model = f"openrouter/{model}"
-                    logging.info(
-                        f"[{self.NODE_NAME}] Added openrouter prefix: {model}")
-
-        if provider == "compatible" and not base_url:
-            self._warn("OpenAI-compatible provider requires a base_url.")
-            return {}
-
-        if not model:
-            self._warn(
-                f"No model specified for provider '{provider}'. Please set a model or use random mode.")
-            return {}
-
         try:
+            text = inputs.get("text") or ""
+            system = inputs.get("system") or None
+            if not text:
+                self._warn("No input 'text' provided.")
+                return {}
+
+            provider = (self.get_property("provider")
+                        or self.default_provider()).strip().lower()
+            api_key = self.resolve_api_key()
+            if not api_key:
+                from aicodeprep_gui.config import get_config_dir
+                config_dir = get_config_dir()
+                self._warn(
+                    f"Missing API key for provider '{provider}'.\n\nPlease edit: {config_dir / 'api-keys.toml'}\n\nAdd your API key under [{provider}] section.")
+                return {}
+
+            base_url = self.resolve_base_url()
+            model = self.resolve_model(api_key)
+
+            # Debug logging
             logging.info(
-                f"[{self.NODE_NAME}] Making LLM call with model: {model}")
-            out = LLMClient.chat(
-                model=model,
-                user_content=text,
-                api_key=api_key,
-                base_url=base_url if base_url else None,
-                extra_headers=self._extra_headers_for_provider(provider),
-                system_content=system
-            )
-            logging.info(
-                f"[{self.NODE_NAME}] LLM call successful, response length: {len(out) if out else 0}")
-            return {"text": out}
-        except LLMError as e:
-            self._warn(f"LLM Error: {str(e)}")
-            logging.error(f"[{self.NODE_NAME}] LLM Error: {str(e)}")
-            return {}
-        except Exception as e:
-            self._warn(f"Unexpected error: {str(e)}")
-            logging.error(f"[{self.NODE_NAME}] Unexpected error: {str(e)}")
+                f"[{self.NODE_NAME}] Provider: {provider}, Model: {model}, Base URL: {base_url}")
+
+            if provider == "openrouter":
+                # Random or random_free modes handled here
+                try:
+                    mode = (self.get_property("model_mode")
+                            or "choose").strip().lower()
+                except Exception:
+                    mode = "choose"
+
+                logging.info(f"[{self.NODE_NAME}] OpenRouter mode: {mode}")
+
+                if mode in ("random", "random_free"):
+                    # LLMClient is already imported at the top of the file
+                    try:
+                        models = LLMClient.list_models_openrouter(api_key)
+                        logging.info(
+                            f"[{self.NODE_NAME}] Found {len(models)} OpenRouter models")
+                        pick = LLMClient.openrouter_pick_model(
+                            models, free_only=(mode == "random_free"))
+                        if not pick:
+                            self._warn(
+                                "Could not pick a model from OpenRouter. Check API key or connectivity.")
+                            return {}
+                        # LiteLLM requires 'openrouter/' prefix
+                        model = f"openrouter/{pick}"
+                        logging.info(
+                            f"[{self.NODE_NAME}] Selected model: {model}")
+                    except Exception as e:
+                        self._warn(f"Failed to get OpenRouter models: {e}")
+                        return {}
+                elif not model:
+                    # If no model specified and not in random mode, default to a known free model
+                    model = "openrouter/openai/gpt-3.5-turbo:free"
+                    logging.info(
+                        f"[{self.NODE_NAME}] Using default model: {model}")
+                else:
+                    # User provided a model in choose mode - ensure proper prefix
+                    if model.startswith("openrouter/openrouter/"):
+                        # User accidentally added openrouter/ prefix, remove one
+                        model = model.replace(
+                            "openrouter/openrouter/", "openrouter/", 1)
+                        logging.info(
+                            f"[{self.NODE_NAME}] Removed duplicate openrouter prefix: {model}")
+                    elif not model.startswith("openrouter/"):
+                        model = f"openrouter/{model}"
+                        logging.info(
+                            f"[{self.NODE_NAME}] Added openrouter prefix: {model}")
+                    else:
+                        logging.info(
+                            f"[{self.NODE_NAME}] Model already has correct prefix: {model}")
+
+            if provider == "compatible" and not base_url:
+                self._warn("OpenAI-compatible provider requires a base_url.")
+                return {}
+
+            if not model:
+                self._warn(
+                    f"No model specified for provider '{provider}'. Please set a model or use random mode.")
+                return {}
+
+            try:
+                logging.info(
+                    f"[{self.NODE_NAME}] Making LLM call with model: {model}")
+                logging.info(
+                    f"[{self.NODE_NAME}] API details - provider: {provider}, base_url: {base_url}, "
+                    f"input_length: {len(text)}, has_system: {bool(system)}")
+                out = LLMClient.chat(
+                    model=model,
+                    user_content=text,
+                    api_key=api_key,
+                    base_url=base_url if base_url else None,
+                    extra_headers=self._extra_headers_for_provider(provider),
+                    system_content=system
+                )
+                logging.info(
+                    f"[{self.NODE_NAME}] LLM call successful, response length: {len(out) if out else 0}")
+                if not out:
+                    logging.warning(
+                        f"[{self.NODE_NAME}] LLM returned empty response!")
+                return {"text": out}
+            except LLMError as e:
+                error_msg = f"LLM Error: {str(e)}"
+                self._warn(error_msg)
+                logging.error(f"[{self.NODE_NAME}] {error_msg}", exc_info=True)
+                return {}
+            except Exception as e:
+                error_msg = f"Unexpected error: {str(e)}"
+                self._warn(error_msg)
+                logging.error(f"[{self.NODE_NAME}] {error_msg}", exc_info=True)
+                return {}
+        except Exception as outer_e:
+            # Catch any exception in the entire run method
+            error_msg = f"Fatal error in LLM node execution: {str(outer_e)}"
+            logging.error(f"[{self.NODE_NAME}] {error_msg}", exc_info=True)
+            try:
+                self._warn(error_msg)
+            except Exception:
+                pass  # Even warning failed
             return {}
 
     def _extra_headers_for_provider(self, provider: str) -> Dict[str, str]:

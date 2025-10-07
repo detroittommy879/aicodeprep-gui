@@ -18,6 +18,7 @@ except Exception as e:
 
 import requests
 
+
 class LLMError(Exception):
     """Exception raised by LLM client operations."""
     pass
@@ -32,10 +33,7 @@ class LLMClient:
     def ensure_lib(parent=None):
         """Ensure LiteLLM is available, show error if not."""
         if litellm is None:
-            from PySide6 import QtWidgets
-            QtWidgets.QMessageBox.critical(
-                parent,
-                "LiteLLM missing",
+            logging.error(
                 f"litellm is not installed. Please install it first.\n\n{_LITELLM_IMPORT_ERROR}"
             )
             raise LLMError("litellm not installed")
@@ -52,33 +50,63 @@ class LLMClient:
         """
         Perform a one-shot chat completion.
         """
-        LLMClient.ensure_lib()
-
-        headers = extra_headers.copy() if extra_headers else {}
-        # LiteLLM uses `api_key` parameter; leave env fallback as-is
-        kwargs = {}
-        if api_key:
-            kwargs["api_key"] = api_key
-        if base_url:
-            # Some providers (OpenRouter / generic OpenAI-compatible) need base_url
-            kwargs["base_url"] = base_url
-
-        messages = []
-        if system_content:
-            messages.append({"role": "system", "content": system_content})
-        messages.append({"role": "user", "content": user_content})
-
         try:
-            resp = litellm.completion(
-                model=model,
-                messages=messages,
-                extra_headers=headers if headers else None,
-                **kwargs
-            )
-            # LiteLLM uses OpenAI response format
-            return resp.choices[0].message.get("content", "")
-        except Exception as e:
-            raise LLMError(f"Chat error: {e}") from e
+            LLMClient.ensure_lib()
+
+            headers = extra_headers.copy() if extra_headers else {}
+            # LiteLLM uses `api_key` parameter; leave env fallback as-is
+            kwargs = {}
+            if api_key:
+                kwargs["api_key"] = api_key
+            if base_url:
+                # Some providers (OpenRouter / generic OpenAI-compatible) need base_url
+                kwargs["base_url"] = base_url
+
+            messages = []
+            if system_content:
+                messages.append({"role": "system", "content": system_content})
+            messages.append({"role": "user", "content": user_content})
+
+            try:
+                logging.info(
+                    f"LiteLLM call starting - model: {model}, base_url: {base_url}, has_api_key: {bool(api_key)}")
+                logging.info(
+                    f"LiteLLM request details - messages: {len(messages)} message(s), "
+                    f"user_content_length: {len(user_content)}, extra_headers: {list(headers.keys()) if headers else None}")
+
+                # Warn about large inputs
+                if len(user_content) > 100000:
+                    logging.warning(
+                        f"Large input detected ({len(user_content)} chars). This may take a while or hit token limits.")
+
+                # Add timeout to prevent indefinite hangs
+                if 'timeout' not in kwargs:
+                    kwargs['timeout'] = 120  # 2 minute timeout per request
+
+                resp = litellm.completion(
+                    model=model,
+                    messages=messages,
+                    extra_headers=headers if headers else None,
+                    **kwargs
+                )
+                # LiteLLM uses OpenAI response format
+                content = resp.choices[0].message.get("content", "")
+                logging.info(
+                    f"LiteLLM call successful - response length: {len(content)}")
+                return content
+            except AttributeError as e:
+                error_msg = f"Response format error: {e}. This may indicate an API compatibility issue."
+                logging.error(error_msg, exc_info=True)
+                raise LLMError(error_msg) from e
+            except Exception as e:
+                error_msg = f"Chat error: {e}"
+                logging.error(error_msg, exc_info=True)
+                raise LLMError(error_msg) from e
+        except Exception as outer_e:
+            # Catch absolutely everything
+            error_msg = f"Fatal LLM client error: {outer_e}"
+            logging.error(error_msg, exc_info=True)
+            raise LLMError(error_msg) from outer_e
 
     # ---- Model listing helpers ----
 
@@ -89,12 +117,24 @@ class LLMClient:
         """
         url = "https://openrouter.ai/api/v1/models"
         try:
-            r = requests.get(url, headers={"Authorization": f"Bearer {api_key}"}, timeout=10)
+            logging.info(f"Fetching OpenRouter models from {url}")
+            r = requests.get(
+                url, headers={"Authorization": f"Bearer {api_key}"}, timeout=10)
             r.raise_for_status()
             data = r.json()
-            return data.get("data", [])
+            models = data.get("data", [])
+            logging.info(f"Retrieved {len(models)} models from OpenRouter")
+            return models
+        except requests.exceptions.Timeout as e:
+            logging.error(f"OpenRouter model list fetch timed out: {e}")
+            return []
+        except requests.exceptions.RequestException as e:
+            logging.error(
+                f"OpenRouter model list fetch failed (network error): {e}")
+            return []
         except Exception as e:
-            logging.error(f"OpenRouter model list fetch failed: {e}")
+            logging.error(
+                f"OpenRouter model list fetch failed (unexpected): {e}", exc_info=True)
             return []
 
     @staticmethod
@@ -102,7 +142,8 @@ class LLMClient:
         """List models via OpenAI API."""
         url = "https://api.openai.com/v1/models"
         try:
-            r = requests.get(url, headers={"Authorization": f"Bearer {api_key}"}, timeout=10)
+            r = requests.get(
+                url, headers={"Authorization": f"Bearer {api_key}"}, timeout=10)
             r.raise_for_status()
             data = r.json()
             # OpenAI style returns {"data":[{"id":...}, ...]}
@@ -122,7 +163,8 @@ class LLMClient:
             url = base_url.rstrip("/") + suffix
             tried.append(url)
             try:
-                r = requests.get(url, headers={"Authorization": f"Bearer {api_key}"}, timeout=10)
+                r = requests.get(
+                    url, headers={"Authorization": f"Bearer {api_key}"}, timeout=10)
                 if r.status_code == 404:
                     continue
                 r.raise_for_status()
@@ -130,7 +172,8 @@ class LLMClient:
                 return data.get("data", [])
             except Exception:
                 continue
-        logging.error(f"OpenAI-compatible models failed. Tried: {', '.join(tried)}")
+        logging.error(
+            f"OpenAI-compatible models failed. Tried: {', '.join(tried)}")
         return []
 
     @staticmethod
