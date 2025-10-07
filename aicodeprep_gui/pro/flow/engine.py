@@ -417,7 +417,7 @@ def execute_graph(graph, parent_widget=None, show_progress: bool = True) -> None
 
                         try:
                             node_obj, out, error = future.result(
-                                timeout=300)  # 5 minute timeout per node
+                                timeout=600)  # 10 minute timeout per node for LLM calls
                         except Exception as future_error:
                             # If future.result() itself fails, treat it as a node error
                             logging.error(

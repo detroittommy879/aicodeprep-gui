@@ -45,6 +45,9 @@ class LLMBaseNode(BaseExecNode):
             "api_key", "", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
         self.create_property(
             "base_url", "", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
+        # Optional: write output to file for debugging (e.g., "llm1.md")
+        self.create_property(
+            "output_file", "", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
 
     # Utility to show user-friendly error
     def _warn(self, msg: str):
@@ -227,6 +230,21 @@ class LLMBaseNode(BaseExecNode):
                 if not out:
                     logging.warning(
                         f"[{self.NODE_NAME}] LLM returned empty response!")
+
+                # Write to file if output_file is specified
+                try:
+                    output_file = self.get_property("output_file") or ""
+                    if output_file and out:
+                        from pathlib import Path
+                        out_path = Path(output_file)
+                        out_path.parent.mkdir(parents=True, exist_ok=True)
+                        out_path.write_text(out, encoding="utf-8")
+                        logging.info(
+                            f"[{self.NODE_NAME}] Wrote output to {output_file}")
+                except Exception as write_err:
+                    logging.warning(
+                        f"[{self.NODE_NAME}] Failed to write output file: {write_err}")
+
                 return {"text": out}
             except LLMError as e:
                 error_msg = f"LLM Error: {str(e)}"

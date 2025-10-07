@@ -113,6 +113,17 @@ class BestOfNNode(BaseExecNode):
                     f"[{self.NODE_NAME}] {key}: {type(val)} = {repr(val)[:100]}")
             return {}
 
+        # If we have fewer than expected candidates, warn but continue
+        if len(candidates) < 5:
+            msg = f"Only {len(candidates)} candidate(s) available (expected 5). Continuing with available candidates."
+            logging.warning(f"[{self.NODE_NAME}] {msg}")
+            if QtWidgets is not None:
+                try:
+                    QtWidgets.QMessageBox.information(
+                        None, self.NODE_NAME, msg)
+                except Exception:
+                    pass
+
         provider = (self.get_property("provider")
                     or "openrouter").strip().lower()
         api_key = self.get_property("api_key") or ""
