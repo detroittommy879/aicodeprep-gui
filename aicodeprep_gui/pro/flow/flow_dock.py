@@ -78,21 +78,26 @@ class _PanEventFilter(QObject):
             if event.type() == QtCore.QEvent.KeyPress and event.key() == Qt.Key_Space and not event.isAutoRepeat():
                 if not self._space_pressed:
                     self._space_pressed = True
-                    # Store current state before enabling pan
+                    # Store current ALT_state before enabling pan
                     self._previous_pan_state = False
 
-                    # Check if we're already in pan mode (for NodeGraphQt)
-                    if hasattr(self.viewer, '_pan_mode'):
-                        self._previous_pan_state = getattr(
-                            self.viewer, '_pan_mode', False)
-                    elif hasattr(self.viewer, 'dragMode'):
-                        current_mode = self.viewer.dragMode()
-                        self._previous_pan_state = (
-                            current_mode == QGraphicsView.ScrollHandDrag)
+                    # Check if we're already in pan mode via ALT_state
+                    if hasattr(self.viewer, 'ALT_state'):
+                        self._previous_pan_state = self.viewer.ALT_state
 
-                    # Enable pan mode using standard QGraphicsView methods
+                    # Enable pan mode using ALT_state (NodeGraphQt's internal pan flag)
                     success = False
-                    if hasattr(self.viewer, 'setDragMode'):
+                    if hasattr(self.viewer, 'ALT_state'):
+                        try:
+                            self.viewer.ALT_state = True
+                            logging.info(
+                                "Space pressed - enabled pan via ALT_state=True")
+                            success = True
+                        except Exception as e:
+                            logging.debug(f"ALT_state failed: {e}")
+
+                    # Fallback to setDragMode if ALT_state not available
+                    if not success and hasattr(self.viewer, 'setDragMode'):
                         try:
                             self.viewer.setDragMode(
                                 QGraphicsView.ScrollHandDrag)
@@ -101,15 +106,6 @@ class _PanEventFilter(QObject):
                             success = True
                         except Exception as e:
                             logging.debug(f"setDragMode failed: {e}")
-
-                    if not success and hasattr(self.viewer, 'set_pan_mode'):
-                        try:
-                            self.viewer.set_pan_mode(True)
-                            logging.info(
-                                "Space pressed - enabled pan via set_pan_mode(True)")
-                            success = True
-                        except Exception as e:
-                            logging.debug(f"set_pan_mode failed: {e}")
 
                     # Cursor hint while space is held
                     try:
@@ -132,9 +128,19 @@ class _PanEventFilter(QObject):
                 if self._space_pressed:
                     self._space_pressed = False
 
-                    # Restore previous pan state using standard QGraphicsView methods
+                    # Restore previous ALT_state
                     success = False
-                    if hasattr(self.viewer, 'setDragMode'):
+                    if hasattr(self.viewer, 'ALT_state'):
+                        try:
+                            self.viewer.ALT_state = self._previous_pan_state
+                            logging.info(
+                                f"Space released - restored ALT_state to {self._previous_pan_state}")
+                            success = True
+                        except Exception as e:
+                            logging.debug(f"ALT_state failed: {e}")
+
+                    # Fallback to setDragMode if ALT_state not available
+                    if not success and hasattr(self.viewer, 'setDragMode'):
                         try:
                             mode = QGraphicsView.ScrollHandDrag if self._previous_pan_state else QGraphicsView.RubberBandDrag
                             self.viewer.setDragMode(mode)
@@ -143,15 +149,6 @@ class _PanEventFilter(QObject):
                             success = True
                         except Exception as e:
                             logging.debug(f"setDragMode failed: {e}")
-
-                    if not success and hasattr(self.viewer, 'set_pan_mode'):
-                        try:
-                            self.viewer.set_pan_mode(self._previous_pan_state)
-                            logging.info(
-                                f"Space released - restored pan mode to {self._previous_pan_state}")
-                            success = True
-                        except Exception as e:
-                            logging.debug(f"set_pan_mode failed: {e}")
 
                     # Restore cursor to match pan state
                     try:
@@ -830,11 +827,21 @@ class FlowStudioDock(QtWidgets.QDockWidget):
                 logging.debug(f"Failed to set cursor: {e}")
 
             if checked:
-                # Enable pan mode - try multiple methods
+                # Enable pan mode via ALT_state (NodeGraphQt's internal pan flag)
                 success = False
 
-                # Method 1: Standard QGraphicsView setDragMode
-                if hasattr(self.viewer, 'setDragMode'):
+                # Method 1: ALT_state (proper way for NodeGraphQt)
+                if hasattr(self.viewer, 'ALT_state'):
+                    try:
+                        self.viewer.ALT_state = True
+                        logging.info(
+                            "Pan mode enabled via ALT_state=True")
+                        success = True
+                    except Exception as e:
+                        logging.debug(f"ALT_state failed: {e}")
+
+                # Method 2: Fallback to setDragMode
+                if not success and hasattr(self.viewer, 'setDragMode'):
                     try:
                         self.viewer.setDragMode(QGraphicsView.ScrollHandDrag)
                         logging.info(
@@ -843,24 +850,25 @@ class FlowStudioDock(QtWidgets.QDockWidget):
                     except Exception as e:
                         logging.debug(f"setDragMode failed: {e}")
 
-                # Method 2: NodeGraphQt's set_pan_mode if available
-                if not success and hasattr(self.viewer, 'set_pan_mode'):
-                    try:
-                        self.viewer.set_pan_mode(True)
-                        logging.info("Pan mode enabled via set_pan_mode(True)")
-                        success = True
-                    except Exception as e:
-                        logging.debug(f"set_pan_mode failed: {e}")
-
                 if not success:
                     logging.warning(
                         "Could not enable pan mode with any available method")
             else:
-                # Enable selection mode - try multiple methods
+                # Disable pan mode via ALT_state
                 success = False
 
-                # Method 1: Standard QGraphicsView setDragMode
-                if hasattr(self.viewer, 'setDragMode'):
+                # Method 1: ALT_state (proper way for NodeGraphQt)
+                if hasattr(self.viewer, 'ALT_state'):
+                    try:
+                        self.viewer.ALT_state = False
+                        logging.info(
+                            "Selection mode enabled via ALT_state=False")
+                        success = True
+                    except Exception as e:
+                        logging.debug(f"ALT_state failed: {e}")
+
+                # Method 2: Fallback to setDragMode
+                if not success and hasattr(self.viewer, 'setDragMode'):
                     try:
                         self.viewer.setDragMode(QGraphicsView.RubberBandDrag)
                         logging.info(
@@ -868,16 +876,6 @@ class FlowStudioDock(QtWidgets.QDockWidget):
                         success = True
                     except Exception as e:
                         logging.debug(f"setDragMode failed: {e}")
-
-                # Method 2: NodeGraphQt's set_pan_mode if available
-                if not success and hasattr(self.viewer, 'set_pan_mode'):
-                    try:
-                        self.viewer.set_pan_mode(False)
-                        logging.info(
-                            "Selection mode enabled via set_pan_mode(False)")
-                        success = True
-                    except Exception as e:
-                        logging.debug(f"set_pan_mode failed: {e}")
 
                 if not success:
                     logging.warning(
