@@ -40,10 +40,21 @@ class ContextOutputNode(BaseExecNode):
         self.create_property("path", "fullcode.txt")
         self.create_property("use_latest_generated", True)
 
-        # Add text display widget for the file path
+        # Add read-only text widget to display file path
         try:
-            if hasattr(self, 'add_text_input'):
-                self.add_text_input('path', 'File', text='fullcode.txt')
+            self.add_text_input('_file_display', '',
+                                multi_line=False, tab=None)
+            # Make it read-only
+            try:
+                widget = self.get_widget('_file_display')
+                if widget and hasattr(widget, 'get_custom_widget'):
+                    qt_widget = widget.get_custom_widget()
+                    if qt_widget and hasattr(qt_widget, 'setReadOnly'):
+                        qt_widget.setReadOnly(True)
+                        qt_widget.setStyleSheet(
+                            "background: transparent; border: none; color: #888;")
+            except Exception:
+                pass
         except Exception:
             pass
 
@@ -55,7 +66,7 @@ class ContextOutputNode(BaseExecNode):
             pass
 
     def _update_node_label(self):
-        """Update node display to show file path."""
+        """Update node display to show file path in node name."""
         try:
             from NodeGraphQt import BaseNode as NGBaseNode
             # Try to get path property value
@@ -65,13 +76,22 @@ class ContextOutputNode(BaseExecNode):
             except Exception as e:
                 logging.debug(f"Error getting path property: {e}")
             # Truncate path if too long
-            if len(path) > 20:
-                path_display = "..." + path[-17:]
+            if len(path) > 15:
+                path_display = "..." + path[-12:]
             else:
                 path_display = path
-            display = f"{self.NODE_NAME}\n📄 {path_display}"
+            display = f"{self.NODE_NAME}: {path_display}"
             if hasattr(self, 'set_name'):
                 self.set_name(display)
+
+            # Update the file display widget
+            try:
+                if hasattr(self, 'set_property'):
+                    from NodeGraphQt import BaseNode as NGBaseNode
+                    NGBaseNode.set_property(
+                        self, '_file_display', f"📄 {path}", push_undo=False)
+            except Exception as e:
+                logging.debug(f"Failed to update file display widget: {e}")
         except Exception as e:
             logging.debug(f"Failed to update ContextOutputNode label: {e}")
 
@@ -153,10 +173,21 @@ class FileWriteNode(BaseExecNode):
         if not self.has_property("path"):
             self.create_property("path", "fullcode.txt")
 
-        # Add text display widget for the file path
+        # Add read-only text widget to display file path
         try:
-            if hasattr(self, 'add_text_input'):
-                self.add_text_input('path', 'File', text='fullcode.txt')
+            self.add_text_input('_file_display', '',
+                                multi_line=False, tab=None)
+            # Make it read-only
+            try:
+                widget = self.get_widget('_file_display')
+                if widget and hasattr(widget, 'get_custom_widget'):
+                    qt_widget = widget.get_custom_widget()
+                    if qt_widget and hasattr(qt_widget, 'setReadOnly'):
+                        qt_widget.setReadOnly(True)
+                        qt_widget.setStyleSheet(
+                            "background: transparent; border: none; color: #888;")
+            except Exception:
+                pass
         except Exception:
             pass
 
@@ -168,7 +199,7 @@ class FileWriteNode(BaseExecNode):
             pass
 
     def _update_node_label(self):
-        """Update node display to show file path."""
+        """Update node display to show file path in node name."""
         try:
             from NodeGraphQt import BaseNode as NGBaseNode
             # Try to get path property value
@@ -178,13 +209,22 @@ class FileWriteNode(BaseExecNode):
             except Exception as e:
                 logging.debug(f"Error getting path property: {e}")
             # Truncate path if too long
-            if len(path) > 20:
-                path_display = "..." + path[-17:]
+            if len(path) > 15:
+                path_display = "..." + path[-12:]
             else:
                 path_display = path
-            display = f"{self.NODE_NAME}\n📝 {path_display}"
+            display = f"{self.NODE_NAME}: {path_display}"
             if hasattr(self, 'set_name'):
                 self.set_name(display)
+
+            # Update the file display widget
+            try:
+                if hasattr(self, 'set_property'):
+                    from NodeGraphQt import BaseNode as NGBaseNode
+                    NGBaseNode.set_property(
+                        self, '_file_display', f"📝 {path}", push_undo=False)
+            except Exception as e:
+                logging.debug(f"Failed to update file display widget: {e}")
         except Exception as e:
             logging.debug(f"Failed to update FileWriteNode label: {e}")
 

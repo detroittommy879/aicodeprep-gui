@@ -54,6 +54,24 @@ class LLMBaseNode(BaseExecNode):
         self.create_property(
             "top_p", 1.0, widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
 
+        # Add read-only text widget to display model info
+        try:
+            self.add_text_input('_info_display', '',
+                                multi_line=False, tab=None)
+            # Make it read-only
+            try:
+                widget = self.get_widget('_info_display')
+                if widget and hasattr(widget, 'get_custom_widget'):
+                    qt_widget = widget.get_custom_widget()
+                    if qt_widget and hasattr(qt_widget, 'setReadOnly'):
+                        qt_widget.setReadOnly(True)
+                        qt_widget.setStyleSheet(
+                            "background: transparent; border: none;")
+            except Exception:
+                pass
+        except Exception:
+            pass
+
         # Schedule label display update after node is fully initialized
         try:
             from PySide6.QtCore import QTimer
@@ -62,7 +80,7 @@ class LLMBaseNode(BaseExecNode):
             pass
 
     def _update_node_label(self):
-        """Update the node's display name with current model and settings."""
+        """Update the node's display name with current model and settings (single line)."""
         try:
             from NodeGraphQt import BaseNode as NGBaseNode
             base_name = getattr(self, 'NODE_NAME', 'LLM Node')
@@ -82,7 +100,7 @@ class LLMBaseNode(BaseExecNode):
             except Exception as e:
                 logging.debug(f"Error getting properties for label: {e}")
 
-            # Build compact display name - keep within node width
+            # Build compact single-line display
             parts = [base_name]
 
             # Add model or mode info
@@ -91,25 +109,47 @@ class LLMBaseNode(BaseExecNode):
             elif model:
                 # Show short model name (last part after /)
                 model_short = model.split('/')[-1] if '/' in model else model
-                # Truncate to fit node width (max 18 chars per line)
-                if len(model_short) > 18:
-                    model_short = model_short[:15] + "..."
-                parts.append(model_short)
+                # Truncate to fit node width
+                if len(model_short) > 15:
+                    model_short = model_short[:12] + "..."
+                parts.append(f": {model_short}")
 
-            # Add sampling params on same line if non-default
+            # Add sampling params if non-default (compact)
             params = []
             if temperature is not None and temperature != 0.7:
-                params.append(f"T:{temperature}")
+                params.append(f"T{temperature}")
             if top_p is not None and top_p != 1.0:
-                params.append(f"P:{top_p}")
+                params.append(f"P{top_p}")
             if params:
-                parts.append(f"({' '.join(params)})")
+                parts.append(f"({','.join(params)})")
 
-            display = "\n".join(parts)
+            display = " ".join(parts)
 
-            # Update node name if it has changed
+            # Update node name
             if hasattr(self, 'set_name'):
                 self.set_name(display)
+
+            # Also update the info display widget if it exists
+            try:
+                # Build info text for widget (can be longer)
+                info_parts = []
+                if model:
+                    info_parts.append(f"Model: {model}")
+                elif model_mode in ("random", "random_free"):
+                    info_parts.append(f"Mode: {model_mode}")
+                if temperature != 0.7:
+                    info_parts.append(f"Temp: {temperature}")
+                if top_p != 1.0:
+                    info_parts.append(f"TopP: {top_p}")
+
+                if info_parts and hasattr(self, 'set_property'):
+                    info_text = " | ".join(info_parts)
+                    # Use the base class's set_property to avoid recursion
+                    from NodeGraphQt import BaseNode as NGBaseNode
+                    NGBaseNode.set_property(
+                        self, '_info_display', info_text, push_undo=False)
+            except Exception as e:
+                logging.debug(f"Failed to update info widget: {e}")
         except Exception as e:
             logging.debug(f"Failed to update node label: {e}")
 

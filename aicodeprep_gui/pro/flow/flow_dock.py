@@ -446,6 +446,7 @@ class FlowStudioDock(QtWidgets.QDockWidget):
         # Register I/O nodes and load the default flow BEFORE creating the properties panel
         # This might prevent issues where panel creation interferes with session loading.
         self._register_nodes()
+        self._setup_node_creation_menu()
         self._load_default_flow_or_build()
 
         # Create the PropertiesBinWidget - this is a separate widget that needs
@@ -666,6 +667,48 @@ class FlowStudioDock(QtWidgets.QDockWidget):
         zoom_fit_btn.setToolTip("Fit to View")
         zoom_fit_btn.clicked.connect(self._zoom_fit)
         toolbar.addWidget(zoom_fit_btn)
+
+        toolbar.addSeparator()
+
+        # Add Node button with dropdown menu
+        add_node_btn = QtWidgets.QToolButton()
+        add_node_btn.setText("➕ Add Node")
+        add_node_btn.setToolTip(
+            "Add a new node to the flow (or press Tab key)")
+        add_node_btn.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+
+        # Create add node menu
+        add_menu = QtWidgets.QMenu(add_node_btn)
+
+        # LLM Providers submenu
+        llm_menu = add_menu.addMenu("🤖 LLM Providers")
+        llm_menu.addAction("OpenAI (Official)").triggered.connect(
+            lambda: self._create_node_at_center('aicp.flow', 'OpenAI LLM'))
+        llm_menu.addAction("OpenRouter").triggered.connect(
+            lambda: self._create_node_at_center('aicp.flow', 'OpenRouter LLM'))
+        llm_menu.addAction("Gemini (Google)").triggered.connect(
+            lambda: self._create_node_at_center('aicp.flow', 'Gemini LLM'))
+        llm_menu.addAction("OpenAI Compatible").triggered.connect(
+            lambda: self._create_node_at_center('aicp.flow', 'OpenAI-Compatible LLM'))
+
+        # I/O submenu
+        io_menu = add_menu.addMenu("📁 Input/Output")
+        io_menu.addAction("Context Output").triggered.connect(
+            lambda: self._create_node_at_center('aicp.flow', 'Context Output'))
+        io_menu.addAction("File Write").triggered.connect(
+            lambda: self._create_node_at_center('aicp.flow', 'File Write'))
+        io_menu.addAction("Clipboard").triggered.connect(
+            lambda: self._create_node_at_center('aicp.flow', 'Clipboard'))
+        io_menu.addAction("Output Display").triggered.connect(
+            lambda: self._create_node_at_center('aicp.flow', 'Output Display'))
+
+        # Utilities submenu
+        util_menu = add_menu.addMenu("🔧 Utilities")
+        util_menu.addAction("Best of N").triggered.connect(
+            lambda: self._create_node_at_center('aicp.flow', 'Best-of-N Synthesizer'))
+
+        add_node_btn.setMenu(add_menu)
+        toolbar.addWidget(add_node_btn)
 
         toolbar.addSeparator()
 
@@ -901,20 +944,170 @@ class FlowStudioDock(QtWidgets.QDockWidget):
             )
             from .nodes.aggregate_nodes import BestOfNNode
 
-            # Register custom nodes with the graph
-            self.graph.register_node(ContextOutputNode)
-            self.graph.register_node(ClipboardNode)
-            self.graph.register_node(FileWriteNode)
-            self.graph.register_node(OutputDisplayNode)
+            # Get currently registered nodes to avoid double registration
+            already_registered = set()
+            if hasattr(self.graph, 'registered_nodes'):
+                registered = self.graph.registered_nodes()
+                if isinstance(registered, list):
+                    already_registered = set(registered)
 
-            self.graph.register_node(OpenRouterNode)
-            self.graph.register_node(OpenAINode)
-            self.graph.register_node(GeminiNode)
-            self.graph.register_node(OpenAICompatibleNode)
+            # Register custom nodes with the graph (skip if already registered)
+            nodes_to_register = [
+                ContextOutputNode,
+                ClipboardNode,
+                FileWriteNode,
+                OutputDisplayNode,
+                OpenRouterNode,
+                OpenAINode,
+                GeminiNode,
+                OpenAICompatibleNode,
+                BestOfNNode,
+            ]
 
-            self.graph.register_node(BestOfNNode)
+            for node_cls in nodes_to_register:
+                if node_cls not in already_registered:
+                    try:
+                        self.graph.register_node(node_cls)
+                    except Exception as reg_err:
+                        logging.warning(
+                            f"Could not register {node_cls.__name__}: {reg_err}")
+
+            # Log all registered nodes for debugging
+            try:
+                if hasattr(self.graph, 'registered_nodes'):
+                    registered = self.graph.registered_nodes()
+                    # registered_nodes() returns a list of class types, not a dict
+                    if isinstance(registered, list):
+                        # Get the identifiers by accessing __identifier__ and NODE_NAME
+                        node_ids = []
+                        for node_cls in registered:
+                            if hasattr(node_cls, '__identifier__') and hasattr(node_cls, 'NODE_NAME'):
+                                node_id = f"{node_cls.__identifier__}.{node_cls.NODE_NAME}"
+                                node_ids.append(node_id)
+                        logging.info(
+                            f"✅ Registered {len(node_ids)} nodes: {node_ids}")
+                    else:
+                        logging.info(
+                            f"✅ Registered nodes (dict): {list(registered.keys())}")
+                elif hasattr(self.graph, 'all_nodes'):
+                    logging.info(
+                        f"✅ Graph has {len(self.graph.all_nodes())} nodes after registration")
+            except Exception as debug_err:
+                logging.warning(f"Could not log registered nodes: {debug_err}")
         except Exception as e:
-            logging.error(f"Failed to register Flow Studio nodes: {e}")
+            logging.error(
+                f"Failed to register Flow Studio nodes: {e}", exc_info=True)
+
+    def _setup_node_creation_menu(self):
+        """Setup Tab key menu for creating nodes."""
+        if not NG_AVAILABLE:
+            return
+
+        try:
+            # NodeGraphQt supports Tab key menu for node creation
+            # The menu is configured through the graph's context menu system
+
+            # Build menu structure: Category -> Node Name -> Node Identifier
+            menu_items = {
+                'graph': {},
+                'nodes': {
+                    'LLM Providers': {
+                        'OpenAI (Official)': 'aicp.flow.OpenAI LLM',
+                        'OpenRouter': 'aicp.flow.OpenRouter LLM',
+                        'Gemini (Google)': 'aicp.flow.Gemini LLM',
+                        'OpenAI Compatible': 'aicp.flow.OpenAI-Compatible LLM',
+                    },
+                    'Input/Output': {
+                        'Context Output': 'aicp.flow.Context Output',
+                        'File Write': 'aicp.flow.File Write',
+                        'Clipboard': 'aicp.flow.Clipboard',
+                        'Output Display': 'aicp.flow.Output Display',
+                    },
+                    'Utilities': {
+                        'Best of N': 'aicp.flow.Best-of-N Synthesizer',
+                    },
+                }
+            }
+
+            # NodeGraphQt's set_context_menu method accepts this structure
+            if hasattr(self.graph, 'set_context_menu'):
+                self.graph.set_context_menu(**menu_items)
+                logging.info(
+                    "✅ Node creation menu configured (Tab key or right-click to access)")
+            else:
+                logging.info(
+                    "ℹ️ Context menu not available in this NodeGraphQt version")
+        except Exception as e:
+            logging.error(f"Failed to setup node creation menu: {e}")
+
+    def _create_node_at_center(self, identifier: str, node_name: str):
+        """Create a node at the center of the current view."""
+        try:
+            # Get the center position of the viewport
+            if self.viewer:
+                # Get viewport center in scene coordinates
+                viewport_rect = self.viewer.viewport().rect()
+                center_point = viewport_rect.center()
+                scene_pos = self.viewer.mapToScene(center_point)
+                pos = (scene_pos.x(), scene_pos.y())
+            else:
+                # Fallback to origin
+                pos = (0, 0)
+
+            # Create the node using the identifier
+            ident_str = f"{identifier}.{node_name}"
+            logging.info(f"Creating node: {ident_str} at position {pos}")
+
+            try:
+                node = self.graph.create_node(ident_str, pos=pos)
+                if node:
+                    logging.info(f"✅ Created node: {node_name}")
+                    # Select the newly created node
+                    self.graph.clear_selection()
+                    node.set_selected(True)
+                    return node
+                else:
+                    logging.warning(
+                        f"create_node returned None for {ident_str}")
+            except Exception as e:
+                logging.error(f"Failed to create node {ident_str}: {e}")
+
+                # Get list of available nodes for debugging
+                available_nodes = []
+                try:
+                    if hasattr(self.graph, 'registered_nodes'):
+                        registered = self.graph.registered_nodes()
+                        # registered_nodes() returns a list of class types
+                        if isinstance(registered, list):
+                            for node_cls in registered:
+                                if hasattr(node_cls, '__identifier__') and hasattr(node_cls, 'NODE_NAME'):
+                                    node_id = f"{node_cls.__identifier__}.{node_cls.NODE_NAME}"
+                                    available_nodes.append(node_id)
+                        elif isinstance(registered, dict):
+                            available_nodes = list(registered.keys())
+                except Exception as list_err:
+                    logging.error(f"Error getting node list: {list_err}")
+
+                logging.error(f"Available registered nodes: {available_nodes}")
+
+                # Show error to user
+                if QtWidgets:
+                    error_msg = f"Could not create {node_name} node.\n\nError: {e}\n\n"
+                    error_msg += f"Tried to create: {ident_str}\n\n"
+                    if available_nodes:
+                        error_msg += f"Available nodes:\n" + \
+                            "\n".join(f"  • {n}" for n in available_nodes[:10])
+                    else:
+                        error_msg += "No nodes registered yet. Check console for registration errors."
+
+                    QtWidgets.QMessageBox.warning(
+                        self,
+                        "Node Creation Failed",
+                        error_msg
+                    )
+        except Exception as e:
+            logging.error(
+                f"Error in _create_node_at_center: {e}", exc_info=True)
 
     def _create_node_compat(self, cls, identifier: str, node_name: str, pos: tuple[int, int]):
         """
@@ -1016,6 +1209,8 @@ class FlowStudioDock(QtWidgets.QDockWidget):
             if load_session and project_path and os.path.isfile(project_path):
                 try:
                     if load_session(self.graph, project_path):
+                        # Re-register nodes after session load (clear_session clears registrations)
+                        self._register_nodes()
                         return
                 except Exception:
                     pass
@@ -1163,6 +1358,8 @@ class FlowStudioDock(QtWidgets.QDockWidget):
                     self, "Flow Import", f"Serializer unavailable: {e}")
                 return
             if import_from_json(self.graph, path):
+                # Re-register nodes after import (clear_session clears registrations)
+                self._register_nodes()
                 settings.setValue("last_import_dir", os.path.dirname(path))
                 QtWidgets.QMessageBox.information(
                     self, "Flow Import", "Flow imported successfully.")
