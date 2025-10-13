@@ -46,6 +46,8 @@ class LLMClient:
         base_url: Optional[str] = None,
         extra_headers: Optional[Dict[str, str]] = None,
         system_content: Optional[str] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
     ) -> str:
         """
         Perform a one-shot chat completion.
@@ -82,6 +84,12 @@ class LLMClient:
                 # Add timeout to prevent indefinite hangs
                 if 'timeout' not in kwargs:
                     kwargs['timeout'] = 120  # 2 minute timeout per request
+
+                # Add temperature and top_p if provided
+                if temperature is not None:
+                    kwargs['temperature'] = temperature
+                if top_p is not None:
+                    kwargs['top_p'] = top_p
 
                 resp = litellm.completion(
                     model=model,

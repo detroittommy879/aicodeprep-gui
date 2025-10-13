@@ -11,6 +11,7 @@ except Exception as e:  # pragma: no cover
                 "NodeGraphQt is required for Flow Studio nodes. "
                 f"Original import error: {e}"
             )
+
     class NodePropWidgetEnum:
         QLINE_EDIT = 3
         FILE_SAVE = 14
@@ -38,6 +39,48 @@ class ContextOutputNode(BaseExecNode):
         # Properties
         self.create_property("path", "fullcode.txt")
         self.create_property("use_latest_generated", True)
+
+        # Add text display widget for the file path
+        try:
+            if hasattr(self, 'add_text_input'):
+                self.add_text_input('path', 'File', text='fullcode.txt')
+        except Exception:
+            pass
+
+        # Schedule label display update after node is fully initialized
+        try:
+            from PySide6.QtCore import QTimer
+            QTimer.singleShot(0, self._update_node_label)
+        except Exception:
+            pass
+
+    def _update_node_label(self):
+        """Update node display to show file path."""
+        try:
+            from NodeGraphQt import BaseNode as NGBaseNode
+            # Try to get path property value
+            path = "fullcode.txt"
+            try:
+                path = NGBaseNode.get_property(self, "path") or "fullcode.txt"
+            except Exception as e:
+                logging.debug(f"Error getting path property: {e}")
+            # Truncate path if too long
+            if len(path) > 20:
+                path_display = "..." + path[-17:]
+            else:
+                path_display = path
+            display = f"{self.NODE_NAME}\n📄 {path_display}"
+            if hasattr(self, 'set_name'):
+                self.set_name(display)
+        except Exception as e:
+            logging.debug(f"Failed to update ContextOutputNode label: {e}")
+
+    def set_property(self, name: str, value, push_undo: bool = True):
+        """Override to update node display when path changes."""
+        result = super().set_property(name, value, push_undo)
+        if name == "path":
+            self._update_node_label()
+        return result
 
     def run(self, inputs: Dict[str, Any], settings: Optional[Dict] = None) -> Dict[str, Any]:
         """
@@ -109,6 +152,48 @@ class FileWriteNode(BaseExecNode):
         # If file_save not available, fallback to regular text
         if not self.has_property("path"):
             self.create_property("path", "fullcode.txt")
+
+        # Add text display widget for the file path
+        try:
+            if hasattr(self, 'add_text_input'):
+                self.add_text_input('path', 'File', text='fullcode.txt')
+        except Exception:
+            pass
+
+        # Schedule label display update after node is fully initialized
+        try:
+            from PySide6.QtCore import QTimer
+            QTimer.singleShot(0, self._update_node_label)
+        except Exception:
+            pass
+
+    def _update_node_label(self):
+        """Update node display to show file path."""
+        try:
+            from NodeGraphQt import BaseNode as NGBaseNode
+            # Try to get path property value
+            path = "output.txt"
+            try:
+                path = NGBaseNode.get_property(self, "path") or "output.txt"
+            except Exception as e:
+                logging.debug(f"Error getting path property: {e}")
+            # Truncate path if too long
+            if len(path) > 20:
+                path_display = "..." + path[-17:]
+            else:
+                path_display = path
+            display = f"{self.NODE_NAME}\n📝 {path_display}"
+            if hasattr(self, 'set_name'):
+                self.set_name(display)
+        except Exception as e:
+            logging.debug(f"Failed to update FileWriteNode label: {e}")
+
+    def set_property(self, name: str, value, push_undo: bool = True):
+        """Override to update node display when path changes."""
+        result = super().set_property(name, value, push_undo)
+        if name == "path":
+            self._update_node_label()
+        return result
 
     def run(self, inputs: Dict[str, Any], settings: Optional[Dict] = None) -> Dict[str, Any]:
         """Write input text to configured file path."""

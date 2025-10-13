@@ -48,6 +48,70 @@ class LLMBaseNode(BaseExecNode):
         # Optional: write output to file for debugging (e.g., "llm1.md")
         self.create_property(
             "output_file", "", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
+        # Sampling parameters for creativity/randomness control
+        self.create_property(
+            "temperature", 0.7, widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
+        self.create_property(
+            "top_p", 1.0, widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
+
+        # Schedule label display update after node is fully initialized
+        try:
+            from PySide6.QtCore import QTimer
+            QTimer.singleShot(0, self._update_node_label)
+        except Exception:
+            pass
+
+    def _update_node_label(self):
+        """Update the node's display name with current model and settings."""
+        try:
+            from NodeGraphQt import BaseNode as NGBaseNode
+            base_name = getattr(self, 'NODE_NAME', 'LLM Node')
+            model = ""
+            model_mode = "choose"
+            temperature = 0.7
+            top_p = 1.0
+
+            # Get properties using BaseNode's get_property to avoid any overrides
+            try:
+                model = (NGBaseNode.get_property(self, "model") or "").strip()
+                model_mode = (NGBaseNode.get_property(
+                    self, "model_mode") or "choose").strip()
+                temperature = NGBaseNode.get_property(
+                    self, "temperature") or 0.7
+                top_p = NGBaseNode.get_property(self, "top_p") or 1.0
+            except Exception as e:
+                logging.debug(f"Error getting properties for label: {e}")
+
+            # Build compact display name - keep within node width
+            parts = [base_name]
+
+            # Add model or mode info
+            if model_mode in ("random", "random_free"):
+                parts.append(f"[{model_mode}]")
+            elif model:
+                # Show short model name (last part after /)
+                model_short = model.split('/')[-1] if '/' in model else model
+                # Truncate to fit node width (max 18 chars per line)
+                if len(model_short) > 18:
+                    model_short = model_short[:15] + "..."
+                parts.append(model_short)
+
+            # Add sampling params on same line if non-default
+            params = []
+            if temperature is not None and temperature != 0.7:
+                params.append(f"T:{temperature}")
+            if top_p is not None and top_p != 1.0:
+                params.append(f"P:{top_p}")
+            if params:
+                parts.append(f"({' '.join(params)})")
+
+            display = "\n".join(parts)
+
+            # Update node name if it has changed
+            if hasattr(self, 'set_name'):
+                self.set_name(display)
+        except Exception as e:
+            logging.debug(f"Failed to update node label: {e}")
 
     # Utility to show user-friendly error
     def _warn(self, msg: str):
@@ -56,6 +120,24 @@ class LLMBaseNode(BaseExecNode):
 
         # Don't show message boxes from worker threads - they can cause crashes
         # The engine will handle showing errors to the user in the main thread
+
+    def set_property(self, name: str, value, push_undo: bool = True):
+        """Override to update node display when key properties change."""
+        result = super().set_property(name, value, push_undo)
+        # Update display when model-related properties change
+        if name in ("model", "model_mode", "temperature", "top_p"):
+            self._update_node_label()
+        return result
+
+    def on_input_connected(self, in_port, out_port):
+        """Override to update display when connections change."""
+        super().on_input_connected(in_port, out_port)
+        self._update_node_label()
+
+    def on_input_disconnected(self, in_port, out_port):
+        """Override to update display when connections change."""
+        super().on_input_disconnected(in_port, out_port)
+        self._update_node_label()
 
     # Child classes can override to set sensible defaults
     def default_provider(self) -> str:
@@ -211,19 +293,40 @@ class LLMBaseNode(BaseExecNode):
                     f"No model specified for provider '{provider}'. Please set a model or use random mode.")
                 return {}
 
+            # Get sampling parameters
+            temperature = None
+            top_p = None
+            try:
+                temp_val = self.get_property("temperature")
+                if temp_val is not None and temp_val != "":
+                    temperature = float(temp_val)
+            except (ValueError, TypeError):
+                logging.warning(
+                    f"[{self.NODE_NAME}] Invalid temperature value, using default")
+
+            try:
+                top_p_val = self.get_property("top_p")
+                if top_p_val is not None and top_p_val != "":
+                    top_p = float(top_p_val)
+            except (ValueError, TypeError):
+                logging.warning(
+                    f"[{self.NODE_NAME}] Invalid top_p value, using default")
+
             try:
                 logging.info(
                     f"[{self.NODE_NAME}] Making LLM call with model: {model}")
                 logging.info(
                     f"[{self.NODE_NAME}] API details - provider: {provider}, base_url: {base_url}, "
-                    f"input_length: {len(text)}, has_system: {bool(system)}")
+                    f"input_length: {len(text)}, has_system: {bool(system)}, temperature: {temperature}, top_p: {top_p}")
                 out = LLMClient.chat(
                     model=model,
                     user_content=text,
                     api_key=api_key,
                     base_url=base_url if base_url else None,
                     extra_headers=self._extra_headers_for_provider(provider),
-                    system_content=system
+                    system_content=system,
+                    temperature=temperature,
+                    top_p=top_p
                 )
                 logging.info(
                     f"[{self.NODE_NAME}] LLM call successful, response length: {len(out) if out else 0}")
