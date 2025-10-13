@@ -27,11 +27,18 @@ def _clear_graph(graph: NodeGraph) -> None:
     try:
         if _has_method(graph, "clear_session"):
             graph.clear_session()
+            # Force Qt to process events and flush UI state
+            try:
+                from PySide6.QtCore import QCoreApplication
+                QCoreApplication.processEvents()
+            except Exception:
+                pass
             return
-    except Exception:
-        pass
+    except Exception as e:
+        logging.warning(f"[Flow Serializer] clear_session failed: {e}")
     try:
         nodes = list(getattr(graph, "all_nodes", lambda: [])())
+        logging.info(f"[Flow Serializer] Clearing {len(nodes)} nodes...")
         for n in nodes:
             try:
                 if _has_method(graph, "delete_node"):
@@ -40,6 +47,12 @@ def _clear_graph(graph: NodeGraph) -> None:
                     n.delete()  # type: ignore
             except Exception as e:
                 logging.error(f"[Flow Serializer] Failed to delete node: {e}")
+        # Force Qt to process events after manual deletion
+        try:
+            from PySide6.QtCore import QCoreApplication
+            QCoreApplication.processEvents()
+        except Exception:
+            pass
     except Exception as e:
         logging.error(f"[Flow Serializer] Failed to enumerate nodes: {e}")
 
@@ -73,17 +86,63 @@ def load_session(graph: NodeGraph, file_path: str) -> bool:
             logging.error(
                 f"[Flow Serializer] load_session: file not found: {file_path}")
             return False
+
+        # Validate JSON before attempting to load
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if not isinstance(data, dict):
+                logging.error(
+                    f"[Flow Serializer] Invalid JSON structure in {file_path}")
+                return False
+            logging.info(
+                f"[Flow Serializer] JSON validation passed for {file_path}")
+        except json.JSONDecodeError as e:
+            logging.error(
+                f"[Flow Serializer] JSON decode error in {file_path}: {e}")
+            return False
+        except Exception as e:
+            logging.error(
+                f"[Flow Serializer] Failed to read/validate {file_path}: {e}")
+            return False
+
         if _has_method(graph, "load_session"):
-            # Many versions auto-clear on load; ensure a clean state anyway.
+            # Clear graph and ensure UI is fully updated before loading
+            logging.info(
+                f"[Flow Serializer] Clearing graph before loading {file_path}...")
             _clear_graph(graph)
+
+            # Additional event processing to ensure clear is complete
+            try:
+                from PySide6.QtCore import QCoreApplication
+                import time
+                QCoreApplication.processEvents()
+                time.sleep(0.05)  # Small delay to ensure clear is complete
+                QCoreApplication.processEvents()
+            except Exception:
+                pass
+
+            # Now load the session
+            logging.info(
+                f"[Flow Serializer] Loading session from: {file_path}")
             graph.load_session(file_path)  # type: ignore
-            logging.info(f"[Flow Serializer] Loaded session from: {file_path}")
+
+            # Process events after loading
+            try:
+                from PySide6.QtCore import QCoreApplication
+                QCoreApplication.processEvents()
+            except Exception:
+                pass
+
+            logging.info(
+                f"[Flow Serializer] Successfully loaded session from: {file_path}")
             return True
         logging.error(
             "[Flow Serializer] load_session: graph.load_session not available")
         return False
     except Exception as e:
-        logging.error(f"[Flow Serializer] load_session failed: {e}")
+        logging.error(
+            f"[Flow Serializer] load_session failed: {e}", exc_info=True)
         return False
 
 

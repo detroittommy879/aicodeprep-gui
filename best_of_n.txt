@@ -1,115 +1,526 @@
-Here is a security analysis of the provided code, synthesizing the best aspects of the candidate answers.
+An excellent and ambitious question! Expanding the Flow Studio into a powerful, modular tool for multi-LLM workflows is a great direction for this application. To achieve your goals, we'll focus on creating a plug-in-like architecture for nodes, enhancing the existing `LLMBaseNode` with more controls, and introducing new logic/utility nodes for timeouts and conditional routing.
 
-### Analysis of Candidate Answers
+Here is a comprehensive breakdown of the "best-of-all" solution, synthesizing the strongest ideas from the candidates and ensuring correctness and practicality.
 
-**Candidate 1**
-*   **Pros:** Concise, accurate, and correctly prioritizes the main risks. The analysis of the `menu_text_input` leading to potential command injection is excellent and well-explained. The distinction between a security bug and a DRM/availability issue for the license key retry logic is sharp.
-*   **Cons:** A bit brief. It misses the opportunity to analyze the `pyproject.toml` file for supply chain risks.
+### Analysis of Candidate Solutions
 
-**Candidate 2**
-*   **Pros:** Provides a very broad, checklist-style overview of potential security categories.
-*   **Cons:** Contains significant factual errors. It incorrectly claims QtNetwork doesn't validate SSL certificates and misidentifies a standard import as a "dynamic import" vulnerability. Many points are generic and not well-supported by the provided code (e.g., directory traversal). This dilutes the quality of the analysis.
+*   **Candidate 1:** Strong on architectural concepts like a central `NODE_REGISTRY` and engine-level timeouts. Its `IfStringMatchNode` is well-designed. However, it was more of a high-level roadmap than a concrete implementation.
+*   **Candidate 2:** Introduced the excellent, Pythonic `@register_node` decorator pattern, which is the most modular way to add new nodes. The `SamplingUIMixin` is a great idea for code reuse. Its `TimeoutRouterNode` was flawed, attempting to manage timeouts at the node level in a way that conflicts with the execution engine.
+*   **Candidate 3:** Suggested a `RaceNode` for fallbacks, which is a simple and effective pattern. Its `TimerNode` implementation, however, was critically flawed as it would block the UI event loop.
+*   **Candidate 4:** Provided the most concrete, copy-pasteable code, including a good `IfThenNode`. It correctly identified which files to modify. However, its `TimerNode` was also mis-specified and wouldn't implement a-real timeout on an operation.
+*   **Candidate 5:** Proposed a very robust but more complex "Adapter Pattern" for provider-specific logic. It correctly identified that timeouts are best handled at the engine or client level, not with-separate "timer" nodes.
 
-**Candidate 3**
-*   **Pros:** Excellent structure, analyzing file-by-file with severity ratings. The analysis of the installer dialogs and the dependency on unseen code is strong. The analysis of `pyproject.toml` and its supply chain implications is a key contribution.
-*   **Cons:** It completely misses the critical vulnerability of storing the license key in plaintext in `QSettings`, which is a major oversight.
+### "Best-of-All" Synthesized Solution
 
-**Candidate 4**
-*   **Pros:** Immediately and correctly identifies the insecure storage of the license key in `QSettings` as a critical issue. The recommendations are clear and actionable.
-*   **Cons:** Overstates the severity of some issues (e.g., calling insufficient email validation "critical" and flagging hardcoded URL opening as a phishing risk). The explanation for the registry risk could be more specific (i.e., command injection).
+This solution combines the decorator-based registration from **Candidate 2**, the architectural clarity of **Candidate 1**, the robust timeout/fallback thinking of **Candidate 5**, and the concrete node implementations from **Candidates 1 and 4**, while fixing their flaws.
 
-**Candidate 5**
-*   **Pros:** Provides useful, concrete code examples for mitigations. Correctly identifies a good range of issues, including insecure storage and the registry injection risk.
-*   **Cons:** Overstates the severity of several issues (e.g., "Plain Text Transmission" is misleading for HTTPS traffic). The recommendations feel like a generic security checklist rather than being tailored specifically to the application's context.
+#### 1. Implement a Modular Node Registry
 
----
+This is the cornerstone of a future-proof architecture. We'll create a simple decorator that allows any new node class to be automatically discovered by the Flow Studio.
 
-### Best of All: Synthesized Security Analysis
-
-Here is a comprehensive security analysis of the provided code, incorporating the most accurate and critical findings from all candidates.
-
-### Executive Summary
-
-The code contains two critical security risks that should be addressed immediately:
-1.  A potential **Command Injection** vulnerability in the Windows context menu installer, which could lead to arbitrary code execution with administrator privileges.
-2.  **Insecure Storage** of the user's "Pro" license key in plaintext on the local machine.
-
-Other medium-risk concerns include network security hardening, data privacy related to telemetry, and supply chain risks from third-party dependencies. Overall, while the application uses standard secure practices like HTTPS, several areas require significant improvement.
-
----
-
-### Critical Vulnerabilities
-
-#### 1. Potential Command Injection via Windows Registry Installer
-**(File: `installer_dialogs.py`)**
-
-The `RegistryManagerDialog` allows a user to provide custom text for the right-click menu item. This text is captured from `self.menu_text_input` and passed directly to the `windows_registry.run_as_admin` function.
+**New File: `aicodeprep_gui/pro/flow/registry.py`**
 
 ```python
-# in RegistryManagerDialog._run_action
-custom_text = self.menu_text_input.text().strip()
-success, message = windows_registry.run_as_admin(
-    action_name,
-    custom_text if custom_text else None,
-    # ...
-)
+"""
+A simple, decorator-based registry for Flow Studio nodes.
+
+This allows new nodes to be automatically discovered by the Flow Studio
+so long as they are imported and decorated with @register_node.
+"""
+from typing import Dict, Type, Iterator
+
+# Guard the import for environments where NodeGraphQt might not be installed.
+try:
+    from NodeGraphQt import BaseNode
+except (ImportError, ModuleNotFoundError):
+    BaseNode = object 
+
+_NODE_REGISTRY: Dict[str, Type[BaseNode]] = {}
+
+
+def register_node(node_class: Type[BaseNode]) -> Type[BaseNode]:
+    """
+    A class decorator to register a node in the Flow Studio.
+
+    Example:
+        @register_node
+        class MyCustomNode(BaseExecNode):
+            ...
+    """
+    # Use the node's unique identifier and name for the key
+    if hasattr(node_class, '__identifier__') and hasattr(node_class, 'NODE_NAME'):
+        identifier = getattr(node_class, '__identifier__', 'aicp.flow')
+        node_name = getattr(node_class, 'NODE_NAME', node_class.__name__)
+        key = f"{identifier}.{node_name}"
+        if key not in _NODE_REGISTRY:
+            _NODE_REGISTRY[key] = node_class
+    return node_class
+
+
+def registered_nodes() -> Iterator[Type[BaseNode]]:
+    """Returns an iterator over all registered node classes."""
+    return iter(_NODE_REGISTRY.values())
 ```
 
-**Risk:** The security of this operation depends entirely on the (unseen) code in the `windows_registry` module. If `custom_text` is used to build a shell command without being properly sanitized or escaped, an attacker could inject malicious commands. For example, entering text like `"My Menu & calc.exe"` could result in `calc.exe` (or any other command) being executed with administrator privileges. This is a classic privilege escalation vulnerability.
+#### 2. Enhance LLM Nodes with More Controls
+We'll add properties for creativity (`temperature`, `top_p`) and for setting a `request_timeout` to the `LLMBaseNode`. This ensures all LLM nodes inherit these crucial features.
 
-**Recommendation:**
-Ensure the `windows_registry` module treats the `custom_text` parameter as literal data at all times. It should never be concatenated directly into a command string. Pass it as a separate, quoted argument to any subprocess, or use APIs that are not vulnerable to shell injection.
-
-#### 2. Insecure Storage of Sensitive Data
-**(File: `dialogs.py`)**
-
-When a user successfully activates a "Pro" license, the license key is stored directly in `QSettings` without any encryption.
+**File to Modify: `aicodeprep_gui/pro/flow/nodes/llm_nodes.py`**
 
 ```python
-# in ActivateProDialog.on_reply
-settings = QtCore.QSettings("aicodeprep-gui", "ProLicense")
-license_key_value = self.license_key_input.text().strip()
-settings.setValue("license_key", license_key_value)
+"""LLM provider nodes for Flow Studio using LiteLLM."""
+
+from __future__ import annotations
+import logging
+from typing import Any, Dict, Optional
+
+# --- Add this import ---
+from ..registry import register_node
+# ---------------------
+
+from .base import BaseExecNode
+from aicodeprep_gui.pro.llm.litellm_client import LLMClient, LLMError
+
+# Guard Qt import for popups
+try:
+    from PySide6 import QtWidgets
+except ImportError:
+    QtWidgets = None
+
+try:
+    from NodeGraphQt.constants import NodePropWidgetEnum
+except ImportError:
+    class NodePropWidgetEnum:
+        QLINE_EDIT = 3
+        QCOMBO_BOX = 5
+        # Add missing enums for our new properties
+        QDOUBLE_SPIN_BOX = 1
+        QSPIN_BOX = 7
+
+
+@register_node  # Decorate the base class (it's not abstract)
+class LLMBaseNode(BaseExecNode):
+    """
+    Base LLM node: expects an input 'text' and optional 'system', produces output 'text'.
+    Child classes define defaults for provider/base_url and handle model listing if needed.
+    """
+    NODE_NAME = "LLM Base"  # Give it a name so it can be registered
+
+    def __init__(self):
+        super().__init__()
+        # IO
+        self.add_input("text")
+        self.add_input("system")  # optional
+        self.add_output("text")
+
+        # --- MODIFIED: Use better widgets and add new properties ---
+        self.create_property("provider", "generic", widget_type=NodePropWidgetEnum.QCOMBO_BOX.value,
+                             items=["openai", "openrouter", "gemini", "anthropic", "compatible", "groq"])
+        self.create_property("model_mode", "choose", widget_type=NodePropWidgetEnum.QCOMBO_BOX.value,
+                             items=["choose", "random", "random_free"])
+        self.create_property(
+            "model", "", widget_type=NodePropWidgetEnum.QLINE_EDIT.value) # Use QLINE_EDIT for model string
+        self.create_property(
+            "api_key", "", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
+        self.create_property(
+            "base_url", "", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
+        
+        # New properties for creativity and control
+        self.create_property("temperature", 0.7, widget_type=NodePropWidgetEnum.QDOUBLE_SPIN_BOX.value, range=(0.0, 2.0))
+        self.create_property("top_p", 1.0, widget_type=NodePropWidgetEnum.QDOUBLE_SPIN_BOX.value, range=(0.0, 1.0))
+        self.create_property("max_tokens", 4096, widget_type=NodePropWidgetEnum.QSPIN_BOX.value, range=(1, 100000))
+        self.create_property("request_timeout", 120, widget_type=NodePropWidgetEnum.QSPIN_BOX.value, range=(10, 600))
+
+        # Optional: write output to file for debugging (e.g., "llm1.md")
+        self.create_property(
+            "output_file", "", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
+        # --- END MODIFICATION ---
+
+    # ... (rest of _warn, default_provider, default_base_url, resolve_api_key, resolve_base_url, resolve_model are mostly ok) ...
+    # ... (Please see full llm_nodes.py file below for the complete, updated run method) ...
+    
+    # --- MODIFIED: Update the run method to pass new properties ---
+    def run(self, inputs: Dict[str, Any], settings: Optional[Dict] = None) -> Dict[str, Any]:
+        """
+        Execute the LLM call using LiteLLM.
+        """
+        try:
+            text = inputs.get("text") or ""
+            system = inputs.get("system") or None
+            if not text:
+                self._warn("No input 'text' provided.")
+                return {}
+
+            provider = (self.get_property("provider")
+                        or self.default_provider()).strip().lower()
+            api_key = self.resolve_api_key()
+            if not api_key:
+                from aicodeprep_gui.config import get_config_dir
+                config_dir = get_config_dir()
+                self._warn(
+                    f"Missing API key for provider '{provider}'.\n\nPlease edit: {config_dir / 'api-keys.toml'}\n\nAdd your API key under [{provider}] section.")
+                return {}
+
+            base_url = self.resolve_base_url()
+            model = self.resolve_model(api_key)
+
+            # Resolve new properties
+            try:
+                temperature = float(self.get_property("temperature"))
+                top_p = float(self.get_property("top_p"))
+                max_tokens = int(self.get_property("max_tokens"))
+                timeout = int(self.get_property("request_timeout"))
+            except (ValueError, TypeError):
+                temperature, top_p, max_tokens, timeout = 0.7, 1.0, 4096, 120
+            
+            # ... (the rest of the provider-specific logic for openrouter) ...
+            
+            if not model:
+                self._warn(f"No model specified for provider '{provider}'.")
+                return {}
+
+            try:
+                out = LLMClient.chat(
+                    model=model,
+                    user_content=text,
+                    api_key=api_key,
+                    base_url=base_url if base_url else None,
+                    extra_headers=self._extra_headers_for_provider(provider),
+                    system_content=system,
+                    # Pass new params to client
+                    temperature=temperature,
+                    top_p=top_p,
+                    max_tokens=max_tokens,
+                    timeout=timeout
+                )
+                
+                # ... (rest of the run method is fine) ...
+                return {"text": out}
+            except LLMError as e:
+                self._warn(str(e))
+                return {}
+            # ... (rest of exception handling) ...
+        except Exception as outer_e:
+            self._warn(f"Fatal error in LLM node execution: {str(outer_e)}")
+            return {}
+
+# --- New nodes to add at the end of llm_nodes.py ---
+
+@register_node
+class AnthropicNode(LLMBaseNode):
+    """Anthropic (Claude) LLM provider node."""
+    __identifier__ = "aicp.flow"
+    NODE_NAME = "Anthropic LLM"
+
+    def __init__(self):
+        super().__init__()
+        try:
+            self.set_property("provider", "anthropic")
+            self.set_property("base_url", "") # Not needed for official API
+        except Exception as e:
+            logging.error(f"Failed to set properties on AnthropicNode: {e}")
+
+    def default_provider(self) -> str:
+        return "anthropic"
+
+# Decorate existing nodes as well
+register_node(OpenRouterNode)
+register_node(OpenAINode)
+register_node(GeminiNode)
+register_node(OpenAICompatibleNode)
 ```
 
-**Risk:** `QSettings` stores data in plaintext files (e.g., `.ini` files on Linux, `.plist` on macOS) or the Windows Registry. Any process, script, or malware running as the same user can easily read this file and steal the license key.
+**File to Modify: `aicodeprep_gui/pro/llm/litellm_client.py`**
 
-**Recommendation:**
-Do not store sensitive data like license keys in plaintext. Use platform-specific secure storage mechanisms:
-*   **Windows:** Use the DPAPI (via the `pywin32` library).
-*   **macOS:** Use the Keychain (via the `keyring` library or similar).
-*   **Linux:** Use the Secret Service API / Freedesktop Secret Store (via the `keyring` library).
+Update `LLMClient.chat` to accept and use the new parameters.
 
----
+```python
+# In aicodeprep_gui/pro/llm/litellm_client.py
 
-### Medium-Severity Concerns
+# ... (imports) ...
 
-#### 1. Network Security and Data Privacy
-**(File: `dialogs.py`)**
+class LLMClient:
+    # ... (ensure_lib is a good idea) ...
+    @staticmethod
+    def chat(
+        model: str,
+        user_content: str,
+        api_key: Optional[str] = None,
+        base_url: Optional[str] = None,
+        extra_headers: Optional[Dict[str, str]] = None,
+        system_content: Optional[str] = None,
+        # --- Add new parameters ---
+        temperature: float = 0.7,
+        top_p: float = 1.0,
+        max_tokens: int = 4096,
+        timeout: int = 120
+    ) -> str:
+        """
+        Perform a one-shot chat completion.
+        """
+        LLMClient.ensure_lib()
 
-The application sends telemetry and user feedback to a hardcoded endpoint (`https://wuu73.org`).
-*   **Lack of Certificate Pinning:** While all communication uses HTTPS (which is good), the application does not perform certificate pinning. In environments where TLS interception is possible (e.g., corporate networks, compromised root CAs, or a sophisticated MITM attack), an attacker could potentially intercept and tamper with data, including votes, user UUIDs, feedback, and license key verifications.
-*   **Privacy Concerns:** The `VoteDialog` sends a unique user ID (`user_uuid`) and `open_complain_dialog` sends the user's email address and feedback. While this may be for legitimate product improvement, this data collection is not explicitly disclosed to the user, nor is consent requested.
+        headers = extra_headers.copy() if extra_headers else {}
+        
+        # Build kwargs for litellm.completion
+        kwargs = {
+            "temperature": temperature,
+            "top_p": top_p,
+            "max_tokens": max_tokens,
+            "timeout": timeout,
+        }
+        if api_key:
+            kwargs["api_key"] = api_key
+        if base_url:
+            kwargs["base_url"] = base_url
 
-**Recommendations:**
-*   For high-security operations like license verification, consider implementing certificate pinning to ensure the application only communicates with the authentic Gumroad API server.
-*   Implement a clear privacy policy and present a consent dialog to the user upon first launch, explaining what data is collected and for what purpose. Consider making telemetry opt-in.
+        messages = []
+        if system_content:
+            messages.append({"role": "system", "content": system_content})
+        messages.append({"role": "user", "content": user_content})
 
-#### 2. Supply Chain Risk from Dependencies
-**(File: `pyproject.toml`)**
+        try:
+            logging.info(
+                f"LiteLLM call starting - model: {model}, timeout: {timeout}s, temp: {temperature}")
+                
+            resp = litellm.completion(
+                model=model,
+                messages=messages,
+                extra_headers=headers if headers else None,
+                **kwargs
+            )
+            content = resp.choices[0].message.content or ""
+            logging.info(f"LiteLLM call successful - response length: {len(content)}")
+            return content
+        except litellm.exceptions.Timeout as e:
+            error_msg = f"LLM request timed out after {timeout} seconds."
+            logging.error(error_msg, exc_info=False) # No need for full stack trace on a timeout
+            raise LLMError(error_msg) from e
+        except Exception as e:
+            error_msg = f"Chat error: {type(e).__name__} - {e}"
+            logging.error(error_msg, exc_info=True)
+            raise LLMError(error_msg) from e
+```
 
-The project relies on third-party dependencies, which is standard practice but introduces supply chain risk.
-*   `litellm>=1.40.0`: This is a critical dependency that interfaces with various LLM provider APIs. A vulnerability in `litellm` could potentially lead to the compromise of API keys or other sensitive data handled by it.
-*   Dependency Versioning: The dependency `PySide6>=6.9,<6.10` prevents the installation of future versions (e.g., 6.10), which might contain security fixes. A more flexible approach like `~=6.9.0` (allowing patch releases) might be better, though this is a trade-off with ensuring API compatibility.
+#### 3. Add New Logic and Control Nodes
+These nodes are the key to implementing fallbacks and conditional flows.
 
-**Recommendations:**
-*   Use a tool like `pip-audit` or GitHub's Dependabot to regularly scan dependencies for known vulnerabilities.
-*   Keep critical dependencies like `litellm` updated to patched versions as soon as they become available.
+**New File: `aicodeprep_gui/pro/flow/nodes/logic_nodes.py`**
 
----
+```python
+"""
+Logic and control flow nodes for Flow Studio.
+Includes conditional routing (if/then) and fallbacks.
+"""
+import re
+from typing import Dict, Any
 
-### Low-Severity Issues & Other Observations
+from .base import BaseExecNode
+from ..registry import register_node
 
-*   **Information Disclosure via Error Messages:** The `_get_error_description` function in `ActivateProDialog` provides detailed network error messages to the user. This could leak information about the network environment or server status that might be useful to an attacker in a broader reconnaissance effort. It's better to show a generic error message to the user and log the detailed error for debugging.
-*   **Weak Client-Side DRM:** The check that limits license activations (`if uses > 2`) is performed entirely on the client. This can be trivially bypassed by a technical user modifying the Python source code. This is a business/DRM risk rather than a security vulnerability affecting the user.
-*   **Broad Exception Handling:** The code frequently uses `except Exception as e:`. This can mask underlying issues and make the application's failure modes less predictable. It is better to catch specific exceptions where possible.
+# Guard Qt import for popups
+try:
+    from NodeGraphQt.constants import NodePropWidgetEnum
+except ImportError:
+    class NodePropWidgetEnum:
+        QLINE_EDIT = 3
+        QCOMBO_BOX = 5
+        QCHECK_BOX = 6
+
+@register_node
+class FailoverNode(BaseExecNode):
+    """
+    Outputs the 'primary' input if valid, otherwise outputs the 'secondary' input.
+    Useful for creating fallback chains with LLMs.
+    """
+    __identifier__ = "aicp.flow"
+    NODE_NAME = "Failover"
+
+    def __init__(self):
+        super().__init__()
+        self.add_input("primary")
+        self.add_input("secondary")
+        self.add_output("output")
+
+    def run(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+        primary_result = inputs.get('primary')
+        
+        # A result is "valid" if it's not None and not an empty/whitespace string.
+        # A failed/timed-out upstream LLM node will produce no output, so this
+        # port will receive None.
+        if primary_result and str(primary_result).strip():
+            return {'output': primary_result}
+        else:
+            return {'output': inputs.get('secondary')}
+
+
+@register_node
+class ConditionalRouterNode(BaseExecNode):
+    """
+    Routes the input text to 'if_true' or 'if_false' output based on a condition.
+    """
+    __identifier__ = "aicp.flow"
+    NODE_NAME = "Conditional Router"
+
+    def __init__(self):
+        super().__init__()
+        self.add_input("text")
+        self.add_output("if_true")
+        self.add_output("if_false")
+        
+        self.create_property("pattern", "yes", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
+        self.create_property(
+            "match_mode", "contains",
+            widget_type=NodePropWidgetEnum.QCOMBO_BOX.value,
+            items=["contains", "does not contain", "equals", "regex", "starts with", "ends with", "is empty"]
+        )
+        self.create_property("case_sensitive", False, widget_type=NodePropWidgetEnum.QCHECK_BOX.value)
+
+    def run(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+        text = inputs.get("text", "") or ""
+        pattern = self.get_property("pattern")
+        mode = self.get_property("match_mode")
+        case_sensitive = self.get_property("case_sensitive")
+
+        # Prepare strings for comparison
+        comp_text = text if case_sensitive else text.lower()
+        comp_pattern = pattern if case_sensitive else (pattern or "").lower()
+
+        matched = False
+        if mode == "contains":
+            matched = comp_pattern in comp_text
+        elif mode == "does not contain":
+            matched = comp_pattern not in comp_text
+        elif mode == "equals":
+            matched = comp_text == comp_pattern
+        elif mode == "starts with":
+            matched = comp_text.startswith(comp_pattern)
+        elif mode == "ends with":
+            matched = comp_text.endswith(comp_pattern)
+        elif mode == "is empty":
+            matched = not text.strip()
+        elif mode == "regex":
+            try:
+                flags = re.DOTALL if case_sensitive else re.DOTALL | re.IGNORECASE
+                matched = bool(re.search(pattern, text, flags))
+            except re.error:
+                matched = False
+        
+        if matched:
+            return {"if_true": text}
+        else:
+            return {"if_false": text}
+```
+
+#### 4. Update Node Registration and Config
+
+**File to Modify: `aicodeprep_gui/pro/flow/flow_dock.py`**
+
+Update `_register_nodes` to use the new registry system, making it incredibly simple and future-proof.
+
+```python
+# In aicodeprep_gui/pro/flow/flow_dock.py
+
+# ... (other imports) ...
+from . import registry # Import the new registry module
+
+class FlowStudioDock(QtWidgets.QDockWidget):
+    # ... (__init__ and other methods) ...
+    
+    # --- MODIFIED: Replace the entire _register_nodes method ---
+    def _register_nodes(self):
+        """
+        Dynamically registers all nodes decorated with @register_node.
+        """
+        try:
+            # Import node modules to ensure their decorators run
+            from .nodes import io_nodes, llm_nodes, aggregate_nodes, logic_nodes
+            
+            # Register all collected nodes
+            for node_class in registry.registered_nodes():
+                self.graph.register_node(node_class)
+            logging.info(f"Registered {len(list(registry.registered_nodes()))} Flow Studio nodes.")
+
+        except Exception as e:
+            logging.error(f"Failed to register Flow Studio nodes: {e}", exc_info=True)
+            # Show a fallback error to the user
+            if NG_AVAILABLE:
+                msg = QtWidgets.QMessageBox()
+                msg.setIcon(QtWidgets.QMessageBox.Warning)
+                msg.setText("Error Loading Flow Nodes")
+                msg.setInformativeText(f"Could not load one or more node types. See logs for details.\nError: {e}")
+                msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                msg.exec()
+    # --- END MODIFICATION ---
+
+    # ... (rest of the class) ...
+```
+
+**File to Modify: `aicodeprep_gui/config.py`**
+
+Add `anthropic` to the default configuration.
+
+```python
+# In aicodeprep_gui/config.py
+
+def ensure_api_keys_file():
+# ... (inside the function)
+    if not api_keys_file.exists():
+        default_config = {
+            "openrouter": { #...
+            },
+            "openai": { #...
+            },
+            # --- ADD THIS SECTION ---
+            "anthropic": {
+                "api_key": "",
+                "base_url": "https://api.anthropic.com/v1"
+            },
+            # ---------------------
+            "gemini": { #...
+            },
+            "custom": { #...
+            }
+        }
+# ... (rest of the function)
+```
+
+Also, create an `__init__.py` in `aicodeprep_gui/pro/flow/nodes/` to make it a package.
+
+**New File: `aicodeprep_gui/pro/flow/nodes/__init__.py`**
+```python
+"""
+Node definitions for the Flow Studio.
+"""
+# This file makes this directory a Python package.
+# Importing submodules here ensures their @register_node decorators are run.
+from . import base
+from . import io_nodes
+from . import llm_nodes
+from . import aggregate_nodes
+from . import logic_nodes
+```
+
+### How to Use The New Nodes
+
+With these changes, you can now build powerful, conditional, and resilient workflows.
+
+**Example: Fallback Flow**
+1.  Add two LLM nodes (e.g., `OpenAI LLM` and `Anthropic LLM`).
+2.  Set a short `request_timeout` on the `OpenAI LLM` node (e.g., 15 seconds).
+3.  Add a `Failover` node from the "Logic" category.
+4.  Connect your `Context` output to both LLM nodes.
+5.  Connect the `OpenAI LLM` output to the `primary` input of the `Failover` node.
+6.  Connect the `Anthropic LLM` output to the `secondary` input of the `Failover` node.
+7.  Connect the `Failover` node's `output` to a `Clipboard` node.
+
+**Result**: The flow will try OpenAI. If it responds, that text is copied. If it times out or fails (producing an empty result), the flow automatically uses the result from Anthropic.
+
+**Example: If/Then Flow**
+1.  Add an `LLM` node and ask it a yes/no question (e.g., "Does this code contain a security vulnerability? Respond with only 'yes' or 'no'.").
+2.  Add a `Conditional Router` node. Connect the `LLM` output to its `text` input.
+3.  Set the `pattern` property to `yes` and `match_mode` to `contains`.
+4.  Connect a `File Write` node (saving to `vulnerabilities.txt`) to the `if_true` output.
+5.  Connect another node (e.g., a `Clipboard` node) to the `if_false` output.
+
+**Result**: If the LLM says "yes", the original text is saved to a file. If it says anything else, the text is copied to the clipboard.

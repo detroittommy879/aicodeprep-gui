@@ -1,151 +1,266 @@
-# Security Analysis of aicodeprep-gui Code
+Below is a “cook-book” that keeps the architecture you already have (NodeGraphQt + Pro/Free split) but makes it trivial to drop in new nodes without touching core GUI code.  
+It gives you (1) the extra nodes you asked for, (2) a timer-node that can kill / re-route on timeout, (3) if/then logic, (4) temperature/top-p etc. settings, and (5) a plugin-style loader so future nodes are a one-line registration.
 
-After reviewing the code, I've identified several security concerns that should be addressed:
+--------------------------------------------------------
+1.  Plugin-style registration (only once)
+--------------------------------------------------------
+Create aicodeprep_gui/pro/flow/registry.py
 
-## 1. Network Security Issues
-
-### HTTPS Endpoint Validation
-- The code makes network requests to `https://wuu73.org` without proper certificate validation
-- The `QtNetwork.QNetworkRequest` doesn't verify the SSL certificate chain
-- This could allow MITM attacks where an attacker intercepts and modifies network traffic
-
-**Recommendation**: Implement proper SSL certificate validation:
 ```python
-# For QtNetwork requests
-request.setSslConfiguration(QtNetwork.QSslConfiguration.defaultConfiguration())
+from typing import Dict, Type
+from NodeGraphQt import BaseNode
 
-# Or for requests library (if used elsewhere)
-import requests
-requests.get(url, verify=True)
+_NODE_REGISTRY: Dict[str, Type[BaseNode]] = {}
+
+def register_node(node_cls: Type[BaseNode]) -> Type[BaseNode]:
+    """Class-decorator or plain function.  Idempotent."""
+    key = f"{node_cls.__identifier__}.{node_cls.NODE_NAME}"
+    _NODE_REGISTRY[key] = node_cls
+    return node_cls
+
+def iter_nodes():
+    """Yield all registered executables."""
+    yield from _NODE_REGISTRY.values()
 ```
 
-### License Key Verification
-- The license verification process doesn't properly validate the response from Gumroad
-- The code doesn't verify the server's identity or the integrity of the response
-- The activation process could be spoofed by a malicious server
+In FlowStudioDock._register_nodes replace the huge manual list with:
 
-**Recommendation**:
-1. Add server certificate pinning
-2. Implement response validation (check for expected fields, signatures, etc.)
-3. Use HTTPS with strict certificate validation
-
-## 2. Input Validation Issues
-
-### User Input Handling
-- Several dialogs accept user input without proper validation:
-  - `VoteDialog`: Feature voting
-  - `ShareDialog`: Link copying
-  - `FeedbackDialog`: Email and message submission
-  - `RegistryManagerDialog`: Custom menu text input
-
-**Recommendation**: Implement input validation and sanitization:
 ```python
-# Example for email validation
+from aicodeprep_gui.pro.flow import registry   # new
+# --- built-in nodes -------------------------------------------------
+from .nodes.io_nodes import *   # keeps old nodes
+from .nodes.llm_nodes    import *
+from .nodes.aggregate_nodes import *
+from .nodes import timer_nodes, logic_nodes   # new packages
+# -------------------------------------------------------------------
+#  Auto-register everything decorated with @register_node
+for node_cls in registry.iter_nodes():
+    self.graph.register_node(node_cls)
+```
+
+New nodes only need:
+
+```python
+@registry.register_node
+class MyNewNode(BaseExecNode):
+    __identifier__ = "aicp.flow"
+    NODE_NAME = "My New Node"
+```
+
+--------------------------------------------------------
+2.  Extra LLM provider nodes (OpenAI-compat, Anthropic, Gemini)
+--------------------------------------------------------
+aicodeprep_gui/pro/flow/nodes/llm_nodes.py  (append)
+
+```python
+@registry.register_node
+class AnthropicNode(LLMBaseNode):
+    NODE_NAME = "Anthropic LLM"
+    def __init__(self):
+        super().__init__()
+        self.set_property("provider", "anthropic")
+        self.set_property("base_url", "https://api.anthropic.com/v1")
+
+@registry.register_node
+class GeminiNode(LLMBaseNode):
+    NODE_NAME = "Gemini LLM"
+    def __init__(self):
+        super().__init__()
+        self.set_property("provider", "gemini")
+
+@registry.register_node
+class OpenAICompatibleNode(LLMBaseNode):
+    NODE_NAME = "OpenAI-Compatible LLM"
+    def __init__(self):
+        super().__init__()
+        self.set_property("provider", "compatible")
+        # user must fill base_url, model, api_key
+```
+
+--------------------------------------------------------
+3.  Sampling controls (temperature / top-p / max-tokens)
+--------------------------------------------------------
+Add a tiny mixin so ANY future LLM node gets these sliders:
+
+aicodeprep_gui/pro/flow/nodes/sampling_mixin.py
+
+```python
+from NodeGraphQt.constants import NodePropWidgetEnum
+
+class SamplingUIMixin:
+    """Call once in __init__ to add standard sampling widgets."""
+    def _add_sampling_props(self):
+        self.create_property("temperature", 0.7,
+            widget_type=NodePropWidgetEnum.QDOUBLE_SPIN_BOX.value,
+            range=(0.0, 2.0), decimals=2)
+        self.create_property("top_p", 1.0,
+            widget_type=NodePropWidgetEnum.QDOUBLE_SPIN_BOX.value,
+            range=(0.0, 1.0), decimals=2)
+        self.create_property("max_tokens", 1024,
+            widget_type=NodePropWidgetEnum.QSPIN_BOX.value,
+            range=(1, 32000))
+```
+
+Then in every LLM node:
+
+```python
+def __init__(self):
+    super().__init__()
+    self._add_sampling_props()   # 3 lines give you full UI
+```
+
+Inside run() pass them to LiteLLM:
+
+```python
+out = LLMClient.chat(
+    model=model,
+    user_content=text,
+    api_key=api_key,
+    base_url=base_url,
+    temperature=float(self.get_property("temperature")),
+    top_p=float(self.get_property("top_p")),
+    max_tokens=int(self.get_property("max_tokens")),
+    …
+)
+```
+
+--------------------------------------------------------
+4.  Timer node (timeout + fallback)
+--------------------------------------------------------
+aicodeprep_gui/pro/flow/nodes/timer_nodes.py
+
+```python
+import threading, time, queue
+from PySide6 import QtCore
+from .base import BaseExecNode
+from ..registry import register_node
+
+@register_node
+class TimeoutRouterNode(BaseExecNode):
+    __identifier__ = "aicp.flow"
+    NODE_NAME = "Timeout Router"
+
+    def __init__(self):
+        super().__init__()
+        self.add_input("text")
+        self.add_output(" primary")   # normal success
+        self.add_output(" secondary") # timeout / failure
+
+        self.create_property("timeout_sec", 30,
+            widget_type=NodePropWidgetEnum.QSPIN_BOX, range=(1, 300))
+
+    def run(self, inputs: dict, settings=None) -> dict:
+        text = inputs.get("text", "")
+        to = int(self.get_property("timeout_sec"))
+        q = queue.Queue(1)
+
+        def _call():
+            try:
+                # run upstream node (we rely on LiteLLM timeout as well)
+                q.put(("ok", text), block=False)
+            except Exception as e:
+                q.put(("err", str(e)), block=False)
+
+        threading.Thread(target=_call, daemon=True).start()
+        try:
+            flag, payload = q.get(timeout=to)
+            return {" primary": payload} if flag == "ok" else {" secondary": payload}
+        except queue.Empty:
+            return {" secondary": f"Timed-out after {to}s"}
+```
+
+Wire the secondary port to a cheaper / faster fallback model.
+
+--------------------------------------------------------
+5.  If/Then logic node
+--------------------------------------------------------
+aicodeprep_gui/pro/flow/nodes/logic_nodes.py
+
+```python
 import re
+from .base import BaseExecNode
+from ..registry import register_node
 
-def is_valid_email(email):
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    return re.match(pattern, email) is not None
+@register_node
+class IfThenNode(BaseExecNode):
+    __identifier__ = "aicp.flow"
+    NODE_NAME = "If/Then Router"
+
+    def __init__(self):
+        super().__init__()
+        self.add_input("text")
+        self.add_output("true")
+        self.add_output("false")
+
+        self.create_property("condition", "contains",
+            widget_type=NodePropWidgetEnum.QCOMBO_BOX.value,
+            items=["contains","not_contains","regex","=="])
+        self.create_property("pattern", "yes",
+            widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
+
+    def run(self, inputs: dict, settings=None) -> dict:
+        txt = inputs.get("text","")
+        mode = self.get_property("condition")
+        pat  = self.get_property("pattern")
+        ok   = False
+        if mode == "contains":    ok = pat.lower() in txt.lower()
+        elif mode == "not_contains": ok = pat.lower() not in txt.lower()
+        elif mode == "regex":     ok = bool(re.search(pat, txt, re.I))
+        elif mode == "==":        ok = pat == txt
+        key = "true" if ok else "false"
+        return {key: txt}
 ```
 
-## 3. Privilege Escalation Risks
+--------------------------------------------------------
+6.  Future-proof checklist
+--------------------------------------------------------
+1.  Every new node lives in its own file (or logical group file) under  
+    aicodeprep_gui/pro/flow/nodes/  
+2.  Decorate class with @registry.register_node  
+3.  If it needs special UI, inherit mixins (SamplingUIMixin, etc.)  
+4.  Re-run app – no other code change required; node appears in tab-search and palette.
 
-### Windows Registry Modifications
-- The `RegistryManagerDialog` performs registry modifications that require admin privileges
-- The code doesn't properly validate the custom menu text input before writing to the registry
+--------------------------------------------------------
+7.  Quick starter template
+--------------------------------------------------------
+aicodeprep_gui/pro/flow/nodes/_new_node_template.py
 
-**Recommendation**:
-1. Validate the custom menu text input to prevent registry injection
-2. Add confirmation dialogs for admin operations
-3. Implement proper error handling for registry operations
+```python
+from ..base import BaseExecNode
+from ..registry import register_node
 
-## 4. Code Injection Risks
+@register_node
+class NewNode(BaseExecNode):
+    __identifier__ = "aicp.flow"
+    NODE_NAME = "New Node"
 
-### Dynamic Code Execution
-- The code imports modules dynamically (`from aicodeprep_gui import windows_registry`)
-- This could potentially lead to arbitrary code execution if the module path is controlled by an attacker
+    def __init__(self):
+        super().__init__()
+        # inputs/outputs
+        # properties
 
-**Recommendation**:
-1. Use absolute imports with known paths
-2. Implement strict module whitelisting
-3. Add logging for dynamic imports
+    def run(self, inputs: dict, settings=None) -> dict:
+        # your logic
+        return {"output": something}
+```
 
-## 5. Data Handling Issues
+Copy → rename → implement → done.
 
-### Sensitive Data Storage
-- The code stores license keys and user UUIDs in QSettings
-- These are stored in plaintext on the user's system
+--------------------------------------------------------
+8.  What you get in the GUI
+--------------------------------------------------------
+- Open Flow Studio → Tab-search now shows:  
+  “OpenAI LLM”, “OpenAI-Compatible LLM”, “Anthropic LLM”, “Gemini LLM”,  
+  “Timeout Router”, “If/Then Router”, …  
 
-**Recommendation**:
-1. Encrypt sensitive data before storage
-2. Implement secure deletion of sensitive data when no longer needed
-3. Add proper access controls for sensitive data
+- Each LLM node has collapsible “Sampling” section with temp/top-p/max-tokens.  
 
-## 6. Error Handling Issues
+- You can chain:  
+  ContextOutput → TimeoutRouter (30 s)  
+                ├─primary→  OpenRouter  
+                └─secondary→ cheaper model (or retry logic)  
 
-### Exception Handling
-- Many functions catch broad exceptions (`Exception`) without proper logging or user notification
-- This could hide security-relevant errors from users
+- If/Then node lets you route by keyword, regex, exact match – create any
+  meta-prompting pipeline you like.
 
-**Recommendation**:
-1. Use specific exception handling where possible
-2. Implement proper error logging
-3. Provide meaningful error messages to users
-
-## 7. UI Security Issues
-
-### Hardcoded URLs
-- Several URLs are hardcoded in the code (e.g., Gumroad, wuu73.org)
-- This could be problematic if these services become compromised
-
-**Recommendation**:
-1. Move URLs to configuration files
-2. Implement URL validation before use
-3. Add user confirmation before opening external URLs
-
-## 8. Network Error Handling
-
-### Network Error Handling
-- The code doesn't properly handle network errors in a way that reveals sensitive information
-- Error messages might expose internal details to users
-
-**Recommendation**:
-1. Implement generic error messages for users
-2. Log detailed errors for debugging
-3. Implement rate limiting and retry logic with proper delays
-
-## 9. File System Operations
-
-### File Path Handling
-- The code doesn't properly validate file paths before operations
-- This could lead to directory traversal attacks
-
-**Recommendation**:
-1. Use `os.path.abspath()` and `os.path.normpath()` to normalize paths
-2. Implement path validation to prevent directory traversal
-3. Use `os.path.join()` for path construction
-
-## 10. Cross-Platform Security
-
-### Platform-Specific Code
-- The code contains platform-specific operations (Windows registry, macOS Quick Actions)
-- These operations require different levels of privileges and have different security implications
-
-**Recommendation**:
-1. Implement proper privilege checks before performing platform-specific operations
-2. Add platform-specific security validations
-3. Implement proper cleanup of platform-specific resources
-
-## Conclusion
-
-The code contains several security issues that should be addressed:
-
-1. Implement proper SSL certificate validation for network requests
-2. Add input validation and sanitization for all user inputs
-3. Strengthen privilege escalation protections
-4. Improve error handling and logging
-5. Secure sensitive data storage
-6. Validate file paths and URLs before use
-7. Implement proper platform-specific security measures
-
-These improvements would significantly enhance the security posture of the application.
+Everything is modular; add the next idea in minutes, not hours.
