@@ -1,0 +1,240 @@
+Of course. Here is a comprehensive code review based on the provided files.
+
+### Overall Assessment
+
+This is a well-structured and robust project that demonstrates a strong understanding of modern Python, especially `asyncio` and concurrent programming. The code is clean, readable, and includes good logging and testing. The separation of concerns into `client`, `server`, and `parallel` modules is excellent. The improvements listed in `IMPROVEMENTS.md` show a thoughtful development process and have clearly resulted in a more resilient application.
+
+My suggestions are mostly refinements to further improve performance, maintainability, and robustness, rather than fixing critical flaws.
+
+---
+
+### File-by-File Review and Suggestions
+
+#### `src/parallel_llm_mcp/client.py`
+
+This file is a good implementation of an API client, but it has one major performance issue and a few minor areas for improvement.
+
+**1. Performance Optimizations**
+
+*   **Suggestion:** Reuse the `httpx.AsyncClient` instance.
+*   **Problem:** A new `httpx.AsyncClient` is created for every single API call inside `call_model_async`. This is inefficient as it prevents connection pooling. Each call has the overhead of setting up a new connection, including the TCP handshake and TLS negotiation.
+*   **Reasoning:** `httpx.AsyncClient` is designed to be instantiated once and reused for many requests. This allows it to maintain a pool of open connections to the server, dramatically reducing latency on subsequent requests.
+*   **Implementation:**
+    *   Create the client in `__init__` and store it as an instance variable.
+    *   Implement `__aenter__` and `__aexit__` methods to manage the client's lifecycle, allowing it to be used as an async context manager.
+
+    ```python
+    # In src/parallel_llm_mcp/client.py
+
+    class OpenRouterClient:
+        def __init__(self, api_key: str, base_url: str = "https://openrouter.ai/api/v1"):
+            # ... (keep existing __init__ code) ...
+            # 4-minute timeout for large context windows (240 seconds)
+            timeout = httpx.Timeout(240.0, connect=60.0)
+            self._async_client = httpx.AsyncClient(timeout=timeout, headers=self.headers)
+
+        async def close(self):
+            """Close the underlying httpx client."""
+            await self._async_client.aclose()
+        
+        # Optional: For use with 'async with'
+        async def __aenter__(self):
+            return self
+        
+        async def __aexit__(self, exc_type, exc_val, exc_tb):
+            await self.close()
+
+        async def call_model_async(
+            self,
+            model: str,
+            prompt: str,
+            # ... (rest of the signature) ...
+        ) -> str:
+            # ... (build data dictionary) ...
+            
+            import time  # Or move to top of file
+            start_time = time.time()
+            logger.info(f"🚀 Starting API call to {model}...")
+            
+            # REMOVE: async with httpx.AsyncClient(timeout=timeout) as client:
+            try:
+                response = await self._async_client.post(
+                    f"{self.base_url}/chat/completions",
+                    json=data
+                    # Headers are already in the client
+                )
+                # ... (rest of the try block) ...
+            # ... (except blocks) ...
+    ```
+    *Note: You would need to ensure `client.close()` is called when the server shuts down.*
+
+**2. Readability and Maintainability**
+
+*   **Suggestion:** Move `import time` to the top of the file.
+*   **Problem:** `import time` is located inside the `call_model_async` method.
+*   **Reasoning:** Per PEP 8, imports should be at the top of the file. This makes dependencies clear and avoids the small overhead of re-evaluating the import on each call.
+
+*   **Suggestion:** Reduce code duplication in exception handlers.
+*   **Problem:** The `elapsed = time.time() - start_time` calculation and logging are repeated in every `except` block.
+*   **Reasoning:** A `try...finally` block can be used to ensure the timing calculation and logging happen regardless of the outcome, cleaning up the code.
+*   **Implementation:**
+    ```python
+    # In call_model_async method
+    import time
+    start_time = time.time()
+    logger.info(f"🚀 Starting API call to {model}...")
+    try:
+        # ... httpx call and success logic ...
+        return content
+    except httpx.HTTPStatusError as e:
+        logger.error(f"❌ HTTP error calling {model}: {e.response.status_code} - {e.response.text[:200]}")
+        raise
+    except httpx.TimeoutException:
+        logger.error(f"⏱️ Timeout calling {model} (limit: 240s)")
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error calling {model}: {e}")
+        raise
+    finally:
+        elapsed = time.time() - start_time
+        logger.info(f"Finished call to {model} in {elapsed:.1f}s") # A generic finished message
+    ```
+
+**3. Potential Bugs or Edge Cases**
+
+*   **Suggestion:** Clarify the behavior of the synchronous `call_model` method.
+*   **Problem:** `asyncio.run()` creates a new event loop. If `call_model` were ever called from within an existing async context (e.g., from another async function without `await`), it would raise a `RuntimeError`.
+*   **Reasoning:** While the current usage in `main_sync` is safe, it's a potential pitfall if the library is used differently in the future. Adding a docstring comment can prevent misuse.
+*   **Implementation:**
+    ```python
+    def call_model(self, ...) -> str:
+        """Call a single model synchronously.
+        
+        Note: This method creates a new asyncio event loop and should not
+        be called from within an already running async function.
+        """
+        return asyncio.run(...)
+    ```
+
+#### `src/parallel_llm_mcp/parallel.py`
+
+This file is very well-written. The `parallel_call_async` function is a textbook example of how to correctly manage concurrent async tasks with rate limiting. I have only a minor suggestion.
+
+**1. Code Quality and Best Practices**
+
+*   **Suggestion:** The function `parallel_call_async` handles exceptions by converting them to strings. This is good for display but loses the original exception context. An alternative is to let `asyncio.gather(return_exceptions=True)` return the exception objects and let the caller decide how to handle them.
+*   **Problem:** The current implementation forces all errors into a string format: `"Error: {str(result)}"`.
+*   **Reasoning:** The calling code in `server.py` immediately checks for this specific string prefix. This is a form of "string-based typing" which can be brittle. Returning the actual exception objects allows for more robust error handling (e.g., `isinstance(result, TimeoutError)`).
+*   **Verdict:** The current implementation works perfectly for this project's needs. This is more of a "philosophical" point for a more generic library. No change is strictly necessary here.
+
+#### `src/parallel_llm_mcp/server.py`
+
+This is the core logic and it's implemented very well. The logging is excellent and the flow is clear.
+
+**1. Readability and Maintainability**
+
+*   **Suggestion:** Refactor the `process_prompt` method.
+*   **Problem:** The `process_prompt` method is very long and handles multiple distinct steps: calling models, writing files, building a new prompt, calling the synthesizer, and writing the final file.
+*   **Reasoning:** Breaking this method into smaller, private helper methods (e.g., `_write_intermediate_files`, `_synthesize_results`) would make the code easier to read, test, and maintain.
+*   **Example:**
+    ```python
+    async def process_prompt(prompt: str) -> str:
+        # ... initial logging ...
+        responses = await self._call_models_parallel(prompt)
+        successful_responses = self._filter_successful(responses)
+        
+        if not successful_responses:
+            return "Error: All models failed..."
+
+        await self._write_intermediate_files(successful_responses)
+        
+        final_answer = await self._synthesize_results(prompt, successful_responses)
+
+        await self._write_final_answer(final_answer)
+
+        # ... final logging ...
+        return final_answer
+    ```
+
+*   **Suggestion:** Make model lists and other settings configurable.
+*   **Problem:** The list of `parallel_models` and the `synthesizer_model` are hardcoded in the `__init__` method.
+*   **Reasoning:** This makes it difficult for a user to experiment with different models without editing the source code. These could be loaded from a configuration file (e.g., YAML, JSON) or environment variables. This would make the server more flexible.
+
+**2. Code Quality and Best Practices**
+
+*   **Suggestion:** Improve the logging configuration.
+*   **Problem:** The code configures logging by creating handlers and then calling `logging.basicConfig`. This can sometimes have unexpected interactions.
+*   **Reasoning:** A more standard and robust approach is to get the root logger and configure it directly, without using `basicConfig`.
+*   **Implementation:**
+    ```python
+    # At the top of server.py
+    log_format = '%(asctime)s [%(levelname)s] %(message)s'
+    log_date_format = '%H:%M:%S'
+    formatter = logging.Formatter(log_format, log_date_format)
+
+    # Get the root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    
+    # Clear existing handlers to avoid duplicates if re-imported
+    if root_logger.hasHandlers():
+        root_logger.handlers.clear()
+
+    # Create file handler
+    file_handler = logging.FileHandler('parallel_llm_progress.log', mode='a', encoding='utf-8')
+    file_handler.setFormatter(formatter)
+    root_logger.addHandler(file_handler)
+
+    # Create console handler
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+    root_logger.addHandler(console_handler)
+
+    # Get module-specific logger
+    logger = logging.getLogger(__name__)
+
+    # REMOVE the logging.basicConfig call
+    ```
+
+#### `tests/test_server.py`
+
+The tests are generally good, but there are some tests for non-existent code.
+
+*   **Potential Bugs or Edge Cases:**
+    *   **Suggestion:** Remove or update obsolete tests.
+    *   **Problem:** The tests `test_run_server_stdio` and `test_run_server_unsupported_transport` are testing a method `server.run()` which does not exist on the `ParallelLLMServer` class. The server is started via the `main_sync()` function.
+    *   **Reasoning:** These tests will fail and are likely leftovers from a previous refactoring. They should be removed, or alternatively, `main_sync()` could be tested (though this is often more complex).
+
+#### `pyproject.toml`
+
+*   **Code Quality and Best Practices:**
+    *   **Suggestion:** Remove unused dependency.
+    *   **Problem:** `pydantic>=2.0.0` is listed as a dependency.
+    *   **Reasoning:** A search of the codebase does not show any usage of `pydantic`. Unused dependencies should be removed to keep the installation footprint minimal and reduce potential security surfaces.
+
+---
+
+### Documentation and Configuration Files
+
+*   **`README.md`:** The README is excellent. It's clear, comprehensive, and provides all the necessary information to get started. The only minor improvement would be to replace the placeholder `<repository-url>` with the actual URL.
+*   **`mcp_config.json`:** This is a good example file. It correctly leaves the API key blank for the user to fill in.
+*   **`IMPROVEMENTS.md`:** This file is a fantastic addition. It provides valuable context on the evolution of the code and the rationale behind key decisions (like the 4-minute timeout).
+
+### Security Concerns
+
+*   **API Key Handling:** The use of environment variables (`os.getenv("OPENROUTER_API_KEY")`) is the correct and secure way to handle secrets. The code properly checks for the existence of the key on startup. No issues here.
+*   **Input Handling:** The server accepts a raw text blob as a prompt. Since this prompt is passed directly to an external LLM API, the primary risk of "injection" would be prompt injection against the LLMs themselves, which is an inherent challenge of working with LLMs and not a flaw in this server's code. The server does not appear to execute or insecurely process the prompt's content, so the risk of traditional code injection is negligible.
+
+### Summary of Recommendations
+
+1.  **High Priority (Performance):** Modify `client.py` to create and reuse a single `httpx.AsyncClient` instance to enable connection pooling.
+2.  **Medium Priority (Correctness):** Remove the obsolete tests for `server.run()` in `test_server.py`.
+3.  **Medium Priority (Maintainability):** Refactor the large `process_prompt` method in `server.py` into smaller helper functions.
+4.  **Low Priority (Best Practices):**
+    *   Remove the unused `pydantic` dependency from `pyproject.toml`.
+    *   Move `import time` to the top of `client.py`.
+    *   Make the model lists in `server.py` configurable instead of hardcoded.
+    *   Refine the logging setup in `server.py` to avoid `basicConfig`.
+    *   Add a docstring to `client.py`'s `call_model` to warn against calling it from a running event loop.
+
+This project is in great shape. Implementing these suggestions will make it even more performant, robust, and maintainable.

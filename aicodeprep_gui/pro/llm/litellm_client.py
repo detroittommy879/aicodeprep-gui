@@ -107,9 +107,33 @@ class LLMClient:
                 logging.error(error_msg, exc_info=True)
                 raise LLMError(error_msg) from e
             except Exception as e:
-                error_msg = f"Chat error: {e}"
-                logging.error(error_msg, exc_info=True)
-                raise LLMError(error_msg) from e
+                # Check if error is about unsupported temperature/top_p
+                error_str = str(e).lower()
+                if ('temperature' in error_str or 'top_p' in error_str) and ('unsupported' in error_str or 'not support' in error_str):
+                    logging.warning(
+                        f"Model doesn't support custom temperature/top_p, retrying with defaults: {e}")
+                    # Retry without temperature and top_p
+                    kwargs.pop('temperature', None)
+                    kwargs.pop('top_p', None)
+                    try:
+                        resp = litellm.completion(
+                            model=model,
+                            messages=messages,
+                            extra_headers=headers if headers else None,
+                            **kwargs
+                        )
+                        content = resp.choices[0].message.get("content", "")
+                        logging.info(
+                            f"LiteLLM call successful (default temp) - response length: {len(content)}")
+                        return content
+                    except Exception as retry_e:
+                        error_msg = f"Chat error (retry failed): {retry_e}"
+                        logging.error(error_msg, exc_info=True)
+                        raise LLMError(error_msg) from retry_e
+                else:
+                    error_msg = f"Chat error: {e}"
+                    logging.error(error_msg, exc_info=True)
+                    raise LLMError(error_msg) from e
         except Exception as outer_e:
             # Catch absolutely everything
             error_msg = f"Fatal LLM client error: {outer_e}"

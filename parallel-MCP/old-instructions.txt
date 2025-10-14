@@ -1,0 +1,72 @@
+
+### CONTEXT  
+You are looking at a local directory that contains the `ember-v2` repository (https://github.com/ember-v2/ember).  
+also ember (v1)
+
+ember v2 repo seems to be in a state of not being finished, a lot of things just don't work if you try some of the readme instructions.. can you fully analyze both ember/ and ember-v2/ repo's and compare them to see if either one of them seems actually useable? did they even make any of the code for doing any of the things yet? a lot of the v2 packages they say to install from npm don't exist in npm's package database at all or its the wrong name. My goal is in the text below the --- in this file. i am thinking about just taking the useable code from either or both of these repo's, and creating a new fresh repo just for my use so it no longer uses any of those since those are glitching or unfinished and the devs don't respond to email. Can you fully analyze and then create a markdown file with what you found? and how we can get to the point where i can implement the mcp server / test it from the text below --- ?
+
+
+
+
+---
+
+Your task is to **understand the repo**, **document every way it can be used**, and then **build a test MCP server** that follows the repo’s own patterns/examples.
+
+---
+
+### PART 1 – Repo reconnaissance  
+1. Read lots of this repo/take your time looking thru it the whole repo (README, examples, docs, etc).  
+2. Produce `ember-v2-capabilities.md` containing:  
+   - What an “MCP server” is in ember-v2 terms.  
+   - Every official example shipped with the repo (with a 1-line summary).  
+   - How to do these things:  
+     – add new model endpoints or api keys/new openai compatible (or other) endpoints 
+     – change routing logic  
+     – run calls in parallel  
+     – insert custom “analysis” or “aggregator” nodes  
+   - How to describe routing/flows? DSL, YAML, JSON, or Custom language? that allows a **user to supply a custom flow** (e.g. “send prompt to LLM-1 three times, LLM-2 three times, fork the six answers into two analyser nodes, then merge”).  
+   - Explicit “yes / no / partially” answers to:  
+     – Can a client dynamically ship a new flow graph at runtime?  
+     – Can a flow contain cycles, branching, or reduce/aggregate steps?  
+   - Anything else that feels relevant for building advanced routing.
+
+---
+
+### PART 2 – Concrete deliverable: test MCP server  
+Build a **single-file, fully-working MCP server** (or the smallest set of files the repo requires) that does **exactly** the following:
+
+1. Accepts one text blob (the user’s question or problem) from any client that speaks the ember MCP protocol.  
+2. In **parallel** fires that identical text to the **five OpenRouter models**:  
+   1. `openai/gpt-5-codex`  
+   2. `x-ai/grok-4-fast`  
+   3. `mistralai/codestral-2508`  
+   4. `google/gemini-2.5-pro`  
+   5. `z-ai/glm-4.6`  
+3. Writes each raw reply to its own local file:  
+   `test_llm_1.txt` … `test_llm_5.txt` (overwrite if exists).  
+4. Sends the **original prompt + the five answers** to a **sixth** call:  
+   `google/gemini-2.5-pro` with the system message:  
+   “You are an expert synthesiser. Return only the single best solution to the user’s problem given the candidate answers above.”  
+5. Returns the final synthesised answer to the client **and** writes it to `test_final_best.md`.  
+6. Keeps the whole round-trip under 60 s (parallelism is expected).  
+7. Uses only the conventions, methods or best practices shown in the official ember-v2 examples (so a user who already knows ember can drop your code into `/servers` or `/examples` and run `ember run my_server`).
+
+Write the **minimal code/config** plus a short `README_test_server.md` that tells an ember user:  
+“Copy these files here, set your `OPENROUTER_API_KEY`, run this command, then test with `echo "my question" | ember client prompt`”.
+
+I already set the local env variable OPENROUTER_API_KEY to a working api key. Should I manually set that up with ember or can you run the terminal commands to do it?
+---
+
+### PART 3 – Future-proofing notes (same file is fine)  
+Add a section “Extending this server to user-defined flows” that briefly explains:  
+- Which ember-v2 APIs or config files or info would need to change if a client wanted to POST a custom graph (e.g. “LLM-1×3 → analyser-A, LLM-2×3 → analyser-B, merge-A+B → final”).  
+- Whether ember already ships a validator/executor for such graphs or if you would have to write one.  
+- The security boundary (can a client upload Python code or only declarative YAML?).
+
+---
+
+### OUTPUT:
+Please create:  
+1. `ember-v2-capabilities.md`  
+2. `README_test_server.md`  
+3. The smallest set of source/config files that implement the test server and instructions on how to run it to test it.

@@ -1,0 +1,1296 @@
+Code quality and adherence to best practices, Potential bugs or edge cases, Performance optimizations, Readability and maintainability, Security concerns. Suggest improvements and explain your reasoning for each suggestion.
+
+Also let us know if things like readme's or test files need to be updated if we forgot.
+
+parallel-llm-mcp\src\parallel_llm_mcp\client.py:
+<code>
+"""OpenRouter API client for parallel LLM calls."""
+
+import asyncio
+import logging
+from typing import List, Dict, Any, Optional
+import httpx
+
+logger = logging.getLogger(__name__)
+
+
+class OpenRouterClient:
+    """Simple OpenRouter API client.
+
+    Handles communication with OpenRouter API for multiple models.
+    Supports both sync and async calls.
+    """
+
+    def __init__(self, api_key: str, base_url: str = "https://openrouter.ai/api/v1"):
+        """Initialize the OpenRouter client.
+
+        Args:
+            api_key: OpenRouter API key
+            base_url: OpenRouter API base URL
+        """
+        self.api_key = api_key
+        self.base_url = base_url
+        self.headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://github.com/example/parallel-llm-mcp",
+            "X-Title": "Parallel LLM MCP Server",
+        }
+
+    async def call_model_async(
+        self,
+        model: str,
+        prompt: str,
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None
+    ) -> str:
+        """Call a single model asynchronously.
+
+        Args:
+            model: Model identifier (e.g., "openai/gpt-4")
+            prompt: Input prompt
+            temperature: Sampling temperature
+            max_tokens: Maximum tokens to generate
+
+        Returns:
+            Model response text
+        """
+        data = {
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": temperature,
+        }
+
+        if max_tokens:
+            data["max_tokens"] = max_tokens
+
+        # 4-minute timeout for large context windows (240 seconds)
+        # These models have large context windows and can handle big prompts
+        timeout = httpx.Timeout(240.0, connect=60.0)
+        
+        import time
+        start_time = time.time()
+        logger.info(f"🚀 Starting API call to {model}...")
+        
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            try:
+                response = await client.post(
+                    f"{self.base_url}/chat/completions",
+                    headers=self.headers,
+                    json=data
+                )
+                response.raise_for_status()
+
+                elapsed = time.time() - start_time
+                logger.info(f"✅ {model} responded in {elapsed:.1f}s")
+
+                result = response.json()
+                content = result["choices"][0]["message"]["content"]
+                token_count = len(content.split())
+                logger.info(f"📊 {model} returned ~{token_count} words")
+                return content
+
+            except httpx.HTTPStatusError as e:
+                elapsed = time.time() - start_time
+                logger.error(f"❌ HTTP error calling {model} after {elapsed:.1f}s: {e.response.status_code} - {e.response.text[:200]}")
+                raise
+            except httpx.TimeoutException as e:
+                elapsed = time.time() - start_time
+                logger.error(f"⏱️ Timeout calling {model} after {elapsed:.1f}s (limit: 240s)")
+                raise
+            except Exception as e:
+                elapsed = time.time() - start_time
+                logger.error(f"❌ Error calling {model} after {elapsed:.1f}s: {e}")
+                raise
+
+    def call_model(
+        self,
+        model: str,
+        prompt: str,
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None
+    ) -> str:
+        """Call a single model synchronously.
+
+        Args:
+            model: Model identifier
+            prompt: Input prompt
+            temperature: Sampling temperature
+            max_tokens: Maximum tokens to generate
+
+        Returns:
+            Model response text
+        """
+        return asyncio.run(
+            self.call_model_async(model, prompt, temperature, max_tokens)
+        )
+
+    async def call_models_parallel(
+        self,
+        models: List[str],
+        prompt: str,
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None
+    ) -> List[Dict[str, str]]:
+        """Call multiple models in parallel.
+
+        Args:
+            models: List of model identifiers
+            prompt: Input prompt
+            temperature: Sampling temperature
+            max_tokens: Maximum tokens to generate
+
+        Returns:
+            List of dictionaries with model and response
+        """
+        tasks = []
+        for model in models:
+            task = asyncio.create_task(
+                self.call_model_async(model, prompt, temperature, max_tokens)
+            )
+            tasks.append((model, task))
+
+        results = []
+        for model, task in tasks:
+            try:
+                response = await task
+                results.append({"model": model, "response": response})
+            except Exception as e:
+                logger.error(f"Failed to call {model}: {e}")
+                results.append({
+                    "model": model,
+                    "response": f"Error: {str(e)}"
+                })
+
+        return results
+</code>
+
+parallel-llm-mcp\src\parallel_llm_mcp\parallel.py:
+<code>
+"""Parallel execution utilities."""
+
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+from typing import Callable, List, Any, Tuple
+
+
+def parallel_call(
+    func: Callable,
+    args_list: List[Tuple[Any, ...]],
+    max_workers: int = 5
+) -> List[Any]:
+    """Execute a function in parallel with different arguments.
+
+    This is a simplified version of the parallel execution pattern
+    extracted from ember-v2, but without the JAX complexity.
+
+    Args:
+        func: Function to execute in parallel
+        args_list: List of argument tuples for each function call
+        max_workers: Maximum number of parallel workers
+
+    Returns:
+        List of results in the same order as args_list
+    """
+    if not args_list:
+        return []
+
+    def run_single(args):
+        return func(*args)
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        results = list(executor.map(run_single, args_list))
+
+    return results
+
+
+async def parallel_call_async(
+    func: Callable,
+    args_list: List[Tuple[Any, ...]],
+    max_workers: int = 5
+) -> List[Any]:
+    """Execute a function in parallel with different arguments (async version).
+
+    Args:
+        func: Function to execute (can be sync or async)
+        args_list: List of argument tuples for each function call
+        max_workers: Maximum number of parallel workers
+
+    Returns:
+        List of results in the same order as args_list
+    """
+    if not args_list:
+        return []
+
+    async def run_single(args):
+        if asyncio.iscoroutinefunction(func):
+            return await func(*args)
+        else:
+            # Run sync function in thread pool
+            return await asyncio.to_thread(func, *args)
+
+    # Create semaphore to limit concurrent calls
+    semaphore = asyncio.Semaphore(max_workers)
+
+    async def bounded_run(args):
+        async with semaphore:
+            return await run_single(args)
+
+    tasks = [bounded_run(args) for args in args_list]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    # Convert exceptions to error strings
+    processed_results = []
+    for result in results:
+        if isinstance(result, Exception):
+            processed_results.append(f"Error: {str(result)}")
+        else:
+            processed_results.append(result)
+
+    return processed_results
+</code>
+
+parallel-llm-mcp\src\parallel_llm_mcp\server.py:
+<code>
+"""MCP server for parallel LLM calls with synthesis."""
+
+import asyncio
+import logging
+import os
+import sys
+from typing import List, Dict, Any
+
+from .client import OpenRouterClient
+from .parallel import parallel_call_async
+
+# Configure logging with detailed format
+# Log to both console and a file that can be tailed
+log_format = '%(asctime)s [%(levelname)s] %(message)s'
+log_date_format = '%H:%M:%S'
+
+# Create file handler for live monitoring
+file_handler = logging.FileHandler('parallel_llm_progress.log', mode='a', encoding='utf-8')
+file_handler.setFormatter(logging.Formatter(log_format, log_date_format))
+
+# Create console handler
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(logging.Formatter(log_format, log_date_format))
+
+# Configure root logger
+logging.basicConfig(
+    level=logging.INFO,
+    handlers=[console_handler, file_handler]
+)
+logger = logging.getLogger(__name__)
+
+
+class ParallelLLMServer:
+    """MCP server that calls multiple LLMs in parallel and synthesizes results.
+
+    This server implements exactly what the instructions require:
+    1. Accept a text blob from any MCP client
+    2. Fire it to 5 OpenRouter models in parallel
+    3. Write each response to separate files
+    4. Synthesize results with a 6th model
+    5. Return final answer and write to file
+    """
+
+    def __init__(self):
+        """Initialize the MCP server."""
+        try:
+            from fastmcp import FastMCP
+            self.mcp = FastMCP("parallel-llm-server")
+        except ImportError:
+            raise ImportError(
+                "fastmcp is required. Install with: pip install fastmcp"
+            )
+
+        # Check for OpenRouter API key
+        api_key = os.getenv("OPENROUTER_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "OPENROUTER_API_KEY environment variable is required. "
+                "Set it with: export OPENROUTER_API_KEY=your_key_here"
+            )
+
+        self.client = OpenRouterClient(api_key)
+
+        # The five models to call in parallel (from instructions)
+        # These models have large context windows for handling big prompts
+        self.parallel_models = [
+            "openai/gpt-5-codex",
+            "x-ai/grok-4-fast",
+            "mistralai/codestral-2508",
+            "google/gemini-2.5-pro",
+            "z-ai/glm-4.6",
+        ]
+
+        # The synthesizer model (from instructions)
+        self.synthesizer_model = "google/gemini-2.5-pro"
+
+        # Register MCP tools
+        self._register_tools()
+
+    def _register_tools(self):
+        """Register MCP tools."""
+
+        @self.mcp.tool()
+        async def process_prompt(prompt: str) -> str:
+            """Process a prompt by calling 5 models in parallel and synthesizing results.
+
+            This implements the exact workflow from the instructions:
+            1. Fire prompt to 5 models in parallel
+            2. Write each response to test_llm_1.txt ... test_llm_5.txt
+            3. Send original + 5 answers to synthesizer model
+            4. Write final answer to test_final_best.md
+            5. Return final answer to client
+
+            Args:
+                prompt: The user's question or problem statement
+
+            Returns:
+                Final synthesized answer
+            """
+            try:
+                import time
+                start_time = time.time()
+                prompt_length = len(prompt.split())
+                logger.info(f"=" * 80)
+                logger.info(f"🎯 NEW REQUEST: Processing prompt ({prompt_length} words)")
+                logger.info(f"📋 Models: {', '.join(self.parallel_models)}")
+                logger.info(f"=" * 80)
+
+                # Step 1: Call models in parallel (with 4-minute timeout per model)
+                logger.info(f"⚡ PHASE 1: Calling {len(self.parallel_models)} models in parallel...")
+                logger.info(f"⏱️  Timeout: 4 minutes per model, ~{len(self.parallel_models) * 4} minutes total worst case")
+                
+                responses = await self._call_models_parallel(prompt)
+                
+                # Count successful vs failed responses
+                successful = sum(1 for r in responses if not str(r).startswith("Error:"))
+                failed = len(responses) - successful
+                elapsed = time.time() - start_time
+                logger.info(f"✅ PHASE 1 COMPLETE in {elapsed:.1f}s: {successful}/{len(responses)} successful, {failed} failed")
+                
+                if successful == 0:
+                    return "Error: All models failed or timed out. Please try again with a shorter prompt or check your API key."
+
+                # Step 2: Write each raw reply to its own local file (async to avoid blocking)
+                logger.info(f"💾 PHASE 2: Writing {len(responses)} responses to files...")
+                for i, response in enumerate(responses, 1):
+                    filename = f"test_llm_{i}.txt"
+                    try:
+                        # Use asyncio to avoid blocking event loop
+                        await asyncio.to_thread(
+                            lambda fn, content: open(fn, "w", encoding="utf-8").write(content),
+                            filename,
+                            str(response)
+                        )
+                        logger.info(f"  ✓ Wrote response #{i} to {filename}")
+                    except Exception as e:
+                        logger.error(f"Failed to write {filename}: {e}")
+                        # Write error to file
+                        try:
+                            await asyncio.to_thread(
+                                lambda fn, content: open(fn, "w", encoding="utf-8").write(content),
+                                filename,
+                                f"Error writing response: {e}"
+                            )
+                        except Exception as write_error:
+                            logger.error(f"Could not write error file: {write_error}")
+
+                # Step 3: Send original prompt + answers to synthesizer
+                # Filter out failed responses for synthesis
+                valid_responses = []
+                valid_models = []
+                for model, response in zip(self.parallel_models, responses):
+                    if not str(response).startswith("Error:"):
+                        valid_models.append(model)
+                        valid_responses.append(response)
+                    else:
+                        logger.warning(f"Excluding failed response from {model}: {response[:100]}...")
+                
+                if not valid_responses:
+                    return "Error: No valid responses to synthesize. All models failed or timed out."
+                
+                synthesis_prompt = self._build_synthesis_prompt(prompt, valid_models, valid_responses)
+
+                logger.info(f"🔄 PHASE 3: Calling synthesizer model...")
+                logger.info(f"  Model: {self.synthesizer_model}")
+                logger.info(f"  Input: {len(valid_responses)} valid responses to synthesize")
+                final_answer = await self.client.call_model_async(
+                    self.synthesizer_model,
+                    synthesis_prompt
+                )
+                logger.info(f"✅ PHASE 3 COMPLETE: Synthesizer returned response")
+
+                # Step 4: Write final answer to file (async to avoid blocking)
+                logger.info(f"💾 PHASE 4: Writing final answer to file...")
+                final_filename = "test_final_best.md"
+                try:
+                    await asyncio.to_thread(
+                        lambda fn, content: open(fn, "w", encoding="utf-8").write(content),
+                        final_filename,
+                        final_answer
+                    )
+                    logger.info(f"  ✓ Wrote final answer to {final_filename}")
+                except Exception as e:
+                    logger.error(f"  ✗ Failed to write {final_filename}: {e}")
+
+                # Step 5: Return final answer to client
+                total_elapsed = time.time() - start_time
+                logger.info(f"=" * 80)
+                logger.info(f"🎉 REQUEST COMPLETE in {total_elapsed:.1f}s ({total_elapsed/60:.1f} minutes)")
+                logger.info(f"=" * 80)
+                return final_answer
+
+            except asyncio.TimeoutError as e:
+                logger.error(f"Timeout processing prompt: {e}")
+                return f"Error: Request timed out. Large prompts may take several minutes to process."
+            except Exception as e:
+                logger.error(f"Error processing prompt: {e}", exc_info=True)
+                return f"Error processing prompt: {str(e)}"
+
+        @self.mcp.tool()
+        async def list_models() -> List[str]:
+            """List all available models configured for parallel processing.
+
+            Returns:
+                List of model identifiers
+            """
+            return self.parallel_models
+
+        @self.mcp.tool()
+        async def get_config() -> Dict[str, Any]:
+            """Get current server configuration.
+
+            Returns:
+                Dictionary with configuration details
+            """
+            return {
+                "parallel_models": self.parallel_models,
+                "synthesizer_model": self.synthesizer_model,
+                "num_parallel_models": len(self.parallel_models),
+            }
+
+    def _build_synthesis_prompt(self, original_prompt: str, models: List[str], responses: List[str]) -> str:
+        """Build the synthesis prompt for the final model.
+
+        Args:
+            original_prompt: The original user prompt
+            models: List of model names used (only successful ones)
+            responses: List of responses from each model (only successful ones)
+
+        Returns:
+            Formatted synthesis prompt
+        """
+        num_responses = len(responses)
+        prompt_parts = [
+            "You are an expert synthesiser analyzing multiple AI model responses.",
+            f"You have {num_responses} candidate answer{'s' if num_responses != 1 else ''} to review.",
+            "",
+            f"Original Problem: {original_prompt}",
+            "",
+            "--- Candidate Answers ---",
+            ""
+        ]
+
+        for i, (model, response) in enumerate(zip(models, responses), 1):
+            prompt_parts.extend([
+                f"Model {i} ({model}):",
+                str(response),
+                "",
+                "---",
+                ""
+            ])
+
+        prompt_parts.extend([
+            "",
+            "Task: Review all candidate answers above and return only the single best solution to the user's problem.",
+            "Synthesize the best elements from multiple responses if needed, but provide ONE clear, actionable answer.",
+            "If responses conflict, use your judgment to determine the most accurate and helpful solution."
+        ])
+
+        return "\n".join(prompt_parts)
+
+    async def _call_models_parallel(self, prompt: str) -> List[str]:
+        """Call multiple models in parallel and return their responses.
+        
+        Each model has up to 4 minutes to respond. If a model times out or fails,
+        it will be excluded from synthesis, but other models will continue.
+
+        Args:
+            prompt: The prompt to send to all models
+
+        Returns:
+            List of model responses in order (may include error strings)
+        """
+        logger.info(f"Calling {len(self.parallel_models)} models in parallel:")
+        for i, model in enumerate(self.parallel_models, 1):
+            logger.info(f"  {i}. {model}")
+        
+        args_list = [(model, prompt) for model in self.parallel_models]
+        responses = await parallel_call_async(
+            self.client.call_model_async,
+            args_list,
+            max_workers=5
+        )
+        return responses
+
+
+
+
+def main_sync():
+    """Synchronous entry point for the server.
+    
+    FastMCP manages its own event loop internally.
+    """
+    try:
+        server = ParallelLLMServer()
+        logger.info("Server initialized, starting stdio transport...")
+        # FastMCP.run() handles everything synchronously
+        server.mcp.run(transport="stdio")
+    except KeyboardInterrupt:
+        logger.info("Server stopped by user")
+    except Exception as e:
+        logger.error(f"Server error: {e}", exc_info=True)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main_sync()
+</code>
+
+parallel-llm-mcp\src\parallel_llm_mcp\__init__.py:
+<code>
+"""Parallel LLM MCP Server.
+
+A minimal, working MCP server that calls multiple LLMs in parallel
+and synthesizes their results.
+
+Example:
+    >>> from parallel_llm_mcp import ParallelLLMServer
+    >>> server = ParallelLLMServer()
+    >>> # Run with stdio transport
+    >>> asyncio.run(server.run())
+"""
+
+from .client import OpenRouterClient
+from .server import ParallelLLMServer
+from .parallel import parallel_call
+
+__version__ = "0.1.0"
+__all__ = ["ParallelLLMServer", "OpenRouterClient", "parallel_call"]
+</code>
+
+parallel-llm-mcp\src\parallel_llm_mcp\__main__.py:
+<code>
+"""Entry point for python -m parallel_llm_mcp.server"""
+
+from .server import main_sync
+
+
+if __name__ == "__main__":
+    main_sync()
+</code>
+
+parallel-llm-mcp\tests\test_parallel.py:
+<code>
+"""Test parallel execution functionality."""
+
+import pytest
+import asyncio
+from unittest.mock import Mock, patch
+
+from parallel_llm_mcp.parallel import parallel_call, parallel_call_async
+
+
+def test_parallel_call():
+    """Test basic parallel execution."""
+
+    def square(x):
+        return x * x
+
+    args_list = [(1,), (2,), (3,), (4,)]
+    results = parallel_call(square, args_list)
+
+    assert results == [1, 4, 9, 16]
+
+
+def test_parallel_call_empty():
+    """Test parallel execution with empty list."""
+
+    def dummy_func(x):
+        return x
+
+    results = parallel_call(dummy_func, [])
+    assert results == []
+
+
+@pytest.mark.asyncio
+async def test_parallel_call_async():
+    """Test async parallel execution."""
+
+    async def multiply(a, b):
+        await asyncio.sleep(0.01)  # Simulate async work
+        return a * b
+
+    args_list = [(2, 3), (4, 5), (6, 7)]
+    results = await parallel_call_async(multiply, args_list)
+
+    assert results == [6, 20, 42]
+
+
+@pytest.mark.asyncio
+async def test_parallel_call_async_with_sync_func():
+    """Test async parallel execution with sync function."""
+
+    def add(a, b):
+        return a + b
+
+    args_list = [(1, 2), (3, 4), (5, 6)]
+    results = await parallel_call_async(add, args_list)
+
+    assert results == [3, 7, 11]
+
+
+@pytest.mark.asyncio
+async def test_parallel_call_async_error_handling():
+    """Test async parallel execution with errors."""
+
+    async def failing_func(x):
+        if x == 2:
+            raise ValueError("Test error")
+        return x * 2
+
+    args_list = [(1,), (2,), (3,)]
+    results = await parallel_call_async(failing_func, args_list)
+
+    assert results[0] == 2
+    assert results[1] == "Error: Test error"
+    assert results[2] == 6
+
+
+@pytest.mark.asyncio
+async def test_parallel_call_async_max_workers():
+    """Test that max_workers limits concurrent execution."""
+
+    execution_count = 0
+    max_concurrent = 0
+
+    async def slow_func(x):
+        nonlocal execution_count, max_concurrent
+
+        execution_count += 1
+        max_concurrent = max(max_concurrent, execution_count)
+
+        await asyncio.sleep(0.1)
+        execution_count -= 1
+
+        return x
+
+    args_list = [(i,) for i in range(5)]
+    await parallel_call_async(slow_func, args_list, max_workers=2)
+
+    # Should never exceed 2 concurrent executions
+    assert max_concurrent <= 2
+</code>
+
+parallel-llm-mcp\tests\test_server.py:
+<code>
+"""Test server functionality."""
+
+import pytest
+import asyncio
+from unittest.mock import Mock, AsyncMock, patch
+
+from parallel_llm_mcp.server import ParallelLLMServer
+
+
+@pytest.fixture
+def mock_api_key():
+    """Provide a mock API key for testing."""
+    return "test-api-key"
+
+
+@pytest.fixture
+def server(mock_api_key):
+    """Create a test server instance."""
+    with patch.dict('os.environ', {'OPENROUTER_API_KEY': mock_api_key}):
+        return ParallelLLMServer()
+
+
+def test_server_initialization_no_api_key():
+    """Test server initialization fails without API key."""
+    with patch.dict('os.environ', {}, clear=True):
+        with pytest.raises(ValueError, match="OPENROUTER_API_KEY environment variable"):
+            ParallelLLMServer()
+
+
+def test_server_initialization_with_api_key(mock_api_key):
+    """Test server initialization succeeds with API key."""
+    with patch.dict('os.environ', {'OPENROUTER_API_KEY': mock_api_key}):
+        server = ParallelLLMServer()
+        assert server.client.api_key == mock_api_key
+        assert len(server.parallel_models) == 5
+        assert server.synthesizer_model == "google/gemini-2.5-pro"
+
+
+def test_build_synthesis_prompt(server):
+    """Test synthesis prompt building."""
+    original_prompt = "What is 2+2?"
+    models = ["model1", "model2"]
+    responses = ["It's 4", "Four"]
+
+    prompt = server._build_synthesis_prompt(original_prompt, models, responses)
+
+    assert "What is 2+2?" in prompt
+    assert "model1" in prompt
+    assert "model2" in prompt
+    assert "It's 4" in prompt
+    assert "Four" in prompt
+    assert "expert synthesiser" in prompt
+
+
+@pytest.mark.asyncio
+async def test_list_models_tool(server):
+    """Test the list_models MCP tool."""
+    result = await server.mcp.tools["list_models"]()
+    expected_models = [
+        "openai/gpt-5-codex",
+        "x-ai/grok-4-fast",
+        "mistralai/codestral-2508",
+        "google/gemini-2.5-pro",
+        "z-ai/glm-4.6",
+    ]
+    assert result == expected_models
+
+
+@pytest.mark.asyncio
+async def test_get_config_tool(server):
+    """Test the get_config MCP tool."""
+    result = await server.mcp.tools["get_config"]()
+
+    assert "parallel_models" in result
+    assert "synthesizer_model" in result
+    assert "num_parallel_models" in result
+    assert result["num_parallel_models"] == 5
+    assert result["synthesizer_model"] == "google/gemini-2.5-pro"
+
+
+@pytest.mark.asyncio
+async def test_process_prompt_tool(server):
+    """Test the process_prompt MCP tool with mocked API calls."""
+    mock_responses = [
+        "Response 1: The answer is 42",
+        "Response 2: Forty-two",
+        "Response 3: 42",
+        "Response 4: The answer is forty-two",
+        "Response 5: It's 42",
+    ]
+
+    final_synthesis = "The best answer is 42, which is the answer to life, the universe, and everything."
+
+    # Mock the parallel execution
+    with patch.object(server, '_call_models_parallel', new_callable=AsyncMock) as mock_parallel:
+        mock_parallel.return_value = mock_responses
+
+        # Mock the synthesizer call
+        with patch.object(server.client, 'call_model_async', new_callable=AsyncMock) as mock_synthesizer:
+            mock_synthesizer.return_value = final_synthesis
+
+            # Test the process
+            result = await server.mcp.tools["process_prompt"]("What is the answer to life?")
+
+            # Verify results
+            assert result == final_synthesis
+
+            # Check that parallel was called correctly
+            mock_parallel.assert_called_once_with("What is the answer to life?")
+
+            # Check that synthesizer was called with proper prompt
+            mock_synthesizer.assert_called_once()
+            synthesis_prompt = mock_synthesizer.call_args[0][0]
+            assert "What is the answer to life?" in synthesis_prompt
+            assert "Response 1" in synthesis_prompt
+
+
+@pytest.mark.asyncio
+async def test_process_prompt_error_handling(server):
+    """Test error handling in process_prompt tool."""
+    # Mock parallel call to raise an exception
+    with patch.object(server, '_call_models_parallel', new_callable=AsyncMock) as mock_parallel:
+        mock_parallel.side_effect = Exception("API Error")
+
+        result = await server.mcp.tools["process_prompt"]("Test prompt")
+
+        assert "Error processing prompt" in result
+
+
+@pytest.mark.asyncio
+async def test_run_server_stdio(server):
+    """Test running the server with stdio transport."""
+    with patch.object(server.mcp, 'run', new_callable=AsyncMock) as mock_run:
+        await server.run("stdio")
+        mock_run.assert_called_once_with(transport="stdio")
+
+
+@pytest.mark.asyncio
+async def test_run_server_unsupported_transport(server):
+    """Test that unsupported transport raises error."""
+    with pytest.raises(ValueError, match="Only 'stdio' transport is supported"):
+        await server.run("http")
+</code>
+
+parallel-llm-mcp\tests\__init__.py:
+<code>
+"""Tests for parallel-llm-mcp."""
+</code>
+
+parallel-llm-mcp\mcp_config.json:
+<code>
+{
+  "mcpServers": {
+    "parallel-llm": {
+      "command": "python",
+      "args": ["-m", "parallel_llm_mcp.server"],
+      "env": {
+        "OPENROUTER_API_KEY": ""
+      }
+    }
+  }
+}
+
+</code>
+
+parallel-llm-mcp\pyproject.toml:
+<code>
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "parallel-llm-mcp"
+version = "0.1.0"
+description = "MCP server for parallel LLM ensemble calls with synthesis"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Generated", email = "noreply@example.com"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "fastmcp>=0.1.0",
+    "httpx>=0.25.0",
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/example/parallel-llm-mcp"
+Repository = "https://github.com/example/parallel-llm-mcp"
+Issues = "https://github.com/example/parallel-llm-mcp/issues"
+
+[project.scripts]
+parallel-llm-mcp = "parallel_llm_mcp.__main__:main_sync"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/parallel_llm_mcp"]
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+
+[tool.ruff]
+line-length = 88
+target-version = "py38"
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+</code>
+
+parallel-llm-mcp\README.md:
+<code>
+# Parallel LLM MCP Server
+
+A minimal, working MCP server that calls multiple LLMs in parallel and synthesizes their results.
+
+## Features
+
+- **Parallel Execution**: Calls 5 OpenRouter models simultaneously
+- **Synthesis**: Uses a 6th model to synthesize the best answer
+- **File Output**: Writes individual model responses and final synthesis to files
+- **MCP Compatible**: Works with any MCP client via stdio transport
+- **Simple Setup**: Just set an API key and run
+
+## Installation
+
+### From Source
+
+```bash
+git clone <repository-url>
+cd parallel-llm-mcp
+pip install -e .
+```
+
+### Using pip (when published)
+
+```bash
+pip install parallel-llm-mcp
+```
+
+## Quick Start
+
+1. **Set your OpenRouter API key**:
+
+```bash
+export OPENROUTER_API_KEY="your-openrouter-api-key-here"
+```
+
+2. **Run the server**:
+
+```bash
+# Option 1: Direct module run
+python -m parallel_llm_mcp.server
+
+# Option 2: Using the installed script
+parallel-llm-mcp
+```
+
+3. **Test with an MCP client**:
+
+```bash
+echo "What is the capital of France?" | mcp client call tool process_prompt
+```
+
+## MCP Tools
+
+The server exposes the following tools:
+
+### `process_prompt(prompt: str) -> str`
+
+Main tool that processes a prompt using the ensemble approach:
+
+1. Fires the prompt to 5 models in parallel:
+   - `openai/gpt-5-codex`
+   - `x-ai/grok-4-fast`
+   - `mistralai/codestral-2508`
+   - `google/gemini-2.5-pro`
+   - `z-ai/glm-4.6`
+
+2. Writes each response to `test_llm_1.txt` ... `test_llm_5.txt`
+
+3. Synthesizes results using `google/gemini-2.5-pro`
+
+4. Writes final answer to `test_final_best.md`
+
+5. Returns the final synthesized answer
+
+### `list_models() -> List[str]`
+
+Returns the list of models used for parallel processing.
+
+### `get_config() -> Dict[str, Any]`
+
+Returns current server configuration.
+
+## Claude Desktop Integration
+
+Add to your Claude Desktop `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "parallel-llm": {
+      "command": "python",
+      "args": ["-m", "parallel_llm_mcp.server"],
+      "env": {
+        "OPENROUTER_API_KEY": "your-openrouter-api-key"
+      }
+    }
+  }
+}
+```
+
+## Development
+
+### Setup Development Environment
+
+```bash
+# Clone and install in development mode
+git clone <repository-url>
+cd parallel-llm-mcp
+pip install -e ".[dev]"
+
+# Run tests
+pytest
+
+# Format code
+black src tests
+ruff check src tests
+
+# Type check
+mypy src
+```
+
+### Project Structure
+
+```
+parallel-llm-mcp/
+├── src/
+│   └── parallel_llm_mcp/
+│       ├── __init__.py      # Package init
+│       ├── client.py        # OpenRouter API client
+│       ├── parallel.py      # Parallel execution utilities
+│       └── server.py        # Main MCP server
+├── tests/                   # Test files
+├── pyproject.toml          # Package configuration
+└── README.md              # This file
+```
+
+## How It Works
+
+The server implements a simple but effective ensemble approach:
+
+1. **Parallel Calls**: Uses `asyncio` and `httpx` to call multiple models simultaneously
+2. **Synthesis**: Sends all responses to a sophisticated model for synthesis
+3. **File Persistence**: Writes all intermediate and final results to files
+4. **Error Handling**: Gracefully handles model failures and returns partial results
+
+The parallel execution pattern is extracted from the working parts of ember-v2 but simplified to remove unnecessary complexity.
+
+## Requirements
+
+- Python 3.8+
+- OpenRouter API key
+- fastmcp
+- httpx
+- pydantic
+
+## License
+
+MIT License - see LICENSE file for details.
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
+
+## Troubleshooting
+
+### Common Issues
+
+1. **"OPENROUTER_API_KEY not set"**
+   - Make sure to set the environment variable before running
+
+2. **"fastmcp not found"**
+   - Install with: `pip install fastmcp`
+
+3. **Models returning errors**
+   - Check your OpenRouter API key has credits
+   - Verify model names are correct and available
+
+4. **Timeout errors**
+   - Increase timeout in the client if needed
+   - Check network connectivity
+
+### Debug Mode
+
+Enable debug logging:
+
+```bash
+export PARALLEL_LLM_LOG_LEVEL=DEBUG
+python -m parallel_llm_mcp.server
+```
+</code>
+
+ai_models.txt:
+<code>
+These 5 Openrouter model names work well:
+openai/gpt-5-codex
+x-ai/grok-4-fast
+mistralai/codestral-2508
+google/gemini-2.5-pro
+z-ai/glm-4.6
+
+Large context capable model that works well:
+google/gemini-2.5-pro
+</code>
+
+IMPROVEMENTS.md:
+<code>
+# Code Improvements Summary
+
+## Issues Found and Fixed
+
+### 1. **Critical: Timeout Too Short** ✅ FIXED
+
+- **Problem**: 60-second timeout was too short for 7000+ token prompts across 5 models
+- **Solution**: Increased timeout to 240 seconds (4 minutes) per model
+- **Location**: `client.py` - `call_model_async()`
+
+### 2. **Critical: Incorrect FastMCP Method** ✅ FIXED
+
+- **Problem**: Called `self.mcp.run_async()` but FastMCP uses `.run()`
+- **Solution**: Changed to `self.mcp.run(transport=transport)`
+- **Location**: `server.py` - `run()` method
+
+### 3. **Blocking File I/O** ✅ FIXED
+
+- **Problem**: Synchronous file writes blocked the async event loop
+- **Solution**: Wrapped all file writes in `asyncio.to_thread()` to prevent blocking
+- **Location**: `server.py` - file write operations
+
+### 4. **Poor Error Handling for Partial Failures** ✅ FIXED
+
+- **Problem**: If one model failed, the whole process appeared to fail
+- **Solution**:
+  - Added logic to filter out failed responses
+  - Continue synthesis with 3-4 successful responses even if 1-2 fail
+  - Added detailed logging of success/failure counts
+- **Location**: `server.py` - `process_prompt()` tool
+
+### 5. **Confusing Synthesis Prompt** ✅ FIXED
+
+- **Problem**: Said "answers above" but then listed them below
+- **Solution**: Restructured prompt to be logically ordered and clearer
+- **Location**: `server.py` - `_build_synthesis_prompt()`
+
+### 6. **Insufficient Logging** ✅ FIXED
+
+- **Problem**: Hard to debug what was happening during long waits
+- **Solution**: Added detailed logging:
+  - Prompt word count
+  - Model list being called
+  - Success/failure counts
+  - Progress indicators
+- **Location**: `server.py` - multiple locations
+
+### 7. **Better Exception Details** ✅ FIXED
+
+- **Problem**: Generic error messages didn't help debugging
+- **Solution**:
+  - Added HTTP status codes and response text to errors
+  - Added `exc_info=True` for full stack traces
+  - Separate handling for TimeoutError vs other exceptions
+- **Location**: `client.py` and `server.py`
+
+## How the Improved System Works
+
+### Timeout Strategy (4 Minutes Per Model)
+
+- Each model gets **240 seconds** (4 minutes) to respond
+- Models run in **parallel**, so total time is still ~4 minutes max (not 20 minutes)
+- If a model times out:
+  - It logs a warning
+  - Returns an error string (e.g., "Error: Timeout...")
+  - Other models continue processing
+
+### Graceful Degradation
+
+1. Send prompt to 5 models in parallel ✅
+2. Wait up to 4 minutes for responses ✅
+3. Collect whatever responses come back ✅
+4. Filter out errors/timeouts ✅
+5. If **at least 1** model succeeded:
+   - Write successful responses to files
+   - Send only valid responses to synthesizer
+   - Return final answer
+6. If **all failed**:
+   - Return clear error message
+   - Don't attempt synthesis
+
+### File Output
+
+- `test_llm_1.txt` through `test_llm_5.txt` - Individual model responses (only successful ones)
+- `test_final_best.md` - Final synthesized answer
+- All file writes are non-blocking (async)
+
+## Testing Recommendations
+
+### Test with Large Prompt (7000 tokens)
+
+```bash
+# Set environment variable
+$env:OPENROUTER_API_KEY="your-key-here"
+
+# Run server
+python -m parallel_llm_mcp.server
+
+# In another terminal/MCP client, call:
+process_prompt("your 7000 token text here...")
+```
+
+### Expected Behavior
+
+- Should see logs: "Calling 5 models in parallel..."
+- Wait up to 4 minutes
+- See: "Received X successful responses, Y failed/timed out"
+- Should work with 3-5 successful responses
+- Files written with successful responses
+- Final synthesized answer returned
+
+### Check Logs
+
+Watch for these success indicators:
+
+- ✅ "Starting parallel model calls..."
+- ✅ "Received N successful responses..."
+- ✅ "Wrote response to test_llm_X.txt"
+- ✅ "Calling synthesizer model..."
+- ✅ "Wrote final answer to test_final_best.md"
+- ✅ "Successfully processed prompt"
+
+## Additional Notes
+
+### Model Names (User Verified)
+
+The following models are confirmed working with large context windows:
+
+- `openai/gpt-5-codex`
+- `x-ai/grok-4-fast`
+- `mistralai/codestral-2508`
+- `google/gemini-2.5-pro`
+- `z-ai/glm-4.6`
+
+### Connection Closed Error
+
+The original "Connection closed" error was likely caused by:
+
+1. ❌ 60-second timeout (too short)
+2. ❌ Blocking file I/O (stalled event loop)
+3. ❌ Wrong FastMCP method name (run_async vs run)
+
+All three issues are now fixed! ✅
+
+</code>
+

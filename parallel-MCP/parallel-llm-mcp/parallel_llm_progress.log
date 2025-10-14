@@ -1,0 +1,186 @@
+19:43:45 [INFO] Server initialized, starting stdio transport...
+19:43:45 [INFO] Processing request of type ListToolsRequest
+19:43:45 [INFO] Processing request of type ListResourcesRequest
+19:43:45 [INFO] Processing request of type ListResourceTemplatesRequest
+19:43:57 [INFO] Server initialized, starting stdio transport...
+19:43:57 [INFO] Server initialized, starting stdio transport...
+19:43:57 [INFO] Processing request of type ListToolsRequest
+19:43:57 [INFO] Processing request of type ListResourcesRequest
+19:43:57 [INFO] Processing request of type ListResourceTemplatesRequest
+19:43:57 [INFO] Processing request of type ListToolsRequest
+19:43:57 [INFO] Processing request of type ListResourcesRequest
+19:43:57 [INFO] Processing request of type ListResourceTemplatesRequest
+19:44:11 [INFO] Server initialized, starting stdio transport...
+19:44:11 [INFO] Processing request of type ListToolsRequest
+19:44:11 [INFO] Processing request of type ListResourcesRequest
+19:44:11 [INFO] Processing request of type ListResourceTemplatesRequest
+19:44:12 [INFO] Server initialized, starting stdio transport...
+19:44:12 [INFO] Processing request of type ListToolsRequest
+19:44:12 [INFO] Processing request of type ListResourcesRequest
+19:44:12 [INFO] Processing request of type ListResourceTemplatesRequest
+19:44:27 [INFO] Server initialized, starting stdio transport...
+19:44:27 [INFO] Processing request of type ListToolsRequest
+19:44:27 [INFO] Processing request of type ListResourcesRequest
+19:44:27 [INFO] Processing request of type ListResourceTemplatesRequest
+19:44:27 [INFO] Server initialized, starting stdio transport...
+19:44:27 [INFO] Processing request of type ListToolsRequest
+19:44:27 [INFO] Processing request of type ListResourcesRequest
+19:44:27 [INFO] Processing request of type ListResourceTemplatesRequest
+19:44:44 [INFO] Processing request of type CallToolRequest
+19:44:44 [INFO] ================================================================================
+19:44:44 [INFO] 🎯 NEW REQUEST: Processing prompt (364 words)
+19:44:44 [INFO] 📋 Models: openai/gpt-5-codex, x-ai/grok-4-fast, mistralai/codestral-2508, google/gemini-2.5-pro, z-ai/glm-4.6
+19:44:44 [INFO] ================================================================================
+19:44:44 [INFO] ⚡ PHASE 1: Calling 5 models in parallel...
+19:44:44 [INFO] ⏱️  Timeout: 4 minutes per model, ~20 minutes total worst case
+19:44:44 [INFO] Calling 5 models in parallel:
+19:44:44 [INFO]   1. openai/gpt-5-codex
+19:44:44 [INFO]   2. x-ai/grok-4-fast
+19:44:44 [INFO]   3. mistralai/codestral-2508
+19:44:44 [INFO]   4. google/gemini-2.5-pro
+19:44:44 [INFO]   5. z-ai/glm-4.6
+19:44:44 [INFO] 🚀 Starting API call to openai/gpt-5-codex...
+19:44:44 [INFO] 🚀 Starting API call to x-ai/grok-4-fast...
+19:44:44 [INFO] 🚀 Starting API call to mistralai/codestral-2508...
+19:44:44 [INFO] 🚀 Starting API call to google/gemini-2.5-pro...
+19:44:44 [INFO] 🚀 Starting API call to z-ai/glm-4.6...
+19:44:45 [INFO] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+19:44:45 [INFO] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+19:44:45 [INFO] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+19:44:46 [INFO] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+19:44:47 [INFO] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+19:44:50 [INFO] ✅ mistralai/codestral-2508 responded in 5.7s
+19:44:50 [INFO] 📊 mistralai/codestral-2508 returned ~560 words
+19:45:26 [INFO] ✅ google/gemini-2.5-pro responded in 41.7s
+19:45:26 [INFO] 📊 google/gemini-2.5-pro returned ~1343 words
+19:45:33 [INFO] ✅ x-ai/grok-4-fast responded in 48.4s
+19:45:33 [INFO] 📊 x-ai/grok-4-fast returned ~1613 words
+19:45:33 [INFO] ✅ openai/gpt-5-codex responded in 49.2s
+19:45:33 [INFO] 📊 openai/gpt-5-codex returned ~450 words
+19:45:44 [INFO] Request 4 cancelled - duplicate response suppressed
+19:52:52 [INFO] Server initialized, starting stdio transport...
+19:52:52 [INFO] Processing request of type ListToolsRequest
+19:52:52 [INFO] Processing request of type ListResourcesRequest
+19:52:52 [INFO] Processing request of type ListResourceTemplatesRequest
+19:53:02 [INFO] Server initialized, starting stdio transport...
+19:53:02 [INFO] Processing request of type ListToolsRequest
+19:53:02 [INFO] Processing request of type ListResourcesRequest
+19:53:02 [INFO] Processing request of type ListResourceTemplatesRequest
+19:53:02 [INFO] Server initialized, starting stdio transport...
+19:53:02 [INFO] Processing request of type ListToolsRequest
+19:53:02 [INFO] Processing request of type ListResourcesRequest
+19:53:02 [INFO] Processing request of type ListResourceTemplatesRequest
+19:54:42 [INFO] Processing request of type CallToolRequest
+19:54:42 [INFO] ================================================================================
+19:54:42 [INFO] 🎯 NEW REQUEST: Processing prompt (1394 words)
+19:54:42 [INFO] 📋 Models: openai/gpt-5-codex, x-ai/grok-4-fast, mistralai/codestral-2508, google/gemini-2.5-pro, z-ai/glm-4.6
+19:54:42 [INFO] ================================================================================
+19:54:42 [INFO] ⚡ PHASE 1: Calling 5 models in parallel...
+19:54:42 [INFO] ⏱️  Timeout: 4 minutes per model, ~20 minutes total worst case
+19:54:42 [INFO] Calling 5 models in parallel:
+19:54:42 [INFO]   1. openai/gpt-5-codex
+19:54:42 [INFO]   2. x-ai/grok-4-fast
+19:54:42 [INFO]   3. mistralai/codestral-2508
+19:54:42 [INFO]   4. google/gemini-2.5-pro
+19:54:42 [INFO]   5. z-ai/glm-4.6
+19:54:42 [INFO] 🚀 Starting API call to openai/gpt-5-codex...
+19:54:42 [INFO] 🚀 Starting API call to x-ai/grok-4-fast...
+19:54:42 [INFO] 🚀 Starting API call to mistralai/codestral-2508...
+19:54:42 [INFO] 🚀 Starting API call to google/gemini-2.5-pro...
+19:54:42 [INFO] 🚀 Starting API call to z-ai/glm-4.6...
+19:54:43 [INFO] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+19:54:43 [INFO] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+19:54:43 [INFO] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+19:54:45 [INFO] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+19:54:45 [INFO] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+19:54:49 [INFO] ✅ mistralai/codestral-2508 responded in 6.4s
+19:54:49 [INFO] 📊 mistralai/codestral-2508 returned ~603 words
+19:55:26 [INFO] ✅ z-ai/glm-4.6 responded in 43.2s
+19:55:26 [INFO] 📊 z-ai/glm-4.6 returned ~843 words
+19:55:29 [INFO] ✅ google/gemini-2.5-pro responded in 47.1s
+19:55:29 [INFO] 📊 google/gemini-2.5-pro returned ~1449 words
+19:55:36 [INFO] ✅ x-ai/grok-4-fast responded in 53.5s
+19:55:36 [INFO] 📊 x-ai/grok-4-fast returned ~1804 words
+19:55:49 [INFO] ✅ openai/gpt-5-codex responded in 67.0s
+19:55:49 [INFO] 📊 openai/gpt-5-codex returned ~617 words
+19:55:49 [INFO] ✅ PHASE 1 COMPLETE in 67.0s: 5/5 successful, 0 failed
+19:55:49 [INFO] 💾 PHASE 2: Writing 5 responses to files...
+19:55:49 [INFO]   ✓ Wrote response #1 to test_llm_1.txt
+19:55:49 [INFO]   ✓ Wrote response #2 to test_llm_2.txt
+19:55:49 [INFO]   ✓ Wrote response #3 to test_llm_3.txt
+19:55:49 [INFO]   ✓ Wrote response #4 to test_llm_4.txt
+19:55:49 [INFO]   ✓ Wrote response #5 to test_llm_5.txt
+19:55:49 [INFO] 🔄 PHASE 3: Calling synthesizer model...
+19:55:49 [INFO]   Model: google/gemini-2.5-pro
+19:55:49 [INFO]   Input: 5 valid responses to synthesize
+19:55:49 [INFO] 🚀 Starting API call to google/gemini-2.5-pro...
+19:55:52 [INFO] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+19:56:30 [INFO] ✅ google/gemini-2.5-pro responded in 41.3s
+19:56:30 [INFO] 📊 google/gemini-2.5-pro returned ~996 words
+19:56:30 [INFO] ✅ PHASE 3 COMPLETE: Synthesizer returned response
+19:56:30 [INFO] 💾 PHASE 4: Writing final answer to file...
+19:56:30 [INFO]   ✓ Wrote final answer to test_final_best.md
+19:56:30 [INFO] ================================================================================
+19:56:30 [INFO] 🎉 REQUEST COMPLETE in 108.3s (1.8 minutes)
+19:56:30 [INFO] ================================================================================
+20:37:31 [INFO] Processing request of type CallToolRequest
+20:37:31 [INFO] ================================================================================
+20:37:31 [INFO] 🎯 NEW REQUEST: Processing prompt (4071 words)
+20:37:31 [INFO] 📋 Models: openai/gpt-5-codex, x-ai/grok-4-fast, mistralai/codestral-2508, google/gemini-2.5-pro, z-ai/glm-4.6
+20:37:31 [INFO] ================================================================================
+20:37:31 [INFO] ⚡ PHASE 1: Calling 5 models in parallel...
+20:37:31 [INFO] ⏱️  Timeout: 4 minutes per model, ~20 minutes total worst case
+20:37:31 [INFO] Calling 5 models in parallel:
+20:37:31 [INFO]   1. openai/gpt-5-codex
+20:37:31 [INFO]   2. x-ai/grok-4-fast
+20:37:31 [INFO]   3. mistralai/codestral-2508
+20:37:31 [INFO]   4. google/gemini-2.5-pro
+20:37:31 [INFO]   5. z-ai/glm-4.6
+20:37:31 [INFO] 🚀 Starting API call to openai/gpt-5-codex...
+20:37:31 [INFO] 🚀 Starting API call to x-ai/grok-4-fast...
+20:37:31 [INFO] 🚀 Starting API call to mistralai/codestral-2508...
+20:37:31 [INFO] 🚀 Starting API call to google/gemini-2.5-pro...
+20:37:31 [INFO] 🚀 Starting API call to z-ai/glm-4.6...
+20:37:32 [INFO] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+20:37:32 [INFO] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+20:37:33 [INFO] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+20:37:34 [INFO] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+20:37:34 [INFO] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+20:37:40 [INFO] ✅ mistralai/codestral-2508 responded in 8.6s
+20:37:40 [INFO] 📊 mistralai/codestral-2508 returned ~854 words
+20:38:29 [INFO] ✅ google/gemini-2.5-pro responded in 57.7s
+20:38:29 [INFO] 📊 google/gemini-2.5-pro returned ~1649 words
+20:38:47 [INFO] ✅ openai/gpt-5-codex responded in 75.9s
+20:38:47 [INFO] 📊 openai/gpt-5-codex returned ~927 words
+20:38:53 [INFO] ✅ x-ai/grok-4-fast responded in 81.7s
+20:38:53 [INFO] 📊 x-ai/grok-4-fast returned ~2027 words
+20:39:09 [INFO] ✅ z-ai/glm-4.6 responded in 98.1s
+20:39:09 [INFO] 📊 z-ai/glm-4.6 returned ~1737 words
+20:39:09 [INFO] ✅ PHASE 1 COMPLETE in 98.2s: 5/5 successful, 0 failed
+20:39:09 [INFO] 💾 PHASE 2: Writing 5 responses to files...
+20:39:09 [INFO]   ✓ Wrote response #1 to test_llm_1.txt
+20:39:09 [INFO]   ✓ Wrote response #2 to test_llm_2.txt
+20:39:09 [INFO]   ✓ Wrote response #3 to test_llm_3.txt
+20:39:09 [INFO]   ✓ Wrote response #4 to test_llm_4.txt
+20:39:09 [INFO]   ✓ Wrote response #5 to test_llm_5.txt
+20:39:09 [INFO] 🔄 PHASE 3: Calling synthesizer model...
+20:39:09 [INFO]   Model: google/gemini-2.5-pro
+20:39:09 [INFO]   Input: 5 valid responses to synthesize
+20:39:09 [INFO] 🚀 Starting API call to google/gemini-2.5-pro...
+20:39:13 [INFO] HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+20:39:58 [INFO] ✅ google/gemini-2.5-pro responded in 49.0s
+20:39:58 [INFO] 📊 google/gemini-2.5-pro returned ~1503 words
+20:39:58 [INFO] ✅ PHASE 3 COMPLETE: Synthesizer returned response
+20:39:58 [INFO] 💾 PHASE 4: Writing final answer to file...
+20:39:58 [INFO]   ✓ Wrote final answer to test_final_best.md
+20:39:58 [INFO] ================================================================================
+20:39:58 [INFO] 🎉 REQUEST COMPLETE in 147.2s (2.5 minutes)
+20:39:58 [INFO] ================================================================================
+20:53:04 [INFO] Server initialized, starting stdio transport...
+20:53:04 [INFO] Processing request of type ListToolsRequest
+20:53:04 [INFO] Processing request of type ListResourcesRequest
+20:53:04 [INFO] Processing request of type ListResourceTemplatesRequest
+20:53:04 [INFO] Server initialized, starting stdio transport...
+20:53:04 [INFO] Processing request of type ListToolsRequest
+20:53:04 [INFO] Processing request of type ListResourcesRequest
+20:53:04 [INFO] Processing request of type ListResourceTemplatesRequest

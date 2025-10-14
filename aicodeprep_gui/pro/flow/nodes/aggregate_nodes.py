@@ -86,16 +86,18 @@ class BestOfNNode(BaseExecNode):
         """Execute the Best-of-N synthesis."""
         context = (inputs.get("context") or "").strip()
         candidates = []
+        # Check all possible candidate inputs, don't break on first missing one
         for i in range(1, 100):  # support more than 5 later
             key = f"candidate{i}"
-            if key not in inputs:
-                break
-            v = (inputs.get(key) or "").strip()
-            if v:
-                candidates.append(v)
+            if key in inputs:
+                v = (inputs.get(key) or "").strip()
+                if v:
+                    candidates.append(v)
 
         logging.info(
             f"[{self.NODE_NAME}] Received {len(candidates)} candidate(s), context length: {len(context)}")
+        logging.info(
+            f"[{self.NODE_NAME}] All input keys: {list(inputs.keys())}")
         for idx, cand in enumerate(candidates, 1):
             logging.info(
                 f"[{self.NODE_NAME}] Candidate {idx} length: {len(cand)}")

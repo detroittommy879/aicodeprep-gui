@@ -8,8 +8,8 @@
 version=1.0
 
 [window]
-width=2733
-height=1454
+width=1334
+height=1514
 splitter_state=AAAA/wAAAAEAAAACAAADAAAAAQAB/////wEAAAACAA==
 
 [format]
@@ -20,15 +20,19 @@ preview_window_enabled=true
 syntax_highlight_enabled=true
 
 [files]
-aicodeprep_gui\data\flow.json
-aicodeprep_gui\data\flow_studio_help.html
-aicodeprep_gui\pro\flow\api_key_dialog.py
-aicodeprep_gui\pro\flow\engine.py
-aicodeprep_gui\pro\flow\flow_dock.py
-aicodeprep_gui\pro\flow\progress_dialog.py
-aicodeprep_gui\pro\flow\serializer.py
-aicodeprep_gui\pro\flow\__init__.py
-aicodeprep_gui\pro\flow\nodes\aggregate_nodes.py
-aicodeprep_gui\pro\flow\nodes\base.py
-aicodeprep_gui\pro\flow\nodes\io_nodes.py
-aicodeprep_gui\pro\flow\nodes\llm_nodes.py
+LICENSE
+mcp_config.json
+MONITORING_SUMMARY_10_12_2025.md
+parallel_llm_progress.log
+pyproject.toml
+test_llm_1.txt
+test_llm_2.txt
+test_llm_3.txt
+test_llm_4.txt
+test_llm_5.txt
+watch_progress_color.ps1
+src\parallel_llm_mcp\client.py
+src\parallel_llm_mcp\parallel.py
+src\parallel_llm_mcp\server.py
+src\parallel_llm_mcp\__init__.py
+src\parallel_llm_mcp\__main__.py

@@ -76,6 +76,26 @@ def save_session(graph: NodeGraph, file_path: str) -> bool:
         return False
 
 
+def _normalize_node_data(data: dict) -> dict:
+    """
+    Normalize node data to ensure 'custom' and 'subgraph_session' fields are JSON strings.
+    NodeGraphQt expects these to be JSON-encoded strings, not raw dicts/lists.
+    """
+    if "nodes" in data and isinstance(data["nodes"], dict):
+        for node_id, node_data in data["nodes"].items():
+            if isinstance(node_data, dict):
+                # Convert 'custom' field to JSON string if it's a dict
+                if "custom" in node_data and isinstance(node_data["custom"], (dict, list)):
+                    node_data["custom"] = json.dumps(node_data["custom"])
+
+                # Convert 'subgraph_session' field to JSON string if it's a dict
+                if "subgraph_session" in node_data and isinstance(node_data["subgraph_session"], (dict, list)):
+                    node_data["subgraph_session"] = json.dumps(
+                        node_data["subgraph_session"])
+
+    return data
+
+
 def load_session(graph: NodeGraph, file_path: str) -> bool:
     """Load a graph session from JSON file, replacing current graph."""
     try:
@@ -97,6 +117,22 @@ def load_session(graph: NodeGraph, file_path: str) -> bool:
                 return False
             logging.info(
                 f"[Flow Serializer] JSON validation passed for {file_path}")
+
+            # Normalize the data to ensure proper format
+            data = _normalize_node_data(data)
+
+            # Write normalized data to a temp file for NodeGraphQt to load
+            import tempfile
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as tf:
+                json.dump(data, tf, indent=2)
+                temp_file = tf.name
+
+            # Update file_path to the normalized temp file
+            original_file = file_path
+            file_path = temp_file
+            logging.info(
+                f"[Flow Serializer] Normalized JSON written to temp file: {temp_file}")
+
         except json.JSONDecodeError as e:
             logging.error(
                 f"[Flow Serializer] JSON decode error in {file_path}: {e}")
@@ -127,6 +163,16 @@ def load_session(graph: NodeGraph, file_path: str) -> bool:
                 f"[Flow Serializer] Loading session from: {file_path}")
             graph.load_session(file_path)  # type: ignore
 
+            # Clean up temp file if we created one
+            if 'temp_file' in locals() and 'original_file' in locals() and temp_file != original_file:
+                try:
+                    os.unlink(temp_file)
+                    logging.info(
+                        f"[Flow Serializer] Cleaned up temp file: {temp_file}")
+                except Exception as cleanup_err:
+                    logging.warning(
+                        f"[Flow Serializer] Failed to cleanup temp file: {cleanup_err}")
+
             # Process events after loading
             try:
                 from PySide6.QtCore import QCoreApplication
@@ -135,12 +181,18 @@ def load_session(graph: NodeGraph, file_path: str) -> bool:
                 pass
 
             logging.info(
-                f"[Flow Serializer] Successfully loaded session from: {file_path}")
+                f"[Flow Serializer] Successfully loaded session from: {original_file if 'original_file' in locals() else file_path}")
             return True
         logging.error(
             "[Flow Serializer] load_session: graph.load_session not available")
         return False
     except Exception as e:
+        # Clean up temp file on error
+        if 'temp_file' in locals() and os.path.exists(temp_file):
+            try:
+                os.unlink(temp_file)
+            except:
+                pass
         logging.error(
             f"[Flow Serializer] load_session failed: {e}", exc_info=True)
         return False

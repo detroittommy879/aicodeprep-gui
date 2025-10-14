@@ -1,0 +1,9 @@
+These 5 Openrouter model names work well:
+openai/gpt-5-codex
+x-ai/grok-4-fast
+mistralai/codestral-2508
+google/gemini-2.5-pro
+z-ai/glm-4.6
+
+Large context capable model that works well:
+google/gemini-2.5-pro

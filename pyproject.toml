@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 # CRITICAL: Changed name to match your new package name
 name = "aicodeprep-gui" 
-version = "1.2.0"
+version = "1.2.1"
 description = "A smart GUI to select, filter, and concatenate code files for large language model (LLM) and AI analysis."
 readme = "README.md"
 authors = [{ name = "Tom Brothers", email = "tom@wuu73.org" }]
@@ -53,6 +53,8 @@ where = ["."]
 # CRITICAL: Changed key to match your actual package name `aicodeprep_gui`
 aicodeprep_gui = [
     "data/default_config.toml",
+    "data/flow.json",
+    "data/flow_studio_help.html",
     "images/*.png",
     "images/*.ico",
     "data/AICodePrep.workflow.zip",

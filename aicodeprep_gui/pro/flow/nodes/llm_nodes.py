@@ -101,29 +101,29 @@ class LLMBaseNode(BaseExecNode):
                 logging.debug(f"Error getting properties for label: {e}")
 
             # Build compact single-line display
-            parts = [base_name]
-
-            # Add model or mode info
-            if model_mode in ("random", "random_free"):
-                parts.append(f"[{model_mode}]")
-            elif model:
-                # Show short model name (last part after /)
+            # Strategy: If model is set, use just the model name. Otherwise use base name.
+            if model:
+                # Show just the model name (last part after /)
                 model_short = model.split('/')[-1] if '/' in model else model
-                # Truncate to fit node width
-                if len(model_short) > 15:
-                    model_short = model_short[:12] + "..."
-                parts.append(f": {model_short}")
+                # Truncate to fit node width better
+                if len(model_short) > 20:
+                    model_short = model_short[:17] + "..."
+                display = model_short
+            elif model_mode in ("random", "random_free"):
+                # For random mode, show the mode
+                display = f"{base_name} [{model_mode}]"
+            else:
+                # Default: just the base name
+                display = base_name
 
-            # Add sampling params if non-default (compact)
+            # Add sampling params if non-default (compact) as suffix
             params = []
             if temperature is not None and temperature != 0.7:
                 params.append(f"T{temperature}")
             if top_p is not None and top_p != 1.0:
                 params.append(f"P{top_p}")
             if params:
-                parts.append(f"({','.join(params)})")
-
-            display = " ".join(parts)
+                display = f"{display} ({','.join(params)})"
 
             # Update node name
             if hasattr(self, 'set_name'):
@@ -393,11 +393,15 @@ class LLMBaseNode(BaseExecNode):
                 error_msg = f"LLM Error: {str(e)}"
                 self._warn(error_msg)
                 logging.error(f"[{self.NODE_NAME}] {error_msg}", exc_info=True)
+                logging.error(
+                    f"[{self.NODE_NAME}] ⚠️ Returning empty output due to error - downstream nodes will not receive data from this node")
                 return {}
             except Exception as e:
                 error_msg = f"Unexpected error: {str(e)}"
                 self._warn(error_msg)
                 logging.error(f"[{self.NODE_NAME}] {error_msg}", exc_info=True)
+                logging.error(
+                    f"[{self.NODE_NAME}] ⚠️ Returning empty output due to error - downstream nodes will not receive data from this node")
                 return {}
         except Exception as outer_e:
             # Catch any exception in the entire run method

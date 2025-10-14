@@ -683,29 +683,29 @@ class FlowStudioDock(QtWidgets.QDockWidget):
         # LLM Providers submenu
         llm_menu = add_menu.addMenu("🤖 LLM Providers")
         llm_menu.addAction("OpenAI (Official)").triggered.connect(
-            lambda: self._create_node_at_center('aicp.flow', 'OpenAI LLM'))
+            lambda: self._create_node_at_center('aicp.flow.OpenAINode'))
         llm_menu.addAction("OpenRouter").triggered.connect(
-            lambda: self._create_node_at_center('aicp.flow', 'OpenRouter LLM'))
+            lambda: self._create_node_at_center('aicp.flow.OpenRouterNode'))
         llm_menu.addAction("Gemini (Google)").triggered.connect(
-            lambda: self._create_node_at_center('aicp.flow', 'Gemini LLM'))
+            lambda: self._create_node_at_center('aicp.flow.GeminiNode'))
         llm_menu.addAction("OpenAI Compatible").triggered.connect(
-            lambda: self._create_node_at_center('aicp.flow', 'OpenAI-Compatible LLM'))
+            lambda: self._create_node_at_center('aicp.flow.OpenAICompatibleNode'))
 
         # I/O submenu
         io_menu = add_menu.addMenu("📁 Input/Output")
         io_menu.addAction("Context Output").triggered.connect(
-            lambda: self._create_node_at_center('aicp.flow', 'Context Output'))
+            lambda: self._create_node_at_center('aicp.flow.ContextOutputNode'))
         io_menu.addAction("File Write").triggered.connect(
-            lambda: self._create_node_at_center('aicp.flow', 'File Write'))
+            lambda: self._create_node_at_center('aicp.flow.FileWriteNode'))
         io_menu.addAction("Clipboard").triggered.connect(
-            lambda: self._create_node_at_center('aicp.flow', 'Clipboard'))
+            lambda: self._create_node_at_center('aicp.flow.ClipboardNode'))
         io_menu.addAction("Output Display").triggered.connect(
-            lambda: self._create_node_at_center('aicp.flow', 'Output Display'))
+            lambda: self._create_node_at_center('aicp.flow.OutputDisplayNode'))
 
         # Utilities submenu
         util_menu = add_menu.addMenu("🔧 Utilities")
         util_menu.addAction("Best of N").triggered.connect(
-            lambda: self._create_node_at_center('aicp.flow', 'Best-of-N Synthesizer'))
+            lambda: self._create_node_at_center('aicp.flow.BestOfNNode'))
 
         add_node_btn.setMenu(add_menu)
         toolbar.addWidget(add_node_btn)
@@ -719,10 +719,24 @@ class FlowStudioDock(QtWidgets.QDockWidget):
 
         toolbar.addSeparator()
 
+        # Add API Key Manager button
+        self._act_api_keys = toolbar.addAction("🔑 Manage API Keys")
+        self._act_api_keys.setToolTip("Configure API keys for AI providers")
+        self._act_api_keys.triggered.connect(self._on_manage_api_keys_clicked)
+
+        toolbar.addSeparator()
+
         self._act_run = toolbar.addAction("Run Flow")
         self._act_run.setEnabled(True)
         self._act_run.triggered.connect(self._on_run_clicked)
         toolbar.addSeparator()
+
+        # Add Help button
+        self._act_help = toolbar.addAction("❓ Help")
+        self._act_help.setToolTip("Open Flow Studio User Guide")
+        self._act_help.triggered.connect(self._show_help)
+        toolbar.addSeparator()
+
         self._act_import = toolbar.addAction("Import…")
         self._act_export = toolbar.addAction("Export…")
 
@@ -945,6 +959,7 @@ class FlowStudioDock(QtWidgets.QDockWidget):
             from .nodes.aggregate_nodes import BestOfNNode
 
             # Get currently registered nodes to avoid double registration
+            # registered_nodes() returns a list of strings like "aicp.flow.ContextOutputNode"
             already_registered = set()
             if hasattr(self.graph, 'registered_nodes'):
                 registered = self.graph.registered_nodes()
@@ -965,27 +980,29 @@ class FlowStudioDock(QtWidgets.QDockWidget):
             ]
 
             for node_cls in nodes_to_register:
-                if node_cls not in already_registered:
+                # Build the full identifier string to check
+                node_identifier = f"{node_cls.__identifier__}.{node_cls.__name__}"
+                if node_identifier not in already_registered:
                     try:
                         self.graph.register_node(node_cls)
+                        logging.info(f"✅ Registered: {node_identifier}")
                     except Exception as reg_err:
                         logging.warning(
                             f"Could not register {node_cls.__name__}: {reg_err}")
+                else:
+                    logging.info(f"ℹ️ Already registered: {node_identifier}")
 
             # Log all registered nodes for debugging
             try:
                 if hasattr(self.graph, 'registered_nodes'):
                     registered = self.graph.registered_nodes()
-                    # registered_nodes() returns a list of class types, not a dict
+                    # registered_nodes() returns a list of identifier STRINGS like "aicp.flow.OpenAINode"
                     if isinstance(registered, list):
-                        # Get the identifiers by accessing __identifier__ and NODE_NAME
-                        node_ids = []
-                        for node_cls in registered:
-                            if hasattr(node_cls, '__identifier__') and hasattr(node_cls, 'NODE_NAME'):
-                                node_id = f"{node_cls.__identifier__}.{node_cls.NODE_NAME}"
-                                node_ids.append(node_id)
+                        # Filter to only show our nodes (aicp.flow.*)
+                        our_nodes = [n for n in registered if isinstance(
+                            n, str) and n.startswith('aicp.flow.')]
                         logging.info(
-                            f"✅ Registered {len(node_ids)} nodes: {node_ids}")
+                            f"✅ Registered {len(our_nodes)} custom nodes: {our_nodes}")
                     else:
                         logging.info(
                             f"✅ Registered nodes (dict): {list(registered.keys())}")
@@ -1008,23 +1025,25 @@ class FlowStudioDock(QtWidgets.QDockWidget):
             # The menu is configured through the graph's context menu system
 
             # Build menu structure: Category -> Node Name -> Node Identifier
+            # NOTE: Identifiers must use CLASS NAMES, not NODE_NAME attributes
+            # Format: __identifier__.ClassName (e.g., "aicp.flow.OpenAINode")
             menu_items = {
                 'graph': {},
                 'nodes': {
                     'LLM Providers': {
-                        'OpenAI (Official)': 'aicp.flow.OpenAI LLM',
-                        'OpenRouter': 'aicp.flow.OpenRouter LLM',
-                        'Gemini (Google)': 'aicp.flow.Gemini LLM',
-                        'OpenAI Compatible': 'aicp.flow.OpenAI-Compatible LLM',
+                        'OpenAI (Official)': 'aicp.flow.OpenAINode',
+                        'OpenRouter': 'aicp.flow.OpenRouterNode',
+                        'Gemini (Google)': 'aicp.flow.GeminiNode',
+                        'OpenAI Compatible': 'aicp.flow.OpenAICompatibleNode',
                     },
                     'Input/Output': {
-                        'Context Output': 'aicp.flow.Context Output',
-                        'File Write': 'aicp.flow.File Write',
-                        'Clipboard': 'aicp.flow.Clipboard',
-                        'Output Display': 'aicp.flow.Output Display',
+                        'Context Output': 'aicp.flow.ContextOutputNode',
+                        'File Write': 'aicp.flow.FileWriteNode',
+                        'Clipboard': 'aicp.flow.ClipboardNode',
+                        'Output Display': 'aicp.flow.OutputDisplayNode',
                     },
                     'Utilities': {
-                        'Best of N': 'aicp.flow.Best-of-N Synthesizer',
+                        'Best of N': 'aicp.flow.BestOfNNode',
                     },
                 }
             }
@@ -1040,8 +1059,12 @@ class FlowStudioDock(QtWidgets.QDockWidget):
         except Exception as e:
             logging.error(f"Failed to setup node creation menu: {e}")
 
-    def _create_node_at_center(self, identifier: str, node_name: str):
-        """Create a node at the center of the current view."""
+    def _create_node_at_center(self, identifier: str):
+        """Create a node at the center of the current view.
+
+        Args:
+            identifier: Full node identifier like "aicp.flow.OpenAINode"
+        """
         try:
             # Get the center position of the viewport
             if self.viewer:
@@ -1054,23 +1077,22 @@ class FlowStudioDock(QtWidgets.QDockWidget):
                 # Fallback to origin
                 pos = (0, 0)
 
-            # Create the node using the identifier
-            ident_str = f"{identifier}.{node_name}"
-            logging.info(f"Creating node: {ident_str} at position {pos}")
+            # Create the node using the full identifier
+            logging.info(f"Creating node: {identifier} at position {pos}")
 
             try:
-                node = self.graph.create_node(ident_str, pos=pos)
+                node = self.graph.create_node(identifier, pos=pos)
                 if node:
-                    logging.info(f"✅ Created node: {node_name}")
+                    logging.info(f"✅ Created node: {identifier}")
                     # Select the newly created node
                     self.graph.clear_selection()
                     node.set_selected(True)
                     return node
                 else:
                     logging.warning(
-                        f"create_node returned None for {ident_str}")
+                        f"create_node returned None for {identifier}")
             except Exception as e:
-                logging.error(f"Failed to create node {ident_str}: {e}")
+                logging.error(f"Failed to create node {identifier}: {e}")
 
                 # Get list of available nodes for debugging
                 available_nodes = []
@@ -1092,8 +1114,8 @@ class FlowStudioDock(QtWidgets.QDockWidget):
 
                 # Show error to user
                 if QtWidgets:
-                    error_msg = f"Could not create {node_name} node.\n\nError: {e}\n\n"
-                    error_msg += f"Tried to create: {ident_str}\n\n"
+                    error_msg = f"Could not create node.\n\nError: {e}\n\n"
+                    error_msg += f"Tried to create: {identifier}\n\n"
                     if available_nodes:
                         error_msg += f"Available nodes:\n" + \
                             "\n".join(f"  • {n}" for n in available_nodes[:10])
@@ -1114,13 +1136,16 @@ class FlowStudioDock(QtWidgets.QDockWidget):
         Create a node in a way that works across NodeGraphQt versions.
 
         Tries, in order:
-        1) create_node using the identifier string "identifier.NODE_NAME"
+        1) create_node using the identifier string "identifier.ClassName"
         2) create_node using the class reference
         3) Instantiate the class directly and add via add_node, then set position
         Returns the node instance or None if all attempts fail.
+
+        Note: NodeGraphQt registers nodes using the CLASS NAME, not NODE_NAME attribute.
         """
         node = None
-        ident_str = f"{identifier}.{node_name}"
+        # Build identifier using class name, not node_name parameter
+        ident_str = f"{identifier}.{cls.__name__}"
         # 1) identifier string
         try:
             node = self.graph.create_node(ident_str, pos=pos)
@@ -1672,6 +1697,269 @@ class FlowStudioDock(QtWidgets.QDockWidget):
 
         except Exception as e:
             logging.error(f"load_template_best_of_5_openrouter failed: {e}")
+
+    def load_template_best_of_5_configured(self):
+        """Load the preconfigured Best-of-5 flow with all settings from data/flow.json."""
+        try:
+            # Clear graph first
+            try:
+                if hasattr(self.graph, "clear_session"):
+                    self.graph.clear_session()
+                else:
+                    for n in list(getattr(self.graph, "all_nodes", lambda: [])()):
+                        try:
+                            if hasattr(self.graph, "delete_node"):
+                                self.graph.delete_node(n)
+                        except Exception:
+                            continue
+            except Exception:
+                pass
+
+            # Create nodes with the exact configuration from flow.json
+            from .nodes.io_nodes import ContextOutputNode, ClipboardNode, FileWriteNode, OutputDisplayNode
+            from .nodes.llm_nodes import OpenRouterNode
+            from .nodes.aggregate_nodes import BestOfNNode
+
+            # Create Context Output node
+            ctx = self._create_node_compat(
+                ContextOutputNode, "aicp.flow", "Context Output: fullcode.txt: fullcode.txt", (19.0, -380.0))
+            if ctx and hasattr(ctx, "set_property"):
+                ctx.set_property("path", "fullcode.txt")
+                ctx.set_property("use_latest_generated", True)
+
+            # Create 5 OpenRouter LLM nodes with specific configurations
+            llm_configs = [
+                {"name": "gpt-5-codex", "model": "openai/gpt-5-codex",
+                    "output_file": "LLM1.md", "pos": (380.06894860099146, -439.193712736119)},
+                {"name": "claude-sonnet-4.5", "model": "anthropic/claude-sonnet-4.5",
+                    "output_file": "LLM2.md", "pos": (359.0, -190.0)},
+                {"name": "glm-4.6", "model": "z-ai/glm-4.6\n",
+                    "output_file": "LLM3.md", "pos": (359.0, 0.0)},
+                {"name": "qwen3-next-80b-a3...", "model": "qwen/qwen3-next-80b-a3b-thinking",
+                    "output_file": "LLM4.md", "pos": (359.0, 190.0)},
+                {"name": "o4-mini", "model": "openai/o4-mini",
+                    "output_file": "LLM5.md", "pos": (359.0, 380.0)},
+            ]
+
+            or_nodes = []
+            for i, config in enumerate(llm_configs):
+                n = self._create_node_compat(
+                    OpenRouterNode, "aicp.flow", config["name"], config["pos"])
+                if n and hasattr(n, "set_property"):
+                    n.set_property("model_mode", "choose")
+                    n.set_property("model", config["model"])
+                    n.set_property("output_file", config["output_file"])
+                    n.set_property("temperature", 0.7)
+                    n.set_property("top_p", 1.0)
+                    n.set_property("provider", "openrouter")
+                    n.set_property("base_url", "https://openrouter.ai/api/v1")
+                logging.info(
+                    f"Created OpenRouter node {i}: {n} with model {config['model']}")
+                or_nodes.append(n)
+
+            # Create Best-of-N node with detailed configuration
+            best = self._create_node_compat(
+                BestOfNNode, "aicp.flow", "Best-of-N Synthesizer", (699.0, -380.0))
+            if best and hasattr(best, "set_property"):
+                best.set_property("provider", "openrouter")
+                best.set_property("base_url", "https://openrouter.ai/api/v1")
+                best.set_property("model", "google/gemini-2.5-pro")
+                best.set_property("model_mode", "choose")
+                extra_prompt = """You are an expert coder and you are good at looking at many different suggested solutions to a problem and coming up with a better or 'best of all of them' solution. You can use all of the available information to try and create an even better solution. Don't assume that all of the suggested solutions are correct, sometimes they can be wrong so use your best judgement and abilities, think critically, etc.
+
+You will receive:
+- The original code  files and the user question/prompt),
+- N candidate answers from different AI models.
+
+Task:
+1) Analyze the strengths and weaknesses of each candidate.
+2) Synthesize a 'best of all' answer that is better than any single one.
+3) Where relevant, cite brief pros/cons observed.
+4) Ensure the final answer is complete, correct, and practical.
+"""
+                best.set_property("extra_prompt", extra_prompt)
+            logging.info(f"Created BestOfN node: {best}")
+
+            # Create Clipboard node
+            clip = self._create_node_compat(
+                ClipboardNode, "aicp.flow", "Clipboard", (1039.0, -380.0))
+            logging.info(f"Created Clipboard node: {clip}")
+
+            # Create FileWrite node
+            fwr = self._create_node_compat(
+                FileWriteNode, "aicp.flow", "File Write: best_of_n.txt: ..._of_all1.txt: ..._of_all1.txt", (1039.0, -190.0))
+            if fwr and hasattr(fwr, "set_property"):
+                fwr.set_property("path", "best_of_all1.txt")
+            logging.info(f"Created FileWrite node: {fwr}")
+
+            # Create Output Display node
+            output_display = self._create_node_compat(
+                OutputDisplayNode, "aicp.flow", "Output Display", (653.9412200232489, 25.1956336961672))
+            logging.info(f"Created Output Display node: {output_display}")
+
+            # Wire connections: ctx.text -> each OpenRouter input.text
+            try:
+                out_text = self._find_port(ctx, "text", "output")
+                logging.info(f"Context output port: {out_text}")
+
+                # Connect context to each OpenRouter node
+                for i, or_node in enumerate(or_nodes):
+                    if or_node and out_text:
+                        in_text = self._find_port(or_node, "text", "input")
+                        if out_text and in_text:
+                            try:
+                                out_text.connect_to(in_text)
+                                logging.info(
+                                    f"Connected ctx -> OpenRouter {i}")
+                            except Exception as e:
+                                logging.error(
+                                    f"Failed to connect ctx -> OpenRouter {i}: {e}")
+
+                # Connect context to Best-of-N context input
+                best_in_ctx = self._find_port(best, "context", "input")
+                if out_text and best_in_ctx:
+                    try:
+                        out_text.connect_to(best_in_ctx)
+                        logging.info("Connected ctx -> Best-of-N context")
+                    except Exception as e:
+                        logging.error(
+                            f"Failed to connect ctx -> Best-of-N context: {e}")
+
+                # Connect each OpenRouter output to Best-of-N candidate inputs
+                for i, or_node in enumerate(or_nodes):
+                    if or_node and best:
+                        or_out = self._find_port(or_node, "text", "output")
+                        best_in = self._find_port(
+                            best, f"candidate{i+1}", "input")
+                        if or_out and best_in:
+                            try:
+                                or_out.connect_to(best_in)
+                                logging.info(
+                                    f"Connected OpenRouter {i} -> Best-of-N candidate{i+1}")
+                            except Exception as e:
+                                logging.error(
+                                    f"Failed to connect OpenRouter {i} -> Best-of-N: {e}")
+
+                # Connect Best-of-N output to Clipboard and FileWrite
+                best_out = self._find_port(best, "text", "output")
+                if best_out:
+                    if clip:
+                        clip_in = self._find_port(clip, "text", "input")
+                        if clip_in:
+                            try:
+                                best_out.connect_to(clip_in)
+                                logging.info(
+                                    "Connected Best-of-N -> Clipboard")
+                            except Exception as e:
+                                logging.error(
+                                    f"Failed to connect Best-of-N -> Clipboard: {e}")
+
+                    if fwr:
+                        fwr_in = self._find_port(fwr, "text", "input")
+                        if fwr_in:
+                            try:
+                                best_out.connect_to(fwr_in)
+                                logging.info(
+                                    "Connected Best-of-N -> FileWrite")
+                            except Exception as e:
+                                logging.error(
+                                    f"Failed to connect Best-of-N -> FileWrite: {e}")
+
+            except Exception as e:
+                logging.error(f"Failed wiring nodes: {e}", exc_info=True)
+
+            # Re-register nodes to update properties panel
+            self._register_nodes()
+
+            QtWidgets.QMessageBox.information(
+                self,
+                "Flow Template Loaded",
+                "✅ Preconfigured Best-of-5 flow loaded successfully!\n\n"
+                "📋 This flow includes:\n"
+                "• 5 AI models: GPT-5 Codex, Claude Sonnet 4.5, GLM-4.6, Qwen3, O4-Mini\n"
+                "• Best-of-N synthesis with Gemini 2.5 Pro\n"
+                "• Pre-configured outputs to clipboard and file\n\n"
+                "🔑 Next step: Add your OpenRouter API key\n"
+                "Click the '🔑 Manage API Keys' button in the toolbar."
+            )
+
+        except Exception as e:
+            logging.error(
+                f"load_template_best_of_5_configured failed: {e}", exc_info=True)
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Flow Template",
+                f"❌ Error loading template:\n\n{e}"
+            )
+
+    def _on_manage_api_keys_clicked(self):
+        """Open the API Key Manager dialog."""
+        try:
+            from .api_key_dialog import APIKeyDialog
+            dialog = APIKeyDialog(self)
+            dialog.exec()
+        except Exception as e:
+            logging.error(f"Failed to open API Key Manager: {e}")
+            QtWidgets.QMessageBox.warning(
+                self,
+                "API Key Manager",
+                f"Failed to open API Key Manager:\n\n{e}"
+            )
+
+    def _show_help(self):
+        """Open the Flow Studio help guide in the default browser."""
+        try:
+            from importlib import resources
+            import webbrowser
+            import tempfile
+            import shutil
+
+            # Try to load the help HTML from package data
+            try:
+                if hasattr(resources, 'files'):  # Python 3.9+
+                    help_html_path = resources.files(
+                        'aicodeprep_gui.data').joinpath('flow_studio_help.html')
+                    # Copy to temp location and open
+                    with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as tf:
+                        tf.write(help_html_path.read_text(encoding='utf-8'))
+                        temp_path = tf.name
+                else:  # Python 3.8
+                    with resources.open_text('aicodeprep_gui.data', 'flow_studio_help.html', encoding='utf-8') as f:
+                        content = f.read()
+                    with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False, encoding='utf-8') as tf:
+                        tf.write(content)
+                        temp_path = tf.name
+
+                # Open in browser
+                webbrowser.open(f'file:///{temp_path.replace(chr(92), "/")}')
+                logging.info(f"Opened help file: {temp_path}")
+
+            except Exception as e:
+                logging.error(f"Failed to load help HTML: {e}")
+                # Fallback: show a simple message box with basic help
+                QtWidgets.QMessageBox.information(
+                    self,
+                    "Flow Studio Help",
+                    "Flow Studio User Guide\n\n"
+                    "Navigation:\n"
+                    "• Hold Spacebar and drag to pan\n"
+                    "• Use arrow keys to pan\n"
+                    "• Mouse wheel to zoom\n\n"
+                    "Working with Nodes:\n"
+                    "• Press Tab or click '➕ Add Node' to add nodes\n"
+                    "• Drag from output ports (right) to input ports (left)\n"
+                    "• Click a node to configure it in the Properties Panel\n"
+                    "• Press Delete to remove selected nodes\n\n"
+                    "API Keys:\n"
+                    "Configure your API keys in:\n"
+                    "~/.aicodeprep-gui/api-keys.toml\n\n"
+                    "For detailed documentation, see flow_studio_help.html in the package."
+                )
+        except Exception as e:
+            logging.error(f"Failed to show help: {e}")
+            QtWidgets.QMessageBox.warning(
+                self, "Help", f"Failed to open help guide: {e}"
+            )
 
     def _check_and_show_config_instructions(self):
         """Check if API keys are configured and show instructions if not ."""

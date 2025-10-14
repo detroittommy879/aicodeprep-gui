@@ -1,0 +1,93 @@
+## High-Level Summary
+
+The codebase is generally well organized, but there are several issues across reliability, correctness, and maintainability:
+
+1. **Concurrency helpers** return ambiguous values, mis-handle async callables, and swallow exceptions.
+2. **Server tooling** lacks a `run` entry point despite tests/docs referencing it, and performs blocking/unmanaged file I/O with fixed filenames (race-condition risk).
+3. **OpenRouter client** re-creates HTTP clients per call, assumes response schema, and exposes a synchronous wrapper that breaks inside running event loops.
+4. **Logging setup** is executed at import time, forcing global handlers/formatting on consumers.
+5. **Small documentation/test drifts** exist (docs mention `server.run`, debug env var unused).
+
+Addressing these will improve correctness, testability, and integration safety.
+
+---
+
+## Detailed Review & Suggestions
+
+### `parallel_llm_mcp/parallel.py`
+
+- **Bug: Async call detection fails for `AsyncMock` / partial async callables.**  
+  `asyncio.iscoroutinefunction(func)` misses async callables (e.g. `AsyncMock`, `functools.partial(async_fn)`) so the code routes through `asyncio.to_thread` and returns a coroutine object instead of awaited result.  
+  **Fix:** Call the function first and use `inspect.isawaitable` on the result:
+  ```python
+  async def run_single(args):
+      result = func(*args)
+      if inspect.isawaitable(result):
+          return await result
+      return result
+  ```
+- **Bug: Lossy error handling.**  
+  Converting exceptions into `"Error: …"` strings hides the original exception type and makes it impossible to distinguish between a genuine model response that begins with `"Error:"` and a failure.  
+  **Fix:** Return structured results (e.g. `{"ok": True, "value": result}` / `{"ok": False, "error": exc}`) and let the caller decide how to log/present failures.
+- **Logging/observability:** No logging occurs when work fails. Instrumentation would aid debugging (especially in `_call_models_parallel`).
+- **Extensibility:** Only positional arguments are supported. Consider allowing kwargs to make the helper reusable.
+
+### `parallel_llm_mcp/client.py`
+
+- **Performance:** A new `httpx.AsyncClient` is created per request. Reuse a single client (e.g. instantiate once and close via `__aenter__/__aexit__` or expose an async `aclose()` on the class) to get connection pooling.
+- **Bug/ergonomics:** `call_model()` always creates a fresh event loop via `asyncio.run`, which raises `RuntimeError` when called from an existing loop (common inside async frameworks or notebooks). Document this limitation or provide an alternative (e.g. detect `asyncio.get_running_loop()` and raise a clearer error).
+- **Error handling robustness:** Accessing `result["choices"][0]["message"]["content"]` without validation will raise `KeyError` or `IndexError` if the schema changes. Use `.get` with defensive checks and raise a descriptive exception.
+- **Missing network error path:** No handler for `httpx.RequestError` (non-HTTP failures). Add a dedicated except block to log and wrap network problems.
+- **Configuration:** Timeout is hard-coded; allow caller to override via constructor argument.
+- **Housekeeping:** Move `import time` to module top; prefer `len(result["choices"][0]["message"]["content"].split())` only after `strip()` to avoid counting empty tokens.
+
+### `parallel_llm_mcp/server.py`
+
+- **Critical: Missing `run()` method.**  
+  Tests (`test_run_server_stdio`, `test_run_server_unsupported_transport`) and docs expect `ParallelLLMServer.run()` but the method was removed. Either reintroduce it (likely wrapping `self.mcp.run`) or update tests/docs accordingly. Currently the test suite must be failing.
+- **Logging side effects:** `logging.basicConfig` and handler attachment run at import time, altering global logging in any process that imports this module. Move logging configuration into `main_sync()` or a dedicated `configure_logging()` function called explicitly.
+- **File I/O concerns:**
+  - Lambda + `open(...).write()` leaves files unclosed; replace with a helper using a context manager (`Path(...).write_text` or explicit `with open(...)`).
+  - Fixed output filenames (`test_llm_*.txt`, `test_final_best.md`) will collide if multiple prompts run concurrently, causing data races. Consider unique filenames per request (timestamp/UUID) or segregated directories.
+  - No validation that files wrote successfully (besides logging errors); consider raising or aggregating error info to the caller.
+- **Error reporting:** Success detection relies on `str(response).startswith("Error:")`; genuine model replies that begin with `"Error:"` would be dropped. Address by using structured results as mentioned above.
+- **Parallel invocation:** `_call_models_parallel` ignores `temperature`/`max_tokens` parameters from `process_prompt` (if those options are later exposed). Keep the signature flexible.
+- **Cancellation:** If FastMCP/client cancels the tool, outstanding HTTP requests continue running. Consider checking `asyncio.CancelledError` and canceling child tasks.
+- **Security/logging:** Response bodies and errors are written to disk in plain text. Ensure this is acceptable for your deployment (these may contain sensitive data). If not, add opt-in gating or configurable paths.
+
+### `parallel_llm_mcp/__init__.py` and README
+
+- Docstring example `asyncio.run(server.run())` and README instructions reference a non-existent `run` coroutine. Update once you add or remove that method.
+- README’s “Debug Mode” section sets `PARALLEL_LLM_LOG_LEVEL`, but code never consumes it. Add logic to read the env var or update the docs.
+
+### Tests
+
+- `test_server.py` currently requires a `run` method; once you implement/fix it, ensure the test passes. If you intentionally removed `run`, adjust the test.
+- Add tests for the new structured return type/error handling in `parallel_call_async`, and for writing files with unique filenames (or disabling that behavior under tests).
+
+---
+
+## Security Considerations
+
+- **Data persistence:** Writing raw LLM responses to deterministic filenames may leak sensitive user prompts/outputs. Ensure proper file permissions, consider configurable directories/filenames, and be explicit in documentation.
+- **API key exposure:** Logging currently avoids printing the key—good. Continue to ensure errors logged from `httpx` don’t accidentally include authentication headers (httpx omits them by default, but sanity check).
+
+---
+
+## Documentation & Ancillary Files
+
+- Update README and module docstrings after fixing the `run` method and logging behavior.
+- Consider adding documentation for new file output behavior (e.g., location, naming scheme).
+- Mention the need to run `fastmcp` dependency in README prerequisites if not already clear.
+
+---
+
+## Next Steps
+
+1. Implement structured result handling and async-call detection fixes in `parallel_call_async`.
+2. Reintroduce or document removal of `ParallelLLMServer.run`, updating tests/README accordingly.
+3. Refactor logging configuration and file writing to avoid side effects and race conditions.
+4. Refine `OpenRouterClient` for reusable HTTP clients and better error handling.
+5. Add/adjust tests to cover the above changes.
+
+*(Per your instruction, remember to copy this review into `testprompt-response.md`.)*

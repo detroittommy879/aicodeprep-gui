@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "parallel-llm": {
+      "command": "python",
+      "args": ["-m", "parallel_llm_mcp.server"],
+      "env": {
+        "OPENROUTER_API_KEY": ""
+      }
+    }
+  }
+}

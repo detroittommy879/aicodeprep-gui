@@ -1,0 +1,656 @@
+Excellent, I will now analyze the provided code and the candidate answers to synthesize a comprehensive security assessment.
+
+### Analysis of Candidate Answers
+
+#### Candidate 1
+*   **Strengths:**
+    *   Correctly identifies the highest-severity vulnerabilities: the path traversal issues leading to arbitrary file read and write.
+    *   The analysis is precise, pointing to the exact files and code blocks responsible.
+    *   The explanation of the attack vector (loading a malicious flow file) and the impact (data exfiltration, file system modification) is clear and accurate.
+    *   The recommendation to use a "safe path" resolution function is an excellent, modern, and effective mitigation strategy.
+*   **Weaknesses:**
+    *   The scope of the analysis is narrow, exclusively focusing on path traversal. It overlooks other significant risks, such as API key exfiltration.
+
+#### Candidate 2
+*   **Strengths:**
+    *   Attempts to provide a broad overview of potential security weaknesses across multiple categories.
+    *   Correctly points out that insecure file handling (Item 2) and session handling (Item 7) are areas of concern, which aligns with the core issue of executing untrusted flow files.
+*   **Weaknesses:**
+    *   Contains several inaccurate or unsubstantiated claims. For example:
+        *   **API Key Exposure in Logs:** The code logs `bool(api_key)`, not the key itself. This claim is incorrect.
+        *   **Insecure Command Execution:** It misidentifies the use of `os.chdir` with a command-line argument as a command injection vulnerability. This is a misunderstanding of the vulnerability class.
+        *   **Insecure Headers Handling:** The custom headers are not derived from untrusted user input within the flow, making this claim unfounded in the context of the code provided.
+    *   The recommendations are overly generic (e.g., "Add Input Validation") and lack the specific, actionable advice seen in Candidate 1.
+    *   The framing of some issues, like "deserialization attacks," is imprecise for `json`, which is safe from remote code execution during parsing. The risk lies in how the deserialized data is used, not the parsing itself.
+
+---
+
+### Best-of-All Synthesis: Security Analysis and Recommendations
+
+Here is a comprehensive security analysis that integrates the valid findings from the candidates, corrects the inaccuracies, and adds a critical vulnerability that both missed.
+
+### Executive Summary
+
+The primary security risk in the Flow Studio feature is the **execution of untrusted flow files (`.json`)**. A malicious actor can craft a flow that, when loaded and run by a user, can lead to two high-severity vulnerabilities:
+
+1.  **Arbitrary File System Access:** Path traversal vulnerabilities allow a malicious flow to read any file on the user's system (e.g., private keys, credentials) and write to or overwrite any file the user can access (e.g., shell profiles, application settings).
+2.  **API Key Exfiltration:** A malicious flow can redirect LLM API calls to an attacker-controlled server, sending the user's configured API keys along with the request.
+
+These vulnerabilities are critical because they can lead to complete compromise of local data and credentials. The following report details these findings and provides specific, actionable recommendations for remediation.
+
+---
+
+### High-Severity Findings
+
+#### Finding 1: Path Traversal Enables Arbitrary File Read and Write
+
+*   **Severity:** High
+*   **Files:**
+    *   `aicodeprep_gui/pro/flow/nodes/io_nodes.py` (in `ContextOutputNode` and `FileWriteNode`)
+    *   `aicodeprep_gui/pro/flow/nodes/llm_nodes.py` (in `LLMBaseNode`)
+
+**Description:**
+Multiple nodes that perform file operations accept a file path from a node property. This path is used without validation to construct a full path on the local file system. A malicious flow file can set this property to an absolute path (e.g., `/etc/passwd`, `C:\Users\user\secrets.txt`) or use relative "dot-dot-slash" sequences (`../../...`) to escape the current working directory.
+
+*   **Arbitrary File Read (`ContextOutputNode`):** The node reads the content of the specified file and places it on its output port. This data can then be sent to another node, such as an LLM node, effectively exfiltrating the file's contents over the network.
+    ```python
+    # aicodeprep_gui/pro/flow/nodes/io_nodes.py
+    path = self.get_property("path") or "fullcode.txt"
+    abspath = os.path.join(os.getcwd(), path) # Vulnerable line
+    with open(abspath, "r", ...) as f:
+        content = f.read()
+    ```
+
+*   **Arbitrary File Write (`FileWriteNode`, `LLMBaseNode`):** The `FileWriteNode` writes its input directly to the specified file path. Similarly, the `LLMBaseNode` has an optional `output_file` property that writes the LLM's response to disk. This can be abused to overwrite critical system files, configuration files (`~/.bashrc`), or plant malicious scripts for later execution.
+    ```python
+    # aicodeprep_gui/pro/flow/nodes/io_nodes.py (FileWriteNode)
+    path = self.get_property("path") or "output.txt"
+    abspath = os.path.join(os.getcwd(), path) # Vulnerable line
+    with open(abspath, "w", ...) as f:
+        f.write(text)
+    
+    # aicodeprep_gui/pro/flow/nodes/llm_nodes.py (LLMBaseNode)
+    output_file = self.get_property("output_file") or ""
+    if output_file and out:
+        out_path = Path(output_file) # Vulnerable line
+        out_path.write_text(out, encoding="utf-8")
+    ```
+
+**(Credit: Candidate 1 correctly identified this finding and provided a strong recommendation.)**
+
+**Recommendation:**
+Implement a centralized, strict path validation function and use it in every node that accesses the file system. This function should ensure that the resolved path is safely contained within the current project directory.
+
+Add a helper method to `BaseExecNode` or a shared utility module:
+
+```python
+from pathlib import Path
+
+def _resolve_safe_path(self, user_path: str, base_dir: Path) -> Path:
+    """
+    Safely resolves a user-provided path, ensuring it remains within the base directory.
+    Raises a ValueError if the path attempts to escape.
+    """
+    if not user_path:
+        raise ValueError("Path cannot be empty.")
+    
+    # Disallow absolute paths immediately
+    if os.path.isabs(user_path):
+        raise ValueError("Absolute paths are not allowed.")
+
+    base_dir = base_dir.resolve()
+    # Join and resolve the path to canonicalize it (e.g., handle '..')
+    candidate_path = (base_dir / user_path).resolve()
+
+    # Verify that the resolved path is still within the base directory
+    if base_dir not in candidate_path.parents and candidate_path != base_dir:
+         # A more robust check for modern Python (3.9+)
+         # if not candidate_path.is_relative_to(base_dir):
+        raise ValueError("Path traversal attempt detected. Path escapes the allowed directory.")
+    
+    return candidate_path
+
+# Example usage in ContextOutputNode.run():
+try:
+    path_str = self.get_property("path") or "fullcode.txt"
+    safe_path = self._resolve_safe_path(path_str, Path.cwd())
+    with open(safe_path, "r", encoding="utf-8", errors="ignore") as f:
+        content = f.read()
+except ValueError as e:
+    self._warn(f"Security error: {e}")
+    return {}
+```
+
+#### Finding 2: API Key Exfiltration via Malicious `base_url` Property
+
+*   **Severity:** High
+*   **Files:**
+    *   `aicodeprep_gui/pro/flow/nodes/llm_nodes.py`
+    *   `aicodeprep_gui/pro/flow/nodes/aggregate_nodes.py`
+
+**Description:**
+All LLM nodes (`LLMBaseNode`, `BestOfNNode`) have a `base_url` property that can be set in a flow file. This property dictates the API endpoint for the LLM call. An attacker can craft a flow that sets the `base_url` to an attacker-controlled server. When the flow is run, the application reads the user's legitimate API key from their configuration and sends it in the request to the attacker's malicious endpoint, exfiltrating the secret API key.
+
+```python
+# aicodeprep_gui/pro/flow/nodes/llm_nodes.py
+# ...
+api_key = self.resolve_api_key() # Gets the user's real API key
+if not api_key:
+    # ... error
+    return {}
+
+base_url = self.resolve_base_url() # This can be set to an attacker's URL
+model = self.resolve_model(api_key)
+# ...
+out = LLMClient.chat(
+    model=model,
+    user_content=text,
+    api_key=api_key, # The secret key
+    base_url=base_url if base_url else None, # The malicious URL
+    # ...
+)
+```
+
+**Recommendation:**
+Mitigate this risk by controlling which URLs can be used.
+
+1.  **Whitelist Known URLs:** For providers with known endpoints (OpenAI, OpenRouter, Gemini), ignore the `base_url` property from the flow and use a hardcoded, known-good URL. Only allow a user-provided `base_url` for the "OpenAI-Compatible" node type.
+2.  **Warn on Custom URLs:** For the "OpenAI-Compatible" node, if `base_url` is set to a non-standard value, display a prominent warning to the user before execution, stating that their API key will be sent to the specified domain. For example: `Security Warning: This flow will send your 'compatible' API key to the custom URL: [url]. Do you want to proceed?`
+
+### Medium-Severity Findings
+
+#### Finding 3: Lack of Security Warning for Untrusted Flows
+
+*   **Severity:** Medium
+*   **Files:** `aicodeprep_gui/pro/flow/flow_dock.py`
+
+**Description:**
+The application allows users to import and load flow files from disk without any warning about the potential security implications. As demonstrated by the high-severity findings, these files are not just data; they are executable graphs that can perform sensitive operations. A user could be socially engineered into downloading and running a malicious flow, believing it to be benign.
+
+**(Credit: This contextualizes the root cause highlighted by both candidates.)**
+
+**Recommendation:**
+When a user initiates an import or load operation, display a clear and non-dismissible security warning.
+
+*   **Warning Text Example:** "You are about to load an external flow file. Flows from untrusted sources can access your files and API keys. Only load flows from sources you trust. Do you want to continue?"
+
+### Other Considerations and Clarifications
+
+*   **API Key Logging (Correction to Candidate 2):** The code **does not** log API keys. It correctly logs `bool(api_key)`, which is secure. No action is needed here.
+*   **API Key Storage (Correction to Candidate 2):** Storing API keys in a plain-text TOML file within the user's profile directory is standard for many developer tools. While not as secure as using the OS credential manager (e.g., Keychain, Windows Credential Manager), it is not a high-severity vulnerability on its own. A good long-term improvement would be to integrate with such OS-level services.
+*   **Deserialization (Correction to Candidate 2):** The use of `json.load` is safe and does not introduce a classic deserialization vulnerability (like arbitrary code execution). The risk comes from the application's unsafe use of the trusted data *after* it has been parsed. The recommendations above address this by validating the data before use.
+
+
+
+---
+
+
+here is copy/paste from terminal output:
+'''> python -m aicodeprep_gui.main                                                                                                                                           
+2025-10-13 07:38:24,975 - INFO - Loaded font: JetBrains Mono from JetBrainsMono-VariableFont_wght.ttf
+2025-10-13 07:38:24,988 - INFO - Loaded font: Fira Code from FiraCode-VariableFont_wght.ttf
+2025-10-13 07:38:25,001 - INFO - Loaded font: Space Mono from SpaceMono-Regular.ttf
+2025-10-13 07:38:25,002 - INFO - All loaded custom fonts: JetBrains Mono, Fira Code, Space Mono
+2025-10-13 07:38:25,003 - INFO - Loaded custom fonts: JetBrains Mono, Fira Code, Space Mono
+2025-10-13 07:38:25,003 - INFO - Target directory: .
+2025-10-13 07:38:25,004 - INFO - Starting code concatenation...
+2025-10-13 07:38:25,004 - INFO - Starting initial fast scan in: C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app
+2025-10-13 07:38:26,500 - INFO - Initial scan collected 241 items.
+2025-10-13 07:38:26,605 - INFO - Sent metric event: open
+2025-10-13 07:38:26,620 - INFO - Loaded font: JetBrains Mono from JetBrainsMono-VariableFont_wght.ttf
+2025-10-13 07:38:26,625 - INFO - Loaded font: Fira Code from FiraCode-VariableFont_wght.ttf
+2025-10-13 07:38:26,626 - INFO - Loaded font: Space Mono from SpaceMono-Regular.ttf
+2025-10-13 07:38:26,626 - INFO - All loaded custom fonts: JetBrains Mono, Fira Code, Space Mono
+Font debug info: Loaded font families: ['JetBrains Mono', 'Fira Code', 'Space Mono']
+2025-10-13 07:38:28,266 - INFO - SyntaxHighlightedTextEdit: Using font family 'JetBrains Mono' (requested: 'JetBrains Mono')
+2025-10-13 07:38:28,271 - INFO - Loaded preview window state from preferences: False
+2025-10-13 07:38:28,271 - INFO - Loaded syntax highlighting state from preferences: True
+2025-10-13 07:38:29,433 - INFO - Application is up to date. (current: 1.2.0, latest: 1.2.0)
+2025-10-13 07:38:31,548 - INFO - NodeGraph type: <class 'NodeGraphQt.base.graph.NodeGraph'>
+2025-10-13 07:38:31,548 - INFO - NodeGraph attributes: ['acyclic', 'add_node', 'add_properties_bin', 'all_nodes', 'auto_layout_nodes', 'background_color', 'begin_undo', 'blockSignals', 'center_on', 'center_selection', 'childEvent', 'children', 'clear_selection', 'clear_session', 'clear_undo_stack', 'close', 'collapse_group_node', 'connect', 'connectNotify', 'context_menu', 'context_menu_prompt', 'context_nodes_menu', 'copy_nodes', 'create_node', 'current_session', 'cursor_pos', 'customEvent', 'cut_nodes', 'data_dropped', 'deleteLater', 'delete_node', 'delete_nodes', 'deserialize_session', 'destroyed', 'disable_context_menu', 'disable_nodes', 'disconnect', 'disconnectNotify', 'dumpObjectInfo', 'dumpObjectTree', 'duplicate_nodes', 'dynamicPropertyNames', 'emit', 'end_undo', 'event', 'eventFilter', 'expand_group_node', 'extract_nodes', 'findChild', 'findChildren', 'fit_to_selection', 'get_context_menu', 'get_node_by_id', 'get_node_by_name', 'get_nodes_by_type', 'get_unique_name', 'get_zoom', 'grid_color', 'import_session', 'inherits', 'installEventFilter', 'invert_selection', 'isQuickItemType', 'isSignalConnected', 'isWidgetType', 'isWindowType', 'is_root', 'killTimer', 'layout_direction', 'load_dialog', 'load_session', 'message_dialog', 'metaObject', 'model', 'moveToThread', 'node_created', 'node_double_clicked', 'node_factory', 'node_selected', 'node_selection_changed', 'nodes_deleted', 'nodes_registered', 'objectName', 'objectNameChanged', 'parent', 'paste_nodes', 'pipe_collision', 'pipe_slicing', 'pipe_style', 'port_connected', 'port_disconnected', 'property', 'property_changed', 'question_dialog', 'receivers', 'register_node', 'register_nodes', 'registered_nodes', 'removeEventFilter', 'remove_node', 'reset_zoom', 'save_dialog', 'save_session', 'scene', 'select_all', 'selected_nodes', 'sender', 'senderSignalIndex', 'serialize_session', 'session_changed', 'setObjectName', 'setParent', 'setProperty', 'set_acyclic', 'set_background_color', 'set_context_menu', 'set_context_menu_from_file', 'set_grid_color', 'set_grid_mode', 'set_layout_direction', 'set_pipe_collision', 'set_pipe_slicing', 'set_pipe_style', 'set_zoom', 'show', 'signalsBlocked', 'startTimer', 'staticMetaObject', 'sub_graphs', 'thread', 'timerEvent', 'toggle_node_search', 'tr', 'undo_stack', 'undo_view', 'use_OpenGL', 'viewer', 'widget']
+2025-10-13 07:38:31,549 - INFO - Widget type: <class 'NodeGraphQt.widgets.node_graph.NodeGraphWidget'>
+2025-10-13 07:38:31,549 - INFO - Widget attributes: ['PaintDeviceMetric', 'RenderFlag', 'TabPosition', 'TabShape', 'acceptDrops', 'accessibleDescription', 'accessibleIdentifier', 'accessibleName', 'actionEvent', 'actions', 'activateWindow', 'addAction', 'addActions', 'addTab', 'add_viewer', 'adjustSize', 'autoFillBackground', 'backgroundRole', 'backingStore', 'baseSize', 'blockSignals', 'changeEvent', 'childAt', 'childEvent', 'children', 'childrenRect', 'childrenRegion', 'clear', 'clearFocus', 'clearMask', 'close', 'closeEvent', 'colorCount', 'connect', 'connectNotify', 'contentsMargins', 'contentsRect', 'contextMenuEvent', 'contextMenuPolicy', 'cornerWidget', 'count', 'create', 'createWinId', 'createWindowContainer', 'currentChanged', 'currentIndex', 'currentWidget', 'cursor', 'customContextMenuRequested', 'customEvent', 'deleteLater', 'depth', 'destroy', 'destroyed', 'devType', 'devicePixelRatio', 'devicePixelRatioF', 'devicePixelRatioFScale', 'disconnect', 'disconnectNotify', 'documentMode', 'dragEnterEvent', 'dragLeaveEvent', 'dragMoveEvent', 'dropEvent', 'dumpObjectInfo', 'dumpObjectTree', 'dynamicPropertyNames', 'effectiveWinId', 'elideMode', 'emit', 'encodeMetricF', 'ensurePolished', 'enterEvent', 'event', 'eventFilter', 'find', 'findChild', 'findChildren', 'focusInEvent', 'focusNextChild', 'focusNextPrevChild', 'focusOutEvent', 'focusPolicy', 'focusPreviousChild', 'focusProxy', 'focusWidget', 'font', 'fontInfo', 'fontMetrics', 'foregroundRole', 'frameGeometry', 'frameSize', 'geometry', 'grab', 'grabGesture', 'grabKeyboard', 'grabMouse', 'grabShortcut', 'graphicsEffect', 'graphicsProxyWidget', 'hasFocus', 'hasHeightForWidth', 'hasMouseTracking', 'hasTabletTracking', 'height', 'heightForWidth', 'heightMM', 'hide', 'hideEvent', 'iconSize', 'indexOf', 'inherits', 'initPainter', 'initStyleOption', 'inputMethodEvent', 'inputMethodHints', 'inputMethodQuery', 'insertAction', 'insertActions', 'insertTab', 'installEventFilter', 'internalWinId', 'isActiveWindow', 'isAncestorOf', 'isEnabled', 'isEnabledTo', 'isFullScreen', 'isHidden', 'isLeftToRight', 'isMaximized', 'isMinimized', 'isModal', 'isMovable', 'isQuickItemType', 'isRightToLeft', 'isSignalConnected', 'isTabEnabled', 'isTabVisible', 'isTopLevel', 'isVisible', 'isVisibleTo', 'isWidgetType', 'isWindow', 'isWindowModified', 'isWindowType', 'keyPressEvent', 'keyReleaseEvent', 'keyboardGrabber', 'killTimer', 'layout', 'layoutDirection', 'leaveEvent', 'locale', 'logicalDpiX', 'logicalDpiY', 'lower', 'mapFrom', 'mapFromGlobal', 'mapFromParent', 'mapTo', 'mapToGlobal', 'mapToParent', 'mask', 'maximumHeight', 'maximumSize', 'maximumWidth', 'metaObject', 'metric', 'minimumHeight', 'minimumSize', 'minimumSizeHint', 'minimumWidth', 'mouseDoubleClickEvent', 'mouseGrabber', 'mouseMoveEvent', 'mousePressEvent', 'mouseReleaseEvent', 'move', 'moveEvent', 'moveToThread', 'nativeEvent', 'nativeParentWidget', 'nextInFocusChain', 'normalGeometry', 'objectName', 'objectNameChanged', 'overrideWindowFlags', 'overrideWindowState', 'paintEngine', 'paintEvent', 'painters', 'paintingActive', 'palette', 'parent', 'parentWidget', 'physicalDpiX', 'physicalDpiY', 'pos', 'previousInFocusChain', 'property', 'raise_', 'receivers', 'rect', 'redirected', 'releaseKeyboard', 'releaseMouse', 'releaseShortcut', 'removeAction', 'removeEventFilter', 'removeTab', 'remove_viewer', 'render', 'repaint', 'resize', 'resizeEvent', 'restoreGeometry', 'saveGeometry', 'screen', 'scroll', 'sender', 'senderSignalIndex', 'setAcceptDrops', 'setAccessibleDescription', 'setAccessibleIdentifier', 'setAccessibleName', 'setAttribute', 'setAutoFillBackground', 'setBackgroundRole', 'setBaseSize', 'setContentsMargins', 'setContextMenuPolicy', 'setCornerWidget', 'setCurrentIndex', 'setCurrentWidget', 'setCursor', 'setDisabled', 'setDocumentMode', 'setElideMode', 'setEnabled', 'setFixedHeight', 'setFixedSize', 'setFixedWidth', 'setFocus', 'setFocusPolicy', 'setFocusProxy', 'setFont', 'setForegroundRole', 'setGeometry', 'setGraphicsEffect', 'setHidden', 'setIconSize', 'setInputMethodHints', 'setLayout', 'setLayoutDirection', 'setLocale', 'setMask', 'setMaximumHeight', 'setMaximumSize', 'setMaximumWidth', 'setMinimumHeight', 'setMinimumSize', 'setMinimumWidth', 'setMouseTracking', 'setMovable', 'setObjectName', 'setPalette', 'setParent', 'setProperty', 'setScreen', 'setShortcutAutoRepeat', 'setShortcutEnabled', 'setSizeIncrement', 'setSizePolicy', 'setStatusTip', 'setStyle', 'setStyleSheet', 'setTabBar', 'setTabBarAutoHide', 'setTabEnabled', 'setTabIcon', 'setTabOrder', 'setTabPosition', 'setTabShape', 'setTabText', 'setTabToolTip', 'setTabVisible', 'setTabWhatsThis', 'setTabletTracking', 'setTabsClosable', 'setToolTip', 'setToolTipDuration', 'setUpdatesEnabled', 'setUsesScrollButtons', 'setVisible', 'setWhatsThis', 'setWindowFilePath', 'setWindowFlag', 'setWindowFlags', 'setWindowIcon', 'setWindowIconText', 'setWindowModality', 'setWindowModified', 'setWindowOpacity', 'setWindowRole', 'setWindowState', 'setWindowTitle', 'sharedPainter', 'show', 'showEvent', 'showFullScreen', 'showMaximized', 'showMinimized', 'showNormal', 'signalsBlocked', 'size', 'sizeHint', 'sizeIncrement', 'sizePolicy', 'stackUnder', 'startTimer', 'staticMetaObject', 'statusTip', 'style', 'styleSheet', 'tabBar', 'tabBarAutoHide', 'tabBarClicked', 'tabBarDoubleClicked', 'tabCloseRequested', 'tabIcon', 'tabInserted', 'tabPosition', 'tabRemoved', 'tabShape', 'tabText', 'tabToolTip', 'tabWhatsThis', 'tabletEvent', 'tabsClosable', 'testAttribute', 'thread', 'timerEvent', 'toolTip', 'toolTipDuration', 'topLevelWidget', 'tr', 'underMouse', 'ungrabGesture', 'unsetCursor', 'unsetLayoutDirection', 'unsetLocale', 'update', 'updateGeometry', 'updateMicroFocus', 'updatesEnabled', 'usesScrollButtons', 'visibleRegion', 'whatsThis', 'wheelEvent', 'widget', 'width', 'widthMM', 'winId', 'window', 'windowFilePath', 'windowFlags', 'windowHandle', 'windowIcon', 'windowIconChanged', 'windowIconText', 'windowIconTextChanged', 'windowModality', 'windowOpacity', 'windowRole', 'windowState', 'windowTitle', 'windowTitleChanged', 'windowType', 'x', 'y']
+2025-10-13 07:38:31,549 - INFO - Found graph.viewer: <class 'method'> - callable: True
+2025-10-13 07:38:31,549 - INFO - Called viewer() -> <class 'NodeGraphQt.widgets.viewer.NodeViewer'>
+2025-10-13 07:38:31,549 - INFO - Found graph._viewer: <class 'NodeGraphQt.widgets.viewer.NodeViewer'> - callable: False
+2025-10-13 07:38:31,550 - INFO - Direct access to _viewer: <class 'NodeGraphQt.widgets.viewer.NodeViewer'>
+2025-10-13 07:38:31,551 - INFO - Found QGraphicsView in widget hierarchy: <class 'NodeGraphQt.widgets.viewer.NodeViewer'>
+2025-10-13 07:38:31,551 - INFO - Evaluating graph.viewer(): dragMode=True, scene=True, viewport=True
+2025-10-13 07:38:31,551 - INFO - Selected viewer from: graph.viewer()
+2025-10-13 07:38:31,551 - INFO - Final viewer: <class 'NodeGraphQt.widgets.viewer.NodeViewer'>
+2025-10-13 07:38:31,551 - INFO - Pan/drag methods: ['DragMode', '_set_viewer_pan', 'dragEnterEvent', 'dragLeaveEvent', 'dragMode', 'dragMoveEvent', 'setDragMode']
+2025-10-13 07:38:31,552 - INFO - Mode/state methods: ['ALT_state', 'COLLIDING_state', 'CTRL_state', 'CacheModeFlag', 'DragMode', 'LMB_state', 'MMB_state', 'RMB_state', 'SHIFT_state', 'ViewportUpdateMode', 'cacheMode', 'clear_key_state', 'dragMode', 'grabMouse', 'hasMouseTracking', 'mouseDoubleClickEvent', 'mouseGrabber', 'mouseMoveEvent', 'mousePressEvent', 'mouseReleaseEvent', 'overrideWindowState', 'releaseMouse', 'rubberBandSelectionMode', 'sceneMouseMoveEvent', 'sceneMousePressEvent', 'sceneMouseReleaseEvent', 'setCacheMode', 'setDragMode', 'setMouseTracking', 'setRubberBandSelectionMode', 'setViewportUpdateMode', 'setWindowState', 'underMouse', 'viewportUpdateMode', 'windowHandle', 'windowState']
+2025-10-13 07:38:31,553 - INFO - Pan event filter installed on viewer and graph widget
+2025-10-13 07:38:33,011 - INFO - HTTP Request: GET https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json "HTTP/1.1 200 OK"
+2025-10-13 07:38:33,704 - INFO - ✅ Registered: aicp.flow.ContextOutputNode
+2025-10-13 07:38:33,705 - INFO - ✅ Registered: aicp.flow.ClipboardNode
+2025-10-13 07:38:33,705 - INFO - ✅ Registered: aicp.flow.FileWriteNode
+2025-10-13 07:38:33,705 - INFO - ✅ Registered: aicp.flow.OutputDisplayNode
+2025-10-13 07:38:33,705 - INFO - ✅ Registered: aicp.flow.OpenRouterNode
+2025-10-13 07:38:33,705 - INFO - ✅ Registered: aicp.flow.OpenAINode
+2025-10-13 07:38:33,705 - INFO - ✅ Registered: aicp.flow.GeminiNode
+2025-10-13 07:38:33,705 - INFO - ✅ Registered: aicp.flow.OpenAICompatibleNode
+2025-10-13 07:38:33,706 - INFO - ✅ Registered: aicp.flow.BestOfNNode
+2025-10-13 07:38:33,706 - INFO - ✅ Registered 0 nodes: []
+2025-10-13 07:38:33,706 - ERROR - Failed to setup node creation menu: NodeGraph.set_context_menu() got an unexpected keyword argument 'graph'
+2025-10-13 07:38:33,708 - INFO - [Flow Serializer] JSON validation passed for C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app\.aicodeprep-flow.json
+2025-10-13 07:38:33,708 - INFO - [Flow Serializer] Clearing graph before loading C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app\.aicodeprep-flow.json...
+2025-10-13 07:38:33,763 - INFO - [Flow Serializer] Loading session from: C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app\.aicodeprep-flow.json
+2025-10-13 07:38:33,764 - ERROR - [Flow Serializer] load_session failed: the JSON object must be str, bytes or bytearray, not dict
+Traceback (most recent call last):
+  File "C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app\aicodeprep_gui\pro\flow\serializer.py", line 128, in load_session
+    graph.load_session(file_path)  # type: ignore
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\NodeGraphQt\base\graph.py", line 1967, in load_session
+    self.import_session(file_path, clear_undo_stack=True)
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\NodeGraphQt\base\graph.py", line 1991, in import_session
+    self.deserialize_session(
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\NodeGraphQt\base\graph.py", line 1913, in deserialize_session
+    self._deserialize(layout_data)
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\NodeGraphQt\base\graph.py", line 1807, in _deserialize
+    attr_value = json.loads(attr_value)
+                 ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python311\Lib\json\__init__.py", line 339, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+TypeError: the JSON object must be str, bytes or bytearray, not dict
+2025-10-13 07:38:33,837 - INFO - ✅ PropertiesBinWidget created successfully
+2025-10-13 07:38:33,841 - INFO - ✅ Connected node_selected to show properties on single click
+2025-10-13 07:38:33,841 - INFO - ✅ Properties panel added to layout
+2025-10-13 07:38:50,423 - INFO - [Flow Serializer] JSON validation passed for D:/flow12.json
+2025-10-13 07:38:50,424 - INFO - [Flow Serializer] Clearing graph before loading D:/flow12.json...
+2025-10-13 07:38:50,554 - INFO - [Flow Serializer] Loading session from: D:/flow12.json
+2025-10-13 07:38:50,555 - ERROR - [Flow Serializer] load_session failed: the JSON object must be str, bytes or bytearray, not dict
+Traceback (most recent call last):
+  File "C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app\aicodeprep_gui\pro\flow\serializer.py", line 128, in load_session
+    graph.load_session(file_path)  # type: ignore
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\NodeGraphQt\base\graph.py", line 1967, in load_session
+    self.import_session(file_path, clear_undo_stack=True)
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\NodeGraphQt\base\graph.py", line 1991, in import_session
+    self.deserialize_session(
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\NodeGraphQt\base\graph.py", line 1913, in deserialize_session
+    self._deserialize(layout_data)
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\NodeGraphQt\base\graph.py", line 1807, in _deserialize
+    attr_value = json.loads(attr_value)
+                 ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python311\Lib\json\__init__.py", line 339, in loads
+    raise TypeError(f'the JSON object must be str, bytes or bytearray, '
+TypeError: the JSON object must be str, bytes or bytearray, not dict
+2025-10-13 07:38:57,066 - INFO - [Flow Serializer] JSON validation passed for D:/flow10.json
+2025-10-13 07:38:57,067 - INFO - [Flow Serializer] Clearing graph before loading D:/flow10.json...
+2025-10-13 07:38:57,190 - INFO - [Flow Serializer] Loading session from: D:/flow10.json
+2025-10-13 07:38:57,233 - INFO - [Flow Serializer] Successfully loaded session from: D:/flow10.json
+2025-10-13 07:38:57,234 - INFO - ℹ️ Already registered: aicp.flow.ContextOutputNode
+2025-10-13 07:38:57,234 - INFO - ℹ️ Already registered: aicp.flow.ClipboardNode
+2025-10-13 07:38:57,234 - INFO - ℹ️ Already registered: aicp.flow.FileWriteNode
+2025-10-13 07:38:57,234 - INFO - ℹ️ Already registered: aicp.flow.OutputDisplayNode
+2025-10-13 07:38:57,234 - INFO - ℹ️ Already registered: aicp.flow.OpenRouterNode
+2025-10-13 07:38:57,234 - INFO - ℹ️ Already registered: aicp.flow.OpenAINode
+2025-10-13 07:38:57,234 - INFO - ℹ️ Already registered: aicp.flow.GeminiNode
+2025-10-13 07:38:57,234 - INFO - ℹ️ Already registered: aicp.flow.OpenAICompatibleNode
+2025-10-13 07:38:57,234 - INFO - ℹ️ Already registered: aicp.flow.BestOfNNode
+2025-10-13 07:38:57,235 - INFO - ✅ Registered 0 nodes: []
+2025-10-13 07:39:11,486 - INFO - Creating node: aicp.flow.OpenAINode at position (502.82698164674457, 288.5072845514108)
+2025-10-13 07:39:11,490 - INFO - ✅ Created node: aicp.flow.OpenAINode
+2025-10-13 07:43:41,381 - INFO - Sent metric event: generate_start
+2025-10-13 07:43:41,390 - INFO - Writing output to: C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app\fullcode.txt
+2025-10-13 07:43:41,391 - INFO - Processed: aicodeprep_gui\pro\flow\nodes\aggregate_nodes.py
+2025-10-13 07:43:41,392 - INFO - Processed: aicodeprep_gui\pro\flow\nodes\base.py
+2025-10-13 07:43:41,392 - INFO - Processed: aicodeprep_gui\pro\flow\nodes\io_nodes.py
+2025-10-13 07:43:41,393 - INFO - Processed: aicodeprep_gui\pro\flow\nodes\llm_nodes.py
+2025-10-13 07:43:41,393 - INFO - Processed: aicodeprep_gui\pro\flow\engine.py
+2025-10-13 07:43:41,394 - INFO - Processed: aicodeprep_gui\pro\flow\flow_dock.py
+2025-10-13 07:43:41,394 - INFO - Processed: aicodeprep_gui\pro\flow\progress_dialog.py
+2025-10-13 07:43:41,395 - INFO - Processed: aicodeprep_gui\pro\flow\serializer.py
+2025-10-13 07:43:41,395 - INFO - Processed: aicodeprep_gui\pro\flow\__init__.py
+2025-10-13 07:43:41,395 - INFO - Processed: aicodeprep_gui\pro\llm\litellm_client.py
+2025-10-13 07:43:41,396 - INFO - Processed: aicodeprep_gui\main.py
+2025-10-13 07:43:41,439 - INFO - Copied 168453 chars to clipboard.
+2025-10-13 07:43:41,442 - INFO - Saved preferences to C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app\.aicodeprep-gui
+2025-10-13 07:43:47,051 - INFO - Executing level 1/4 with 2 node(s)
+2025-10-13 07:43:47,052 - INFO - Executing 2 nodes in parallel
+2025-10-13 07:43:47,114 - INFO - Executing node: OpenRouter LLM 2 : gemini-2.5-f... : gemini-2.5-f... : gemini-2.5-f...
+2025-10-13 07:43:47,114 - WARNING - [OpenRouter LLM 2 : gemini-2.5-f... : gemini-2.5-f... : gemini-2.5-f...] No input 'text' provided.
+2025-10-13 07:43:47,115 - INFO - Executing node: Context Output: fullcode.txt
+2025-10-13 07:43:47,115 - INFO - Node OpenRouter LLM 2 : gemini-2.5-f... : gemini-2.5-f... : gemini-2.5-f... completed successfully
+2025-10-13 07:43:47,115 - INFO - [ContextOutputNode] Resolving context path C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app\fullcode.txt
+2025-10-13 07:43:47,121 - INFO - [ContextOutputNode] Loaded 168453 characters from context
+2025-10-13 07:43:47,121 - INFO - Node Context Output: fullcode.txt completed successfully
+2025-10-13 07:43:47,183 - INFO - Executing level 2/4 with 5 node(s)
+2025-10-13 07:43:47,184 - INFO - Executing 5 nodes in parallel
+2025-10-13 07:43:47,437 - INFO - Executing node: OpenRouter LLM 1 : codestral-2508 : codestral-2508
+2025-10-13 07:43:47,438 - INFO - Executing node: OpenRouter LLM 3 : glm-4.6 : glm-4.6
+2025-10-13 07:43:47,438 - INFO - Executing node: OpenRouter LLM 4 : glm-4.6 : glm-4.6
+2025-10-13 07:43:47,439 - INFO - Executing node: OpenAI LLM : gpt-5-mini : gpt-5-mini (T0.7)
+2025-10-13 07:43:47,439 - INFO - Executing node: OpenRouter LLM : gpt-5-codex : gpt-5-codex : gpt-5-codex (T0.7)
+2025-10-13 07:43:47,441 - INFO - [OpenRouter LLM 1 : codestral-2508 : codestral-2508] Provider: openrouter, Model: mistralai/codestral-2508, Base URL: https://openrouter.ai/api/v1
+2025-10-13 07:43:47,442 - INFO - [OpenRouter LLM 1 : codestral-2508 : codestral-2508] OpenRouter mode: choose
+2025-10-13 07:43:47,442 - INFO - [OpenRouter LLM 3 : glm-4.6 : glm-4.6] Provider: openrouter, Model: z-ai/glm-4.6, Base URL: https://openrouter.ai/api/v1
+2025-10-13 07:43:47,442 - INFO - [OpenRouter LLM 4 : glm-4.6 : glm-4.6] Provider: openrouter, Model: z-ai/glm-4.6, Base URL: https://openrouter.ai/api/v1
+2025-10-13 07:43:47,442 - INFO - [OpenRouter LLM 1 : codestral-2508 : codestral-2508] Added openrouter prefix: openrouter/mistralai/codestral-2508
+2025-10-13 07:43:47,442 - INFO - [OpenRouter LLM 3 : glm-4.6 : glm-4.6] OpenRouter mode: choose
+2025-10-13 07:43:47,443 - INFO - [OpenRouter LLM 4 : glm-4.6 : glm-4.6] OpenRouter mode: choose
+2025-10-13 07:43:47,443 - INFO - [OpenRouter LLM : gpt-5-codex : gpt-5-codex : gpt-5-codex (T0.7)] Provider: openrouter, Model: openai/gpt-5-codex, Base URL: https://openrouter.ai/api/v1
+2025-10-13 07:43:47,443 - INFO - [OpenRouter LLM 1 : codestral-2508 : codestral-2508] Making LLM call with model: openrouter/mistralai/codestral-2508
+2025-10-13 07:43:47,443 - INFO - [OpenRouter LLM 3 : glm-4.6 : glm-4.6] Added openrouter prefix: openrouter/z-ai/glm-4.6
+2025-10-13 07:43:47,443 - INFO - [OpenRouter LLM 4 : glm-4.6 : glm-4.6] Added openrouter prefix: openrouter/z-ai/glm-4.6
+2025-10-13 07:43:47,444 - INFO - [OpenRouter LLM : gpt-5-codex : gpt-5-codex : gpt-5-codex (T0.7)] OpenRouter mode: choose
+2025-10-13 07:43:47,444 - INFO - [OpenRouter LLM 1 : codestral-2508 : codestral-2508] API details - provider: openrouter, base_url: https://openrouter.ai/api/v1, input_length: 168453, has_system: False, temperature: 0.7, top_p: 1.0
+2025-10-13 07:43:47,444 - INFO - [OpenAI LLM : gpt-5-mini : gpt-5-mini (T0.7)] Provider: openai, Model: gpt-5-mini, Base URL: https://api.openai.com/v1
+2025-10-13 07:43:47,444 - INFO - [OpenRouter LLM 3 : glm-4.6 : glm-4.6] Making LLM call with model: openrouter/z-ai/glm-4.6
+2025-10-13 07:43:47,445 - INFO - [OpenRouter LLM 4 : glm-4.6 : glm-4.6] Making LLM call with model: openrouter/z-ai/glm-4.6
+2025-10-13 07:43:47,445 - INFO - [OpenRouter LLM : gpt-5-codex : gpt-5-codex : gpt-5-codex (T0.7)] Added openrouter prefix: openrouter/openai/gpt-5-codex
+2025-10-13 07:43:47,445 - INFO - [OpenAI LLM : gpt-5-mini : gpt-5-mini (T0.7)] Making LLM call with model: gpt-5-mini
+2025-10-13 07:43:47,445 - INFO - [OpenRouter LLM 3 : glm-4.6 : glm-4.6] API details - provider: openrouter, base_url: https://openrouter.ai/api/v1, input_length: 168453, has_system: False, temperature: 0.7, top_p: 1.0
+2025-10-13 07:43:47,445 - INFO - [OpenRouter LLM 4 : glm-4.6 : glm-4.6] API details - provider: openrouter, base_url: https://openrouter.ai/api/v1, input_length: 168453, has_system: False, temperature: 0.7, top_p: 1.0
+2025-10-13 07:43:47,446 - INFO - [OpenRouter LLM : gpt-5-codex : gpt-5-codex : gpt-5-codex (T0.7)] Making LLM call with model: openrouter/openai/gpt-5-codex
+2025-10-13 07:43:47,446 - INFO - [OpenAI LLM : gpt-5-mini : gpt-5-mini (T0.7)] API details - provider: openai, base_url: https://api.openai.com/v1, input_length: 168453, has_system: False, temperature: 0.7, top_p: 1.0
+2025-10-13 07:43:47,446 - INFO - LiteLLM call starting - model: openrouter/mistralai/codestral-2508, base_url: https://openrouter.ai/api/v1, has_api_key: True
+2025-10-13 07:43:47,447 - INFO - [OpenRouter LLM : gpt-5-codex : gpt-5-codex : gpt-5-codex (T0.7)] API details - provider: openrouter, base_url: https://openrouter.ai/api/v1, input_length: 168453, has_system: False, temperature: 0.7, top_p: 1.0
+2025-10-13 07:43:47,447 - INFO - LiteLLM call starting - model: gpt-5-mini, base_url: https://api.openai.com/v1, has_api_key: True
+2025-10-13 07:43:47,447 - INFO - LiteLLM request details - messages: 1 message(s), user_content_length: 168453, extra_headers: ['Accept', 'HTTP-Referer', 'X-Title']
+2025-10-13 07:43:47,447 - INFO - LiteLLM call starting - model: openrouter/z-ai/glm-4.6, base_url: https://openrouter.ai/api/v1, has_api_key: True
+2025-10-13 07:43:47,448 - INFO - LiteLLM request details - messages: 1 message(s), user_content_length: 168453, extra_headers: None
+2025-10-13 07:43:47,448 - WARNING - Large input detected (168453 chars). This may take a while or hit token limits.
+2025-10-13 07:43:47,448 - INFO - LiteLLM request details - messages: 1 message(s), user_content_length: 168453, extra_headers: ['Accept', 'HTTP-Referer', 'X-Title']
+2025-10-13 07:43:47,448 - INFO - LiteLLM call starting - model: openrouter/z-ai/glm-4.6, base_url: https://openrouter.ai/api/v1, has_api_key: True
+2025-10-13 07:43:47,448 - WARNING - Large input detected (168453 chars). This may take a while or hit token limits.
+07:43:47 - LiteLLM:INFO: utils.py:2760 -
+LiteLLM completion() model= gpt-5-mini; provider = openai
+2025-10-13 07:43:47,451 - WARNING - Large input detected (168453 chars). This may take a while or hit token limits.
+07:43:47 - LiteLLM:INFO: utils.py:2760 -
+LiteLLM completion() model= z-ai/glm-4.6; provider = openrouter
+2025-10-13 07:43:47,451 - INFO - LiteLLM call starting - model: openrouter/openai/gpt-5-codex, base_url: https://openrouter.ai/api/v1, has_api_key: True
+2025-10-13 07:43:47,452 - INFO - LiteLLM request details - messages: 1 message(s), user_content_length: 168453, extra_headers: ['Accept', 'HTTP-Referer', 'X-Title']
+2025-10-13 07:43:47,459 - INFO -
+LiteLLM completion() model= gpt-5-mini; provider = openai
+2025-10-13 07:43:47,462 - INFO -
+LiteLLM completion() model= z-ai/glm-4.6; provider = openrouter
+2025-10-13 07:43:47,462 - INFO - LiteLLM request details - messages: 1 message(s), user_content_length: 168453, extra_headers: ['Accept', 'HTTP-Referer', 'X-Title']
+2025-10-13 07:43:47,463 - WARNING - Large input detected (168453 chars). This may take a while or hit token limits.
+07:43:47 - LiteLLM:INFO: utils.py:2760 -
+LiteLLM completion() model= z-ai/glm-4.6; provider = openrouter
+2025-10-13 07:43:47,467 - WARNING - Large input detected (168453 chars). This may take a while or hit token limits.
+07:43:47 - LiteLLM:INFO: utils.py:2760 -
+LiteLLM completion() model= openai/gpt-5-codex; provider = openrouter
+2025-10-13 07:43:47,470 - INFO -
+LiteLLM completion() model= z-ai/glm-4.6; provider = openrouter
+2025-10-13 07:43:47,474 - INFO -
+LiteLLM completion() model= openai/gpt-5-codex; provider = openrouter
+07:43:47 - LiteLLM:INFO: utils.py:2760 - 
+LiteLLM completion() model= mistralai/codestral-2508; provider = openrouter
+2025-10-13 07:43:47,549 - INFO - 
+LiteLLM completion() model= mistralai/codestral-2508; provider = openrouter
+2025-10-13 07:43:48,772 - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 400 Bad Request"
+
+Give Feedback / Get Help: https://github.com/BerriAI/litellm/issues/new
+LiteLLM.Info: If you need to debug this error, use `litellm.set_verbose=True'.
+
+2025-10-13 07:43:48,981 - ERROR - Chat error: litellm.BadRequestError: OpenAIException - Error code: 400 - {'error': {'message': "Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported.", 'type': 'invalid_request_error', 'param': 'temperature', 'code': 'unsupported_value'}}
+Traceback (most recent call last):
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\llms\OpenAI\openai.py", line 860, in completion
+    raise e
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\llms\OpenAI\openai.py", line 796, in completion
+    self.make_sync_openai_chat_completion_request(
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\llms\OpenAI\openai.py", line 657, in make_sync_openai_chat_completion_request
+    raise e
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\llms\OpenAI\openai.py", line 639, in make_sync_openai_chat_completion_request
+    raw_response = openai_client.chat.completions.with_raw_response.create(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\openai\_legacy_response.py", line 364, in wrapped
+    return cast(LegacyAPIResponse[R], func(*args, **kwargs))
+                                      ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\openai\_utils\_utils.py", line 279, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\openai\resources\chat\completions\completions.py", line 879, in create
+    return self._post(
+           ^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\openai\_base_client.py", line 1290, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\openai\_base_client.py", line 967, in request
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\openai\_base_client.py", line 1071, in _request
+    raise self._make_status_error_from_response(err.response) from None
+openai.BadRequestError: Error code: 400 - {'error': {'message': "Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported.", 'type': 'invalid_request_error', 'param': 'temperature', 'code': 'unsupported_value'}}
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\main.py", line 1608, in completion
+    raise e
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\main.py", line 1581, in completion
+    response = openai_chat_completions.completion(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\llms\OpenAI\openai.py", line 870, in completion
+    raise OpenAIError(
+litellm.llms.OpenAI.openai.OpenAIError: Error code: 400 - {'error': {'message': "Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported.", 'type': 'invalid_request_error', 'param': 'temperature', 'code': 'unsupported_value'}}
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app\aicodeprep_gui\pro\llm\litellm_client.py", line 94, in chat
+    resp = litellm.completion(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\utils.py", line 972, in wrapper
+    raise e
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\utils.py", line 853, in wrapper
+    result = original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\main.py", line 3066, in completion
+    raise exception_type(
+          ^^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\litellm_core_utils\exception_mapping_utils.py", line 2137, in exception_type
+    raise e
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\litellm_core_utils\exception_mapping_utils.py", line 282, in exception_type
+    raise BadRequestError(
+litellm.exceptions.BadRequestError: litellm.BadRequestError: OpenAIException - Error code: 400 - {'error': {'message': "Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported.", 'type': 'invalid_request_error', 'param': 'temperature', 'code': 'unsupported_value'}}
+2025-10-13 07:43:48,986 - ERROR - Fatal LLM client error: Chat error: litellm.BadRequestError: OpenAIException - Error code: 400 - {'error': {'message': "Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported.", 'type': 'invalid_request_error', 'param': 'temperature', 'code': 'unsupported_value'}}
+Traceback (most recent call last):
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\llms\OpenAI\openai.py", line 860, in completion
+    raise e
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\llms\OpenAI\openai.py", line 796, in completion
+    self.make_sync_openai_chat_completion_request(
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\llms\OpenAI\openai.py", line 657, in make_sync_openai_chat_completion_request
+    raise e
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\llms\OpenAI\openai.py", line 639, in make_sync_openai_chat_completion_request
+    raw_response = openai_client.chat.completions.with_raw_response.create(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\openai\_legacy_response.py", line 364, in wrapped
+    return cast(LegacyAPIResponse[R], func(*args, **kwargs))
+                                      ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\openai\_utils\_utils.py", line 279, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\openai\resources\chat\completions\completions.py", line 879, in create
+    return self._post(
+           ^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\openai\_base_client.py", line 1290, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\openai\_base_client.py", line 967, in request
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\openai\_base_client.py", line 1071, in _request
+    raise self._make_status_error_from_response(err.response) from None
+openai.BadRequestError: Error code: 400 - {'error': {'message': "Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported.", 'type': 'invalid_request_error', 'param': 'temperature', 'code': 'unsupported_value'}}
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\main.py", line 1608, in completion
+    raise e
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\main.py", line 1581, in completion
+    response = openai_chat_completions.completion(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\llms\OpenAI\openai.py", line 870, in completion
+    raise OpenAIError(
+litellm.llms.OpenAI.openai.OpenAIError: Error code: 400 - {'error': {'message': "Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported.", 'type': 'invalid_request_error', 'param': 'temperature', 'code': 'unsupported_value'}}
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app\aicodeprep_gui\pro\llm\litellm_client.py", line 94, in chat
+    resp = litellm.completion(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\utils.py", line 972, in wrapper
+    raise e
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\utils.py", line 853, in wrapper
+    result = original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\main.py", line 3066, in completion
+    raise exception_type(
+          ^^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\litellm_core_utils\exception_mapping_utils.py", line 2137, in exception_type
+    raise e
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\litellm_core_utils\exception_mapping_utils.py", line 282, in exception_type
+    raise BadRequestError(
+litellm.exceptions.BadRequestError: litellm.BadRequestError: OpenAIException - Error code: 400 - {'error': {'message': "Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported.", 'type': 'invalid_request_error', 'param': 'temperature', 'code': 'unsupported_value'}}
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app\aicodeprep_gui\pro\llm\litellm_client.py", line 112, in chat
+    raise LLMError(error_msg) from e
+aicodeprep_gui.pro.llm.litellm_client.LLMError: Chat error: litellm.BadRequestError: OpenAIException - Error code: 400 - {'error': {'message': "Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported.", 'type': 'invalid_request_error', 'param': 'temperature', 'code': 'unsupported_value'}}
+2025-10-13 07:43:48,989 - WARNING - [OpenAI LLM : gpt-5-mini : gpt-5-mini (T0.7)] LLM Error: Fatal LLM client error: Chat error: litellm.BadRequestError: OpenAIException - Error code: 400 - {'error': {'message': "Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported.", 'type': 'invalid_request_error', 'param': 'temperature', 'code': 'unsupported_value'}}
+2025-10-13 07:43:48,989 - ERROR - [OpenAI LLM : gpt-5-mini : gpt-5-mini (T0.7)] LLM Error: Fatal LLM client error: Chat error: litellm.BadRequestError: OpenAIException - Error code: 400 - {'error': {'message': "Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported.", 'type': 'invalid_request_error', 'param': 'temperature', 'code': 'unsupported_value'}}
+Traceback (most recent call last):
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\llms\OpenAI\openai.py", line 860, in completion
+    raise e
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\llms\OpenAI\openai.py", line 796, in completion
+    self.make_sync_openai_chat_completion_request(
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\llms\OpenAI\openai.py", line 657, in make_sync_openai_chat_completion_request
+    raise e
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\llms\OpenAI\openai.py", line 639, in make_sync_openai_chat_completion_request
+    raw_response = openai_client.chat.completions.with_raw_response.create(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\openai\_legacy_response.py", line 364, in wrapped
+    return cast(LegacyAPIResponse[R], func(*args, **kwargs))
+                                      ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\openai\_utils\_utils.py", line 279, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\openai\resources\chat\completions\completions.py", line 879, in create
+    return self._post(
+           ^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\openai\_base_client.py", line 1290, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\openai\_base_client.py", line 967, in request
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\openai\_base_client.py", line 1071, in _request
+    raise self._make_status_error_from_response(err.response) from None
+openai.BadRequestError: Error code: 400 - {'error': {'message': "Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported.", 'type': 'invalid_request_error', 'param': 'temperature', 'code': 'unsupported_value'}}
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\main.py", line 1608, in completion
+    raise e
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\main.py", line 1581, in completion
+    response = openai_chat_completions.completion(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\llms\OpenAI\openai.py", line 870, in completion
+    raise OpenAIError(
+litellm.llms.OpenAI.openai.OpenAIError: Error code: 400 - {'error': {'message': "Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported.", 'type': 'invalid_request_error', 'param': 'temperature', 'code': 'unsupported_value'}}
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app\aicodeprep_gui\pro\llm\litellm_client.py", line 94, in chat
+    resp = litellm.completion(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\utils.py", line 972, in wrapper
+    raise e
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\utils.py", line 853, in wrapper
+    result = original_function(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\main.py", line 3066, in completion
+    raise exception_type(
+          ^^^^^^^^^^^^^^^
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\litellm_core_utils\exception_mapping_utils.py", line 2137, in exception_type
+    raise e
+  File "C:\Users\Basic\AppData\Roaming\Python\Python311\site-packages\litellm\litellm_core_utils\exception_mapping_utils.py", line 282, in exception_type
+    raise BadRequestError(
+litellm.exceptions.BadRequestError: litellm.BadRequestError: OpenAIException - Error code: 400 - {'error': {'message': "Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported.", 'type': 'invalid_request_error', 'param': 'temperature', 'code': 'unsupported_value'}}
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app\aicodeprep_gui\pro\llm\litellm_client.py", line 112, in chat
+    raise LLMError(error_msg) from e
+aicodeprep_gui.pro.llm.litellm_client.LLMError: Chat error: litellm.BadRequestError: OpenAIException - Error code: 400 - {'error': {'message': "Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported.", 'type': 'invalid_request_error', 'param': 'temperature', 'code': 'unsupported_value'}}
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app\aicodeprep_gui\pro\flow\nodes\llm_nodes.py", line 361, in run
+    out = LLMClient.chat(
+          ^^^^^^^^^^^^^^^
+  File "C:\2nd\Main\Git-Projects\aicpgui\aicodeprep-gui-main-app\aicodeprep_gui\pro\llm\litellm_client.py", line 117, in chat
+    raise LLMError(error_msg) from outer_e
+aicodeprep_gui.pro.llm.litellm_client.LLMError: Fatal LLM client error: Chat error: litellm.BadRequestError: OpenAIException - Error code: 400 - {'error': {'message': "Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported.", 'type': 'invalid_request_error', 'param': 'temperature', 'code': 'unsupported_value'}}
+2025-10-13 07:43:48,995 - INFO - Node OpenAI LLM : gpt-5-mini : gpt-5-mini (T0.7) completed successfully
+2025-10-13 07:43:49,039 - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-13 07:43:49,352 - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-13 07:43:52,434 - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-10-13 07:43:53,232 - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+07:44:02 - LiteLLM:INFO: utils.py:894 - Wrapper: Completed Call, calling success_handler
+2025-10-13 07:44:02,310 - INFO - Wrapper: Completed Call, calling success_handler
+2025-10-13 07:44:02,357 - INFO - LiteLLM call successful - response length: 3806
+2025-10-13 07:44:02,358 - INFO - [OpenRouter LLM 1 : codestral-2508 : codestral-2508] LLM call successful, response length: 3806
+2025-10-13 07:44:02,359 - INFO - [OpenRouter LLM 1 : codestral-2508 : codestral-2508] Wrote output to LLM4.md
+2025-10-13 07:44:02,359 - INFO - Node OpenRouter LLM 1 : codestral-2508 : codestral-2508 completed successfully
+07:44:32 - LiteLLM:INFO: utils.py:894 - Wrapper: Completed Call, calling success_handler
+2025-10-13 07:44:32,204 - INFO - Wrapper: Completed Call, calling success_handler
+2025-10-13 07:44:32,208 - INFO - LiteLLM call successful - response length: 3828
+2025-10-13 07:44:32,208 - INFO - [OpenRouter LLM 4 : glm-4.6 : glm-4.6] LLM call successful, response length: 3828
+2025-10-13 07:44:32,209 - INFO - [OpenRouter LLM 4 : glm-4.6 : glm-4.6] Wrote output to LLM2.md
+2025-10-13 07:44:32,209 - INFO - Node OpenRouter LLM 4 : glm-4.6 : glm-4.6 completed successfully
+07:44:41 - LiteLLM:INFO: utils.py:894 - Wrapper: Completed Call, calling success_handler
+2025-10-13 07:44:41,898 - INFO - Wrapper: Completed Call, calling success_handler
+2025-10-13 07:44:41,904 - INFO - LiteLLM call successful - response length: 4174
+2025-10-13 07:44:41,904 - INFO - [OpenRouter LLM 3 : glm-4.6 : glm-4.6] LLM call successful, response length: 4174
+2025-10-13 07:44:41,905 - INFO - [OpenRouter LLM 3 : glm-4.6 : glm-4.6] Wrote output to LLM3.md
+2025-10-13 07:44:41,905 - INFO - Node OpenRouter LLM 3 : glm-4.6 : glm-4.6 completed successfully
+07:45:11 - LiteLLM:INFO: utils.py:894 - Wrapper: Completed Call, calling success_handler
+2025-10-13 07:45:11,898 - INFO - Wrapper: Completed Call, calling success_handler
+2025-10-13 07:45:11,899 - INFO - LiteLLM call successful - response length: 3658
+2025-10-13 07:45:11,899 - INFO - [OpenRouter LLM : gpt-5-codex : gpt-5-codex : gpt-5-codex (T0.7)] LLM call successful, response length: 3658
+2025-10-13 07:45:11,900 - INFO - [OpenRouter LLM : gpt-5-codex : gpt-5-codex : gpt-5-codex (T0.7)] Wrote output to LLM1.md
+2025-10-13 07:45:11,900 - INFO - Node OpenRouter LLM : gpt-5-codex : gpt-5-codex : gpt-5-codex (T0.7) completed successfully
+2025-10-13 07:45:12,125 - INFO - Executing level 3/4 with 1 node(s)
+2025-10-13 07:45:12,174 - INFO - Executing node: Best-of-N Synthesizer
+2025-10-13 07:45:12,176 - INFO - [Best-of-N Synthesizer] Received 2 candidate(s), context length: 168451
+2025-10-13 07:45:12,176 - INFO - [Best-of-N Synthesizer] Candidate 1 length: 3658
+2025-10-13 07:45:12,176 - INFO - [Best-of-N Synthesizer] Candidate 2 length: 3806
+2025-10-13 07:45:12,176 - WARNING - [Best-of-N Synthesizer] Only 2 candidate(s) available (expected 5). Continuing with available candidates.
+2025-10-13 07:45:16,201 - INFO - [Best-of-N Synthesizer] Added openrouter prefix: openrouter/google/gemini-2.5-pro
+2025-10-13 07:45:16,202 - INFO - LiteLLM call starting - model: openrouter/google/gemini-2.5-pro, base_url: https://openrouter.ai/api/v1, has_api_key: True
+2025-10-13 07:45:16,202 - INFO - LiteLLM request details - messages: 1 message(s), user_content_length: 176781, extra_headers: ['Accept']
+2025-10-13 07:45:16,202 - WARNING - Large input detected (176781 chars). This may take a while or hit token limits.
+07:45:16 - LiteLLM:INFO: utils.py:2760 -
+LiteLLM completion() model= google/gemini-2.5-pro; provider = openrouter
+2025-10-13 07:45:16,205 - INFO -
+LiteLLM completion() model= google/gemini-2.5-pro; provider = openrouter
+2025-10-13 07:45:21,091 - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+07:46:18 - LiteLLM:INFO: utils.py:894 - Wrapper: Completed Call, calling success_handler
+2025-10-13 07:46:18,482 - INFO - Wrapper: Completed Call, calling success_handler
+2025-10-13 07:46:18,483 - INFO - LiteLLM call successful - response length: 11088
+2025-10-13 07:46:18,483 - INFO - Node Best-of-N Synthesizer completed successfully
+2025-10-13 07:46:18,682 - INFO - Executing level 4/4 with 2 node(s)
+2025-10-13 07:46:18,685 - INFO - Executing 2 nodes in parallel
+2025-10-13 07:46:18,925 - INFO - Executing node: Clipboard
+OleSetClipboard: Failed to set mime data (text/plain) on clipboard: COM error 0x800401f0: CoInitialize has not been called. (The operation completed successfully.)
+2025-10-13 07:46:18,926 - INFO - Node Clipboard completed successfully
+2025-10-13 07:46:18,926 - INFO - Executing node: File Write: ..._of_n-00.txt: ..._of_n-00.txt
+2025-10-13 07:46:18,929 - INFO - Node File Write: ..._of_n-00.txt: ..._of_n-00.txt completed successfully
+'''
+
+It did complete and did write the correct files, it says only two LLMs completed but i think i see more than 2 in the terminal saying completed? 
+There are 4 md files written at close to the same time, within a couple minutes, LLM1-LLM4.md but LLM5.md doesn't appear to have updated since a different day.
+

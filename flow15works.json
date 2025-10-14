@@ -5,14 +5,14 @@
     "pipe_collision": false,
     "pipe_slicing": true,
     "pipe_style": 1,
-    "accept_connection_types": {},
-    "reject_connection_types": {}
+    "accept_connection_types": "{}",
+    "reject_connection_types": "{}"
   },
   "nodes": {
-    "0x1f6a8c4ce10": {
+    "0x2187ea0fc90": {
       "type_": "aicp.flow.ContextOutputNode",
       "icon": null,
-      "name": "Context Output: fullcode.txt: fullcode.txt",
+      "name": "Context Output: fullcode.txt",
       "color": [
         50,
         200,
@@ -34,7 +34,7 @@
       "disabled": false,
       "selected": false,
       "visible": true,
-      "width": 191.515625,
+      "width": 160,
       "height": 60,
       "pos": [
         19.0,
@@ -49,10 +49,10 @@
         "use_latest_generated": true
       }
     },
-    "0x1f6a8c60b50": {
+    "0x2187ea21550": {
       "type_": "aicp.flow.OpenRouterNode",
       "icon": null,
-      "name": "gpt-5-codex",
+      "name": "OpenRouter LLM : gpt-5-codex : gpt-5-codex : qwen3-vl-30b...",
       "color": [
         50,
         200,
@@ -74,11 +74,11 @@
       "disabled": false,
       "selected": false,
       "visible": true,
-      "width": 160,
+      "width": 284.171875,
       "height": 74.2,
       "pos": [
-        380.06894860099146,
-        -439.193712736119
+        359.0,
+        -380.0
       ],
       "layout_direction": 0,
       "port_deletion_allowed": false,
@@ -87,7 +87,7 @@
         "version": "1.0.0",
         "provider": "openrouter",
         "model_mode": "choose",
-        "model": "openai/gpt-5-codex",
+        "model": "qwen/qwen3-vl-30b-a3b-thinking",
         "base_url": "https://openrouter.ai/api/v1",
         "output_file": "LLM1.md",
         "temperature": 0.7,
@@ -95,10 +95,10 @@
         "ui_hint_models": "Choose a model id, or set model_mode to 'random' or 'random_free'"
       }
     },
-    "0x1f6a8c637d0": {
+    "0x2187ea23dd0": {
       "type_": "aicp.flow.OpenRouterNode",
       "icon": null,
-      "name": "qwen3-next-80b-a3...",
+      "name": "OpenRouter LLM 1 : codestral-2508 : codestral-2508 : deepseek-v3....",
       "color": [
         50,
         200,
@@ -118,9 +118,9 @@
         180
       ],
       "disabled": false,
-      "selected": true,
+      "selected": false,
       "visible": true,
-      "width": 160,
+      "width": 320.421875,
       "height": 74.2,
       "pos": [
         359.0,
@@ -133,7 +133,7 @@
         "version": "1.0.0",
         "provider": "openrouter",
         "model_mode": "choose",
-        "model": "qwen/qwen3-next-80b-a3b-thinking",
+        "model": "deepseek/deepseek-v3.2-exp",
         "base_url": "https://openrouter.ai/api/v1",
         "output_file": "LLM4.md",
         "temperature": 0.7,
@@ -141,10 +141,10 @@
         "ui_hint_models": "Choose a model id, or set model_mode to 'random' or 'random_free'"
       }
     },
-    "0x1f6a8c621d0": {
+    "0x2187ea22550": {
       "type_": "aicp.flow.OpenRouterNode",
       "icon": null,
-      "name": "o4-mini",
+      "name": "OpenRouter LLM 2 : gemini-2.5-f... : gemini-2.5-f...",
       "color": [
         50,
         200,
@@ -179,7 +179,7 @@
         "version": "1.0.0",
         "provider": "openrouter",
         "model_mode": "choose",
-        "model": "openai/o4-mini",
+        "model": "google/gemini-2.5-flash-preview-09-2025",
         "base_url": "https://openrouter.ai/api/v1",
         "output_file": "LLM5.md",
         "temperature": 0.7,
@@ -187,10 +187,10 @@
         "ui_hint_models": "Choose a model id, or set model_mode to 'random' or 'random_free'"
       }
     },
-    "0x1f6a8c65290": {
+    "0x2187ea29850": {
       "type_": "aicp.flow.OpenRouterNode",
       "icon": null,
-      "name": "glm-4.6",
+      "name": "OpenRouter LLM 3 : glm-4.6 : glm-4.6 : glm-4.6 (T1.8)",
       "color": [
         50,
         200,
@@ -212,7 +212,7 @@
       "disabled": false,
       "selected": false,
       "visible": true,
-      "width": 160,
+      "width": 243.921875,
       "height": 74.2,
       "pos": [
         359.0,
@@ -225,18 +225,18 @@
         "version": "1.0.0",
         "provider": "openrouter",
         "model_mode": "choose",
-        "model": "z-ai/glm-4.6\n",
+        "model": "z-ai/glm-4.6",
         "base_url": "https://openrouter.ai/api/v1",
         "output_file": "LLM3.md",
-        "temperature": 0.7,
+        "temperature": "1.8",
         "top_p": 1.0,
         "ui_hint_models": "Choose a model id, or set model_mode to 'random' or 'random_free'"
       }
     },
-    "0x1f6a8c66e10": {
+    "0x2187e9e4190": {
       "type_": "aicp.flow.OpenRouterNode",
       "icon": null,
-      "name": "claude-sonnet-4.5",
+      "name": "OpenRouter LLM 4 : glm-4.6 : glm-4.6 : glm-4.5v : grok-4-fast",
       "color": [
         50,
         200,
@@ -258,7 +258,7 @@
       "disabled": false,
       "selected": false,
       "visible": true,
-      "width": 160,
+      "width": 299.4375,
       "height": 74.2,
       "pos": [
         359.0,
@@ -271,7 +271,7 @@
         "version": "1.0.0",
         "provider": "openrouter",
         "model_mode": "choose",
-        "model": "anthropic/claude-sonnet-4.5",
+        "model": "x-ai/grok-4-fast",
         "base_url": "https://openrouter.ai/api/v1",
         "output_file": "LLM2.md",
         "temperature": 0.7,
@@ -279,7 +279,7 @@
         "ui_hint_models": "Choose a model id, or set model_mode to 'random' or 'random_free'"
       }
     },
-    "0x1f6a8c66150": {
+    "0x2187e9e4810": {
       "type_": "aicp.flow.BestOfNNode",
       "icon": null,
       "name": "Best-of-N Synthesizer",
@@ -307,8 +307,8 @@
       "width": 160,
       "height": 166.6,
       "pos": [
-        699.0,
-        -380.0
+        811.3109543713349,
+        -304.63343851397264
       ],
       "layout_direction": 0,
       "port_deletion_allowed": false,
@@ -322,7 +322,7 @@
         "extra_prompt": "You are an expert coder and you are good at looking at many different suggested solutions to a problem and coming up with a better or 'best of all of them' solution. You can use all of the available information to try and create an even better solution. Don't assume that all of the suggested solutions are correct, sometimes they can be wrong so use your best judgement and abilities, think critically, etc.\n\nYou will receive:\n- The original code  files and the user question/prompt),\n- N candidate answers from different AI models.\n\nTask:\n1) Analyze the strengths and weaknesses of each candidate.\n2) Synthesize a 'best of all' answer that is better than any single one.\n3) Where relevant, cite brief pros/cons observed.\n4) Ensure the final answer is complete, correct, and practical.\n"
       }
     },
-    "0x1f6a8c4c190": {
+    "0x2187ea2a150": {
       "type_": "aicp.flow.ClipboardNode",
       "icon": null,
       "name": "Clipboard",
@@ -360,10 +360,10 @@
         "version": "1.0.0"
       }
     },
-    "0x1f6a8c6de50": {
+    "0x2187ea2dfd0": {
       "type_": "aicp.flow.FileWriteNode",
       "icon": null,
-      "name": "File Write: best_of_n.txt: ..._of_all1.txt: ..._of_all1.txt",
+      "name": "File Write: ..._of_n-00.txt: ..._of_n-01.txt",
       "color": [
         50,
         200,
@@ -383,9 +383,9 @@
         180
       ],
       "disabled": false,
-      "selected": false,
+      "selected": true,
       "visible": true,
-      "width": 235.84375,
+      "width": 169.9375,
       "height": 60,
       "pos": [
         1039.0,
@@ -396,177 +396,138 @@
       "subgraph_session": {},
       "custom": {
         "version": "1.0.0",
-        "path": "best_of_all1.txt"
-      }
-    },
-    "0x1f6a3eba690": {
-      "type_": "aicp.flow.OutputDisplayNode",
-      "icon": null,
-      "name": "Output Display",
-      "color": [
-        50,
-        200,
-        100,
-        255
-      ],
-      "border_color": [
-        74,
-        84,
-        85,
-        255
-      ],
-      "text_color": [
-        255,
-        255,
-        255,
-        180
-      ],
-      "disabled": false,
-      "selected": false,
-      "visible": true,
-      "width": 160,
-      "height": 60,
-      "pos": [
-        653.9412200232489,
-        25.1956336961672
-      ],
-      "layout_direction": 0,
-      "port_deletion_allowed": false,
-      "subgraph_session": {},
-      "custom": {
-        "version": "1.0.0",
-        "last_result": ""
+        "path": "best_of_n-01.txt"
       }
     }
   },
   "connections": [
     {
       "out": [
-        "0x1f6a8c4ce10",
+        "0x2187ea0fc90",
         "text"
       ],
       "in": [
-        "0x1f6a8c60b50",
+        "0x2187ea21550",
         "text"
       ]
     },
     {
       "out": [
-        "0x1f6a8c4ce10",
+        "0x2187ea0fc90",
         "text"
       ],
       "in": [
-        "0x1f6a8c637d0",
+        "0x2187ea23dd0",
         "text"
       ]
     },
     {
       "out": [
-        "0x1f6a8c4ce10",
+        "0x2187ea0fc90",
         "text"
       ],
       "in": [
-        "0x1f6a8c621d0",
+        "0x2187ea22550",
         "text"
       ]
     },
     {
       "out": [
-        "0x1f6a8c4ce10",
+        "0x2187ea0fc90",
         "text"
       ],
       "in": [
-        "0x1f6a8c65290",
+        "0x2187ea29850",
         "text"
       ]
     },
     {
       "out": [
-        "0x1f6a8c4ce10",
+        "0x2187ea0fc90",
         "text"
       ],
       "in": [
-        "0x1f6a8c66e10",
+        "0x2187e9e4190",
         "text"
       ]
     },
     {
       "out": [
-        "0x1f6a8c4ce10",
+        "0x2187ea0fc90",
         "text"
       ],
       "in": [
-        "0x1f6a8c66150",
+        "0x2187e9e4810",
         "context"
       ]
     },
     {
       "out": [
-        "0x1f6a8c60b50",
+        "0x2187ea21550",
         "text"
       ],
       "in": [
-        "0x1f6a8c66150",
+        "0x2187e9e4810",
         "candidate1"
       ]
     },
     {
       "out": [
-        "0x1f6a8c637d0",
+        "0x2187ea23dd0",
         "text"
       ],
       "in": [
-        "0x1f6a8c66150",
+        "0x2187e9e4810",
         "candidate2"
       ]
     },
     {
       "out": [
-        "0x1f6a8c621d0",
+        "0x2187ea22550",
         "text"
       ],
       "in": [
-        "0x1f6a8c66150",
+        "0x2187e9e4810",
         "candidate3"
       ]
     },
     {
       "out": [
-        "0x1f6a8c65290",
+        "0x2187ea29850",
         "text"
       ],
       "in": [
-        "0x1f6a8c66150",
+        "0x2187e9e4810",
         "candidate4"
       ]
     },
     {
       "out": [
-        "0x1f6a8c66e10",
+        "0x2187e9e4190",
         "text"
       ],
       "in": [
-        "0x1f6a8c66150",
+        "0x2187e9e4810",
         "candidate5"
       ]
     },
     {
       "out": [
-        "0x1f6a8c66150",
+        "0x2187e9e4810",
         "text"
       ],
       "in": [
-        "0x1f6a8c4c190",
+        "0x2187ea2a150",
         "text"
       ]
     },
     {
       "out": [
-        "0x1f6a8c66150",
+        "0x2187e9e4810",
         "text"
       ],
       "in": [
-        "0x1f6a8c6de50",
+        "0x2187ea2dfd0",
         "text"
       ]
     }
