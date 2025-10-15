@@ -305,11 +305,24 @@ class FlowStudioDock(QtWidgets.QDockWidget):
             placeholder = QtWidgets.QWidget()
             lay = QtWidgets.QVBoxLayout(placeholder)
             lay.setContentsMargins(8, 8, 8, 8)
-            label = QtWidgets.QLabel(
-                "Flow Studio requires the 'NodeGraphQt' package.\n"
-                "Install it to enable the node graph view.\n\n"
-                f"Import error: {str(_NG_IMPORT_ERROR)}"
-            )
+
+            error_msg = str(_NG_IMPORT_ERROR)
+            # Check if this is the distutils Python 3.12+ issue
+            if "distutils" in error_msg.lower():
+                message = (
+                    "Flow Studio requires 'NodeGraphQt' and 'setuptools'.\n\n"
+                    "Python 3.12+ removed 'distutils'. Please run:\n"
+                    "pip install --upgrade setuptools NodeGraphQt\n\n"
+                    f"Error: {error_msg}"
+                )
+            else:
+                message = (
+                    "Flow Studio requires the 'NodeGraphQt' package.\n"
+                    "Install it to enable the node graph view.\n\n"
+                    f"Import error: {error_msg}"
+                )
+
+            label = QtWidgets.QLabel(message)
             label.setWordWrap(True)
             lay.addWidget(label)
             lay.addStretch(1)

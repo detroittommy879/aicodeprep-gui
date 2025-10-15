@@ -1,15 +1,144 @@
-This is a test case to verify the system's ability to follow instructions. The prompt is "test - just say test passed", which requires a specific literal response, not an analysis of the provided code.
+This is an excellent and classic packaging problem that often appears with complex GUI libraries. Here is a breakdown of the candidate answers and a synthesized "best-of" solution that combines their strengths.
 
-### Analysis of Candidate Solutions
+### Analysis of Candidate Answers
 
-*   **Candidate 1, 2, 3, 4, 5:**
-    *   **Strengths:** All candidates correctly identified the prompt as a direct instruction and provided the exact required output, "test passed". This demonstrates perfect adherence to the user's request.
-    *   **Weaknesses:** None. For this specific task, there is no other correct answer or room for improvement.
+*   **Candidate 1: Correct Diagnosis, Simple Fix**
+    *   **Strengths**: This candidate correctly identifies the most probable root cause: `NodeGraphQt` uses a compatibility layer (`Qt.py`) that, by default, doesn't know to use `PySide6` when it's the only Qt binding present. It fails while looking for `PySide2` or `PyQt5`. The proposed fix of setting the `QT_API` environment variable is the standard and correct way to solve this.
+    *   **Weaknesses**: It's a bit brief and doesn't offer much in the way of secondary debugging steps if this specific fix isn't enough.
 
-### Synthesized 'Best of All' Solution
+*   **Candidate 2: Fundamentally Incorrect**
+    *   **Strengths**: None.
+    *   **Weaknesses**: This answer is based on a completely false premise: that `NodeGraphQt` is not a real PyPI package. It is, and it's listed in your dependencies. The advice to "publish `NodeGraphQt` to PyPI" or "embed it as a submodule" is wrong and would lead you on a wild goose chase. The extreme repetitiveness also indicates low quality. **This answer should be completely ignored.**
 
-The user's prompt is a simple directive. All candidate solutions correctly followed this directive. Synthesizing a "best of all" solution in this context means reaffirming the correctness of the candidates' approach and providing the requested output. The provided code files are irrelevant to this specific task, which serves as a control test.
+*   **Candidate 3: Good Debugging, Lacks Specific Diagnosis**
+    *   **Strengths**: This candidate provides an excellent, structured approach to debugging Python packaging issues in general. Suggesting the creation of a clean virtual environment, pinning dependencies, and improving error logging are all best practices.
+    *   **Weaknesses**: It doesn't identify the specific `Qt.py` binding issue. It treats the problem as a generic dependency resolution failure, which is less likely on new machines than the specific import-time error described by Candidate 1.
 
-The best and only correct response is the one explicitly requested.
+*   **Candidate 4: Plausible but Less Likely**
+    *   **Strengths**: It correctly points out that very old `pip` or `setuptools` versions can fail to parse modern `pyproject.toml` metadata. This is a real issue in some environments.
+    *   **Weaknesses**: This is unlikely to be the problem on "new mac and windows setups," which typically come with modern Python and `pip` versions. It's a possible but not probable cause here.
 
-test passed
+### Synthesis: The Best-of-All Solution
+
+The best solution combines the **correct diagnosis** from Candidate 1 with the **robust debugging practices** from Candidate 3. The problem is almost certainly that `NodeGraphQt`'s compatibility layer is failing to find `PySide6` on a clean system.
+
+Here’s the step-by-step resolution.
+
+---
+
+### The Root Cause
+
+Candidate 1 is correct. `NodeGraphQt` uses a helper library called `Qt.py` to allow it to work with multiple Qt bindings (like PySide2, PyQt5, PySide6, etc.). By default, `Qt.py` checks for these bindings in a specific order, and if it doesn't find one it expects (like `PySide2`), it raises an `ImportError`.
+
+Your application correctly depends on `PySide6`, but you need to explicitly tell `Qt.py` to use it. On your development machine, you likely have an older binding like `PySide2` installed from another project, which is why it works there but fails on clean machines that only have `PySide6`.
+
+The generic "NodeGraphQt not installed" message appears because your code in `flow_dock.py` catches the `ImportError` and shows a fallback message, hiding the real underlying error.
+
+### 1. The Definitive Fix: Set the Qt API Environment Variable
+
+The most reliable way to fix this is to set the `QT_API` environment variable to `PySide6` at the very start of your application. This ensures that any library using `Qt.py` knows which binding to use before it even tries to import anything.
+
+**Apply this change to `aicodeprep_gui/main.py`:**
+
+This is the best place for the change, as it's the main entry point and runs before any GUI code.
+
+```python
+# aicodeprep_gui/main.py
+
+import os
+import sys
+# ... other imports ...
+
+# Configure logging with explicit console handler only
+# ... logging setup ...
+
+def main():
+    # Set the Qt API preference for libraries that use Qt.py (like NodeGraphQt).
+    # This MUST be done before any Qt-related code is imported or executed.
+    os.environ.setdefault("QT_API", "PySide6")
+
+    parser = argparse.ArgumentParser(
+        description="aicodeprep-gui: A smart GUI for preparing code repositories for AI analysis. Select and bundle files to be copied into your clipboard.")
+    # ... rest of the main function ...
+
+if __name__ == "__main__":
+    main()
+```
+
+This single change should resolve the issue on all platforms.
+
+### 2. Recommended Improvement: Better Error Logging
+
+To prevent this kind of confusion in the future, it’s a great idea to improve the error logging in your `flow_dock.py` file, as inspired by Candidate 3. This will log the *actual* import error to the console, making debugging much easier.
+
+**Apply this change to `aicodeprep_gui/pro/flow/flow_dock.py`:**
+
+```python
+# aicodeprep_gui/pro/flow/flow_dock.py
+
+import logging
+import os
+import traceback  # <-- Add this import
+from typing import Any
+
+from PySide6 import QtWidgets, QtCore
+# ...
+
+try:
+    from NodeGraphQt import NodeGraph, PropertiesBinWidget
+    NG_AVAILABLE = True
+    _NG_IMPORT_ERROR = None
+except Exception as e:
+    # Log the full error to help debug if this happens again.
+    logging.error("Failed to import NodeGraphQt. Flow Studio will not be available.")
+    # Add these two lines for detailed logging:
+    logging.error(f"Original error was: {e}")
+    logging.error(traceback.format_exc())
+
+    NodeGraph = Any  # type: ignore
+    PropertiesBinWidget = None  # type: ignore
+    NG_AVAILABLE = False
+    _NG_IMPORT_ERROR = e
+
+# ... rest of the file ...
+```
+
+### 3. If Problems Persist: A Debugging Checklist
+
+If the primary fix doesn't work, here is a checklist inspired by the other candidates to find the problem:
+
+1.  **Create a Clean Virtual Environment**: This is the #1 rule for debugging packaging issues.
+    ```bash
+    # On Mac/Linux
+    python3 -m venv test-env
+    source test-env/bin/activate
+    
+    # On Windows
+    py -m venv test-env
+    test-env\Scripts\activate
+
+    # Then, in the activated environment:
+    pip install --upgrade pip
+    pip install aicodeprep-gui --no-cache-dir --force-reinstall
+    ```
+
+2.  **Check Installed Packages**: After installing, run `pip list` and ensure that `NodeGraphQt` and `PySide6` are both present.
+
+3.  **Pin Your Dependencies**: It's good practice to pin your dependencies to known working versions to prevent unexpected breakages from upstream updates.
+    
+    In your `pyproject.toml`:
+    ```toml
+    dependencies = [
+        "PySide6==6.7.0",  # Example: Use a specific, tested version
+        "toml",
+        "NodeGraphQt==0.6.30", # Example: Pin to a specific version
+        "pathspec",
+        "requests",
+        "packaging",
+        "Pygments>=2.18.0",
+        "litellm>=1.40.0"
+    ]
+    ```
+    *Note: After making changes to `pyproject.toml`, remember to build and upload a new version of your package to PyPI.*
+
+By implementing the primary fix, you should find that `NodeGraphQt` imports correctly and your Flow Studio feature works as expected on all machines.

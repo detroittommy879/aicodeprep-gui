@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 # CRITICAL: Changed name to match your new package name
 name = "aicodeprep-gui" 
-version = "1.2.2"
+version = "1.2.3"
 description = "A smart GUI to select, filter, and concatenate code files for large language model (LLM) and AI analysis."
 readme = "README.md"
 authors = [{ name = "Tom Brothers", email = "tom@wuu73.org" }]
@@ -32,7 +32,8 @@ dependencies = [
     "requests", # for your network check
     "packaging",
     "Pygments>=2.18.0", # for syntax highlighting in preview window
-    "litellm>=1.40.0" # for LLM provider integration in flow studio
+    "litellm>=1.40.0", # for LLM provider integration in flow studio
+    "setuptools>=65.0.0" # Required for Python 3.12+ compatibility (distutils was removed)
 ]
 requires-python = ">=3.8" # PySide6 requires Python 3.8+
 
