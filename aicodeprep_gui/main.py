@@ -198,7 +198,7 @@ def main():
 
     # Set Windows AppUserModelID for proper taskbar icon
     if platform.system() == "Windows":
-        myappid = 'wuu73.aicodeprep-gui.1.2.0'  # arbitrary unique string
+        myappid = 'wuu73.aicodeprep-gui'  # arbitrary unique string
         try:
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
                 myappid)

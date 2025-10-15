@@ -1223,9 +1223,9 @@ class FlowStudioDock(QtWidgets.QDockWidget):
 
     # ---- Default flow ----
     def _load_default_flow_or_build(self):
-        """Phase 1: Just build in -memory default graph."""
+        """Load default flow: use project-level if exists, otherwise load Best-of-5 configured."""
         try:
-            # Phase 2: try to load project-level default if present
+            # Phase 1: try to load project-level default if present
             try:
                 from .serializer import load_session
             except Exception:
@@ -1239,7 +1239,19 @@ class FlowStudioDock(QtWidgets.QDockWidget):
                         return
                 except Exception:
                     pass
-            # Create nodes using a compatibility helper (supports multiple NodeGraphQt versions)
+
+            # Phase 2: Load the pre-configured Best-of-5 flow as the default
+            # This provides a functional, ready-to-use flow instead of a blank canvas
+            logging.info("Loading default Best-of-5 configured flow...")
+            try:
+                self.load_template_best_of_5_configured()
+                return
+            except Exception as e:
+                logging.error(
+                    f"Failed to load configured flow as default: {e}")
+                # Fall through to simple fallback
+
+            # Phase 3: Simple fallback if configured flow fails to load
             from .nodes.io_nodes import ContextOutputNode, ClipboardNode, FileWriteNode
             ctx = self._create_node_compat(
                 ContextOutputNode, "aicp.flow", "Context Output", (0, 0))
@@ -1768,7 +1780,7 @@ class FlowStudioDock(QtWidgets.QDockWidget):
                 extra_prompt = """You are an expert coder and you are good at looking at many different suggested solutions to a problem and coming up with a better or 'best of all of them' solution. You can use all of the available information to try and create an even better solution. Don't assume that all of the suggested solutions are correct, sometimes they can be wrong so use your best judgement and abilities, think critically, etc.
 
 You will receive:
-- The original code  files and the user question/prompt),
+- The original code files and the user question/prompt,
 - N candidate answers from different AI models.
 
 Task:
@@ -1864,6 +1876,18 @@ Task:
                             except Exception as e:
                                 logging.error(
                                     f"Failed to connect Best-of-N -> FileWrite: {e}")
+
+                    if output_display:
+                        display_in = self._find_port(
+                            output_display, "text", "input")
+                        if display_in:
+                            try:
+                                best_out.connect_to(display_in)
+                                logging.info(
+                                    "Connected Best-of-N -> OutputDisplay")
+                            except Exception as e:
+                                logging.error(
+                                    f"Failed to connect Best-of-N -> OutputDisplay: {e}")
 
             except Exception as e:
                 logging.error(f"Failed wiring nodes: {e}", exc_info=True)

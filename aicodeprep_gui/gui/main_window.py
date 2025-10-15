@@ -721,7 +721,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         premium_content_layout.addLayout(syntax_highlight_layout)
 
         # Flow Studio toggle (Phase 1: visible for Free as read-only; editable for Pro)
-        self.flow_studio_toggle = QtWidgets.QCheckBox("Enable Flow Studio")
+        self.flow_studio_toggle = QtWidgets.QCheckBox(
+            "Enable Flow Studio (currently testing alpha version - might be glitchy!)")
         flow_help = QtWidgets.QLabel(
             "<b style='color:#0098D4; font-size:14px; cursor:help;'>?</b>")
         flow_help.setToolTip(

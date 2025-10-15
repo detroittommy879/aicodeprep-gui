@@ -2,7 +2,11 @@
 
 ---
 
-## [1.2.0] - 2025-XX-XX
+## [1.2.2] - 2025-10-15
+
+Added Flow Studio
+
+## [1.2.0] - 2025-08-26
 
 ### ✨ New Features
 
@@ -21,7 +25,7 @@
 - **UI Responsiveness**: Enhanced the application's responsiveness when generating and managing large code contexts.
 - **Font Management**: Added Font Size slider for users who wanted bigger fonts
 
-## [1.0.6] - 2025-10-01
+## [1.0.6] - 2025-07-01
 
 ### 🐛 Fixed
 
