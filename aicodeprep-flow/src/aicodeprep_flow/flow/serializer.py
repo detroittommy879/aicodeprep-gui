@@ -78,39 +78,20 @@ def save_session(graph: NodeGraph, file_path: str) -> bool:
 
 def _normalize_node_data(data: dict) -> dict:
     """
-    Normalize node data to ensure 'custom' and 'subgraph_session' fields are dicts.
-    NodeGraphQt expects these to be dict objects, not JSON strings.
-    If they are JSON strings, parse them back to dicts.
+    Normalize node data to ensure 'custom' and 'subgraph_session' fields are JSON strings.
+    NodeGraphQt expects these to be JSON-encoded strings, not raw dicts/lists.
     """
     if "nodes" in data and isinstance(data["nodes"], dict):
         for node_id, node_data in data["nodes"].items():
             if isinstance(node_data, dict):
-                # If 'custom' is a JSON string, parse it to a dict
-                if "custom" in node_data and isinstance(node_data["custom"], str):
-                    try:
-                        node_data["custom"] = json.loads(node_data["custom"])
-                    except json.JSONDecodeError:
-                        logging.warning(
-                            f"[Flow Serializer] Failed to parse 'custom' for node {node_id}")
-                        node_data["custom"] = {}
+                # Convert 'custom' field to JSON string if it's a dict
+                if "custom" in node_data and isinstance(node_data["custom"], (dict, list)):
+                    node_data["custom"] = json.dumps(node_data["custom"])
 
-                # Ensure 'custom' is a dict if it doesn't exist
-                if "custom" not in node_data:
-                    node_data["custom"] = {}
-
-                # If 'subgraph_session' is a JSON string, parse it to a dict
-                if "subgraph_session" in node_data and isinstance(node_data["subgraph_session"], str):
-                    try:
-                        node_data["subgraph_session"] = json.loads(
-                            node_data["subgraph_session"])
-                    except json.JSONDecodeError:
-                        logging.warning(
-                            f"[Flow Serializer] Failed to parse 'subgraph_session' for node {node_id}")
-                        node_data["subgraph_session"] = {}
-
-                # Ensure 'subgraph_session' is a dict if it doesn't exist
-                if "subgraph_session" not in node_data:
-                    node_data["subgraph_session"] = {}
+                # Convert 'subgraph_session' field to JSON string if it's a dict
+                if "subgraph_session" in node_data and isinstance(node_data["subgraph_session"], (dict, list)):
+                    node_data["subgraph_session"] = json.dumps(
+                        node_data["subgraph_session"])
 
     return data
 

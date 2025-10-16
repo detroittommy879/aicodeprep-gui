@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flow Studio User Guide</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #1a1a1a;
+        color: #e0e0e0;
+      }
+      h1 {
+        color: #64b5f6;
+        border-bottom: 3px solid #42a5f5;
+        padding-bottom: 10px;
+      }
+      h2 {
+        color: #81c784;
+        margin-top: 30px;
+        border-bottom: 2px solid #66bb6a;
+        padding-bottom: 5px;
+      }
+      h3 {
+        color: #ffd54f;
+        margin-top: 20px;
+      }
+      .section {
+        background: #2d2d2d;
+        padding: 20px;
+        margin: 15px 0;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        border: 1px solid #3a3a3a;
+      }
+      code {
+        background-color: #3a3a3a;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: "Courier New", monospace;
+        color: #ff6b6b;
+      }
+      pre {
+        background-color: #1e1e1e;
+        color: #a9b7c6;
+        padding: 15px;
+        border-radius: 5px;
+        overflow-x: auto;
+        border: 1px solid #3a3a3a;
+      }
+      .note {
+        background-color: #2d2416;
+        border-left: 4px solid #ffa726;
+        padding: 12px;
+        margin: 15px 0;
+        color: #ffd54f;
+      }
+      .warning {
+        background-color: #2d1616;
+        border-left: 4px solid #ef5350;
+        padding: 12px;
+        margin: 15px 0;
+        color: #ffcdd2;
+      }
+      .tip {
+        background-color: #162d2d;
+        border-left: 4px solid #26c6da;
+        padding: 12px;
+        margin: 15px 0;
+        color: #b2ebf2;
+      }
+      ul {
+        line-height: 1.8;
+      }
+      a {
+        color: #64b5f6;
+        text-decoration: none;
+      }
+      a:hover {
+        color: #90caf9;
+        text-decoration: underline;
+      }
+      .node-type {
+        display: inline-block;
+        background: #42a5f5;
+        color: #1a1a1a;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.9em;
+        margin: 2px;
+        font-weight: 600;
+      }
+      kbd {
+        background-color: #3a3a3a;
+        border: 1px solid #555;
+        border-radius: 3px;
+        padding: 2px 6px;
+        font-family: monospace;
+        font-size: 0.9em;
+        color: #e0e0e0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🎨 Flow Studio User Guide</h1>
+
+    <div class="section">
+      <h2>📖 Introduction</h2>
+      <p>
+        Flow Studio is a powerful visual node-based editor that lets you create
+        sophisticated AI processing pipelines. Connect different AI models,
+        combine their outputs, and automate your workflow.
+      </p>
+
+      <div class="tip">
+        <strong>💡 Quick Start:</strong> Flow Studio now defaults to a fully
+        configured <strong>Best-of-5 flow</strong> with 5 top-tier AI models
+        ready to use!
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>📋 How to Use the Default Best-of-5 Flow</h2>
+      <p>
+        The default flow is designed to analyze your code and generate the best
+        possible response by consulting 5 different AI models and synthesizing
+        their answers.
+      </p>
+
+      <div class="warning">
+        <strong>⚠️ IMPORTANT WORKFLOW:</strong>
+      </div>
+
+      <ol>
+        <li>
+          <strong>Step 1: Write Your Question</strong><br />
+          In the main AICodePrep window, type your question or task in the
+          <strong>"Prompt / Question"</strong> text box
+        </li>
+        <li>
+          <strong>Step 2: Generate Context</strong><br />
+          Click the <strong>"GENERATE CONTEXT!"</strong> button<br />
+          <span style="color: #666; font-size: 0.9em">
+            → This creates <code>fullcode.txt</code> with your code + question
+          </span>
+        </li>
+        <li>
+          <strong>Step 3: Configure API Key</strong><br />
+          In Flow Studio, click <strong>"🔑 Manage API Keys"</strong> and add
+          your OpenRouter API key<br />
+          <span style="color: #666; font-size: 0.9em">
+            → Get a free key at
+            <a href="https://openrouter.ai/keys" target="_blank"
+              >openrouter.ai/keys</a
+            >
+          </span>
+        </li>
+        <li>
+          <strong>Step 4: Run the Flow</strong><br />
+          Click the <strong>"▶ Run Flow"</strong> button in Flow Studio
+          toolbar<br />
+          <span style="color: #666; font-size: 0.9em">
+            → Watch as 5 AI models analyze your code and synthesize the best
+            answer
+          </span>
+        </li>
+        <li>
+          <strong>Step 5: Get Results</strong><br />
+          Find your answer in:
+          <ul>
+            <li>📋 Clipboard (automatically copied)</li>
+            <li>📄 <code>best_of_all1.txt</code> (saved to disk)</li>
+            <li>👁️ Output Display panel (visible in Flow Studio)</li>
+          </ul>
+        </li>
+      </ol>
+
+      <div class="note">
+        <strong>📌 What This Flow Does:</strong>
+        <ul>
+          <li>
+            Reads <code>fullcode.txt</code> (generated by GENERATE CONTEXT
+            button)
+          </li>
+          <li>Sends it to 5 different AI models in parallel</li>
+          <li>Synthesizes all 5 responses into one "best of all" answer</li>
+          <li>Outputs to clipboard, file, and display panel</li>
+        </ul>
+      </div>
+
+      <div class="tip">
+        <strong>💡 Cost Saving Tip:</strong> The default flow uses premium
+        models. You can click on any LLM node and change the
+        <code>model</code> property to use cheaper alternatives. Set
+        <code>model_mode</code> to "random_free" to use only free models!
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>🔑 Setting Up API Keys</h2>
+      <p>
+        Before you can use AI nodes, you need to configure your API keys. You
+        have two options:
+      </p>
+
+      <h3>Option 1: In-App API Key Manager (Easiest! ⭐)</h3>
+      <ol>
+        <li>
+          In Flow Studio toolbar, click
+          <strong>"🔑 Manage API Keys"</strong> button
+        </li>
+        <li>Enter your API keys for each provider you want to use</li>
+        <li>Click <strong>"Save"</strong></li>
+        <li>Done! Your keys are securely saved to the config file</li>
+      </ol>
+
+      <div class="tip">
+        <strong>💡 Recommended:</strong> Use the built-in API Key Manager for
+        the easiest setup experience. No need to manually edit files!
+      </div>
+
+      <h3>Option 2: Manual Configuration File</h3>
+      <p><strong>Step 1:</strong> Locate your config file at:</p>
+      <pre>
+Windows: C:\Users\[YourUsername]\.aicodeprep-gui\api-keys.toml
+Mac/Linux: ~/.aicodeprep-gui/api-keys.toml</pre
+      >
+
+      <p>
+        <strong>Step 2:</strong> Open the file in a text editor and add your
+        keys:
+      </p>
+      <pre>
+[openrouter]
+api_key = "sk-or-v1-your-openrouter-key-here"
+base_url = "https://openrouter.ai/api/v1"
+
+[openai]
+api_key = "sk-your-openai-key-here"
+base_url = "https://api.openai.com/v1"
+
+[gemini]
+api_key = "your-gemini-api-key-here"</pre
+      >
+
+      <div class="note">
+        <strong>📌 Where to Get API Keys:</strong>
+        <ul>
+          <li>
+            <a href="https://openrouter.ai/keys" target="_blank">OpenRouter</a>
+            - Access to 100+ models (recommended for Best-of-5)
+          </li>
+          <li>
+            <a href="https://platform.openai.com/api-keys" target="_blank"
+              >OpenAI</a
+            >
+            - GPT-4.1, GPT-5, o3, and more
+          </li>
+          <li>
+            <a href="https://makersuite.google.com/app/apikey" target="_blank"
+              >Google AI Studio</a
+            >
+            - Gemini models
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>🎯 Node Types</h2>
+
+      <h3>🤖 LLM Provider Nodes</h3>
+      <p>These nodes send your input to AI models and return the response:</p>
+      <ul>
+        <li>
+          <span class="node-type">OpenRouter</span> Access to 100+ models from
+          various providers
+        </li>
+        <li>
+          <span class="node-type">OpenAI</span> GPT-4.1, GPT-5, o3, and other
+          OpenAI models
+        </li>
+        <li><span class="node-type">Gemini</span> Google's Gemini models</li>
+        <li>
+          <span class="node-type">OpenAI Compatible</span> Any OpenAI-compatible
+          API endpoint
+        </li>
+      </ul>
+
+      <h3>📁 Input/Output Nodes</h3>
+      <ul>
+        <li>
+          <span class="node-type">Context Output</span> Provides your selected
+          files and prompt as input
+        </li>
+        <li>
+          <span class="node-type">File Write</span> Saves output to a file
+        </li>
+        <li>
+          <span class="node-type">Clipboard</span> Copies output to clipboard
+        </li>
+        <li>
+          <span class="node-type">Output Display</span> Shows output in the UI
+        </li>
+      </ul>
+
+      <h3>🔧 Utility Nodes</h3>
+      <ul>
+        <li>
+          <span class="node-type">Best of N</span> Takes multiple AI responses
+          and synthesizes the best answer using another AI model
+        </li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>🎮 Using Flow Studio</h2>
+
+      <h3>Navigation Controls</h3>
+      <ul>
+        <li>
+          <strong>Pan:</strong> Hold Spacebar and drag, or use the hand tool
+          (✋)
+        </li>
+        <li><strong>Pan with Arrows:</strong> Use arrow keys (←↑↓→) to pan</li>
+        <li><strong>Zoom:</strong> Mouse wheel or 🔍+/🔍- buttons</li>
+        <li><strong>Fit View:</strong> Click ⊡ button to fit all nodes</li>
+      </ul>
+
+      <h3>Working with Nodes</h3>
+      <ul>
+        <li>
+          <strong>Add Node:</strong> Click "➕ Add Node" or press <kbd>Tab</kbd>
+        </li>
+        <li>
+          <strong>Connect Nodes:</strong> Drag from an output port (right side)
+          to an input port (left side)
+        </li>
+        <li><strong>Select Node:</strong> Click on a node to select it</li>
+        <li><strong>Move Node:</strong> Click and drag a node</li>
+        <li>
+          <strong>Delete Node:</strong> Select node and press
+          <kbd>Delete</kbd> or <kbd>Backspace</kbd>
+        </li>
+        <li>
+          <strong>Configure Node:</strong> Select a node to see its properties
+          in the Properties Panel on the right
+        </li>
+      </ul>
+
+      <h3>Configuring LLM Nodes</h3>
+      <ol>
+        <li>Click on an LLM node to select it</li>
+        <li>
+          In the Properties Panel, you'll see:
+          <ul>
+            <li>
+              <code>model_mode</code>: Choose "choose" to specify a model, or
+              "random"/"random_free" for automatic selection
+            </li>
+            <li>
+              <code>model</code>: Enter the model ID (e.g., "openai/gpt-4",
+              "anthropic/claude-3-opus")
+            </li>
+            <li>
+              <code>output_file</code>: Where to save the model's response
+              (e.g., "LLM1.md")
+            </li>
+            <li>
+              <code>temperature</code>: Controls randomness (0.0-2.0, typically
+              0.7)
+            </li>
+          </ul>
+        </li>
+      </ol>
+
+      <div class="tip">
+        <strong>💡 Tip:</strong> For OpenRouter nodes, browse available models
+        at
+        <a href="https://openrouter.ai/models" target="_blank"
+          >openrouter.ai/models</a
+        >
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>🚀 Running Your Flow</h2>
+      <ol>
+        <li>
+          Make sure all nodes are connected properly (no red error indicators)
+        </li>
+        <li>Ensure your API keys are configured</li>
+        <li>Click <strong>"Run Flow"</strong> button in the toolbar</li>
+        <li>Watch the execution progress in the status bar</li>
+        <li>Check the output files or clipboard for results</li>
+      </ol>
+
+      <div class="warning">
+        <strong>⚠️ Important:</strong> Running flows with multiple LLM nodes
+        will consume API credits. Be mindful of costs, especially when using
+        paid models!
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>📝 Built-in Flow Templates</h2>
+
+      <h3>Best-of-5 (Blank)</h3>
+      <p>
+        A template with 5 LLM nodes and a Best-of-N synthesizer. Models are not
+        pre-configured, so you need to set them up yourself.
+      </p>
+
+      <h3>Best-of-5 (Configured)</h3>
+      <p>A ready-to-use flow with pre-configured models from OpenRouter:</p>
+      <ul>
+        <li>GPT-5 Codex</li>
+        <li>Claude Sonnet 4.5</li>
+        <li>GLM-4.6</li>
+        <li>Qwen3 Next 80B</li>
+        <li>O4 Mini</li>
+        <li>Synthesized by Gemini 2.5 Pro</li>
+      </ul>
+      <p>Just add your OpenRouter API key and you're ready to go!</p>
+    </div>
+
+    <div class="section">
+      <h2>💾 Saving and Loading Flows</h2>
+      <ul>
+        <li>
+          <strong>Export:</strong> <code>Flow → Export Flow JSON…</code> saves
+          your current flow to a .json file
+        </li>
+        <li>
+          <strong>Import:</strong> <code>Flow → Import Flow JSON…</code> loads a
+          previously saved flow
+        </li>
+        <li>
+          <strong>Reset:</strong>
+          <code>Flow → Reset to Default Flow</code> clears the canvas
+        </li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>❓ Common Issues</h2>
+
+      <h3>Node won't execute / Shows error</h3>
+      <ul>
+        <li>
+          Check that your API key is configured in <code>api-keys.toml</code>
+        </li>
+        <li>Verify the model ID is correct</li>
+        <li>Ensure input ports are connected</li>
+        <li>Check your internet connection</li>
+      </ul>
+
+      <h3>Can't connect nodes</h3>
+      <ul>
+        <li>Make sure you're connecting output (right) to input (left)</li>
+        <li>Ports must be compatible types (text → text)</li>
+      </ul>
+
+      <h3>Flow runs but no output</h3>
+      <ul>
+        <li>Check that output nodes (Clipboard, File Write) are connected</li>
+        <li>Verify file paths in File Write nodes are valid</li>
+        <li>Look for error messages in the log</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>🎓 Example Use Cases</h2>
+
+      <h3>Best-of-N Analysis</h3>
+      <p>
+        Send the same prompt to multiple different AI models and synthesize
+        their responses into one superior answer.
+      </p>
+
+      <h3>Multi-Stage Processing</h3>
+      <p>
+        Chain multiple AI calls: first model generates ideas, second model
+        refines them, third model writes code.
+      </p>
+
+      <h3>Parallel Processing</h3>
+      <p>
+        Run multiple independent AI tasks simultaneously and collect all
+        results.
+      </p>
+    </div>
+
+    <div class="section">
+      <h2>📚 Additional Resources</h2>
+      <ul>
+        <li>
+          <a href="https://openrouter.ai/" target="_blank"
+            >OpenRouter Documentation</a
+          >
+        </li>
+        <li>
+          <a href="https://platform.openai.com/docs" target="_blank"
+            >OpenAI API Documentation</a
+          >
+        </li>
+        <li>
+          <a href="https://ai.google.dev/docs" target="_blank"
+            >Google AI Documentation</a
+          >
+        </li>
+      </ul>
+    </div>
+
+    <footer
+      style="
+        text-align: center;
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #3a3a3a;
+        color: #888;
+      "
+    >
+      <p>AI Code Prep GUI - Flow Studio</p>
+      <p style="font-size: 0.9em">Happy flowing! 🎨✨</p>
+    </footer>
+  </body>
+</html>

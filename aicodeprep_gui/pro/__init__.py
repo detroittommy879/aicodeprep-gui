@@ -5,11 +5,7 @@ from PySide6 import QtCore
 
 
 def _check_pro_enabled():
-    """Check if pro mode is enabled via CLI flag or global settings."""
-    # Command line flag takes precedence
-    if '--pro' in sys.argv:
-        return True
-
+    """Check if pro mode is enabled via license key validation."""
     # Check global settings for license key and pro status
     try:
         settings = QtCore.QSettings("aicodeprep-gui", "ProLicense")

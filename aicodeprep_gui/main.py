@@ -7,6 +7,7 @@ from PySide6 import QtWidgets
 from aicodeprep_gui import pro
 from aicodeprep_gui.file_processor import process_files
 from aicodeprep_gui.gui.settings.preferences import _read_prefs_file
+from aicodeprep_gui.config import get_flows_dir, copy_builtin_flows
 
 # Handle --delset command-line option to delete user settings and exit
 if "--delset" in sys.argv:
@@ -47,12 +48,14 @@ logger.addHandler(console_handler)
 
 
 def main():
+    # Ensure configuration directories are created and copy built-in flows
+    get_flows_dir()  # This creates ~/.aicodeprep-gui/flows/
+    copy_builtin_flows()  # Copy flow_*.json templates from data/ to flows/
+
     parser = argparse.ArgumentParser(
         description="aicodeprep-gui: A smart GUI for preparing code repositories for AI analysis. Select and bundle files to be copied into your clipboard.")
     parser.add_argument("-n", "--no-copy", action="store_true",
                         help="Do NOT copy output to clipboard (default: copy to clipboard)")
-    parser.add_argument("--pro", action="store_true",
-                        help="Enable Pro features (fake license mode)")
     parser.add_argument("-o", "--output", default="fullcode.txt",
                         help="Output file name (default: fullcode.txt)")
     parser.add_argument("-d", "--debug", action="store_true",
@@ -189,10 +192,6 @@ def main():
 
         sys.exit(0)
     # --- END: Headless / Skip-UI Mode ---
-
-    if '--pro' in sys.argv:
-        # Set global QSettings value for pro_enabled
-        QSettings("aicodeprep-gui", "ProLicense").setValue("pro_enabled", True)
 
     force_update = args.force_update_check
 

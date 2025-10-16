@@ -1,52 +1,101 @@
-It turns out nothing mystical is wrong with NodeGraphQt or your flow-dock code – it’s simply never getting installed when folks do
+Yes – you can hide all of the “paint‐by‐numbers” UI stuff and just expose the two things your engine really cares about:
 
-    pip install aicodeprep-gui
+  1. What nodes exist (and their minimal parameters).  
+  2. How they’re wired together.
 
-even though you listed it in your pyproject.toml under `[project.dependencies]`.  Here’s why:
+Below is a sketch of a tiny DSL you might call “flow.dsl” that compiles to your big JSON under the hood.
 
-  1.  PEP 621 (the `[project]` table in pyproject.toml) only became “real” for setuptools in version 61.0, and pip only started paying attention to it in about pip 21.3.  
-  2.  If your users’ machines have older pip/setuptools, they build your wheel but pip ignores your `[project.dependencies]`, so it never pulls in NodeGraphQt.  
-  3.  At runtime, your code does  
-         try:
-             from NodeGraphQt import NodeGraph, PropertiesBinWidget
-         except ImportError:
-             …  
-      and so it falls back to “NG_AVAILABLE = False” and tells them “NodeGraphQt not installed.”
+—– flow.dsl —–
 
-How to fix it:
+```plain
+# 1) Declare your nodes
+#    <node-name> : <type> ( param1=value1, param2="value2", … )
 
-— Short term, on those machines:
+context   : ContextOutput( path="fullcode.txt" )
+codex     : OpenRouter( model="openai/gpt-5-codex",    output="LLM1.md" )
+qwen      : OpenRouter( model="qwen3-next-80b-a3b-think", output="LLM2.md" )
+claude    : OpenRouter( model="anthropic/claude-sonnet-4.5", output="LLM3.md" )
+glm       : OpenRouter( model="z-ai/glm-4.6",           output="LLM4.md" )
+o4mini    : OpenRouter( model="openai/o4-mini",        output="LLM5.md" )
 
-   • `pip install NodeGraphQt`  
-   • or simply upgrade pip & setuptools before installing your package:
-       ```
-       pip install --upgrade pip setuptools wheel
-       pip install aicodeprep-gui
-       ```
+synth     : BestOfN( model="google/gemini-2.5-pro", extra_prompt="""\
+You are an expert coder…think critically…synthesize best answer.
+""" )
 
-— Longer term, make your project install_requires work even on older installers.  You have two easy options:
+clipboard : Clipboard()
+outfile   : FileWrite( path="best_of_all1.txt" )
+display   : OutputDisplay()
 
-  1.  Add a minimal `setup.cfg` (or `setup.py`) alongside your pyproject.toml with an `[options] install_requires = …` section that duplicates:
-         install_requires =
-             PySide6>=6.9,<6.10
-             NodeGraphQt
-             pathspec
-             requests
-             …
-     setuptools will always read `install_requires` even on ancient pip.
+# 2) Wire them up
+#    context.text   -> [codex.text, qwen.text, claude.text, glm.text, o4mini.text]  
+#    context.text   -> synth.context  
+#    codex.text     -> synth.candidate1  
+#    qwen.text      -> synth.candidate2  
+#    claude.text    -> synth.candidate3  
+#    glm.text       -> synth.candidate4  
+#    o4mini.text    -> synth.candidate5  
+#    synth.text     -> [clipboard.text, outfile.text, display.text]
 
-  2.  Bump your build-backend requirement in pyproject.toml so that anyone installing your package is forced to use a new setuptools/pip:
-     ```toml
-     [build-system]
-     requires = [
-       "setuptools>=61.0.0",
-       "wheel",
-       "pip>=21.3"        # <— add this
-     ]
-     build-backend = "setuptools.build_meta"
-     ```
-     Then ensure your CI / docs tell users to run `pip install --upgrade pip setuptools wheel` before pulling you down.
+context.text  -> codex.text, qwen.text, claude.text, glm.text, o4mini.text  
+context.text  -> synth.context  
+codex.text    -> synth.candidate1  
+qwen.text     -> synth.candidate2  
+claude.text   -> synth.candidate3  
+glm.text      -> synth.candidate4  
+o4mini.text   -> synth.candidate5  
+synth.text    -> clipboard.text, outfile.text, display.text  
+```
 
-Once pip actually installs NodeGraphQt, your Flow Studio dock will find it, `NG_AVAILABLE` will be true, and you won’t see that “not installed” warning anymore.
+That 20‐line file (pure ASCII!) contains everything you need:
 
-In summary: Your dependency declaration is perfectly correct for modern build tools, but older pip/setuptools clients simply ignore it.  Either upgrade your installers or add a legacy `install_requires` so that NodeGraphQt always comes along for the ride.
+• The node “type”  
+• The only parameters you care about (API model, file names, extra prompts)  
+• The exact port‐to‐port connections  
+
+You’d write a tiny parser (100 lines of Python or Go) that:
+
+  1. Reads each “declaration” line and emits the minimal JSON for that node (omitting colors, icons, pos, etc.)  
+  2. Reads each “wire” line and emits the correct `"connections":[…]` entries  
+
+—–
+
+If you prefer a data-oriented syntax you can do the same in YAML:
+
+```yaml
+nodes:
+  context:
+    type: ContextOutput
+    path: fullcode.txt
+  codex:
+    type: OpenRouter
+    model: openai/gpt-5-codex
+    output: LLM1.md
+  …
+  synth:
+    type: BestOfN
+    model: google/gemini-2.5-pro
+    extra_prompt: |
+      You are an expert coder…synthesize best answer.
+  clipboard:
+    type: Clipboard
+  outfile:
+    type: FileWrite
+    path: best_of_all1.txt
+  display:
+    type: OutputDisplay
+
+connections:
+  - ["context.text",  ["codex.text", "qwen.text", "claude.text", "glm.text", "o4mini.text"]]
+  - ["context.text",  "synth.context"]
+  - ["codex.text",    "synth.candidate1"]
+  - …  
+  - ["synth.text",    ["clipboard.text","outfile.text","display.text"]]
+```
+
+Either of these is:
+
+• Human‐writable in seconds.  
+• Completely independent of any GUI.  
+• Easy to round-trip into your existing JSON/Flow-Studio format.
+
+You can even version-control these tiny DSL files, diff them, templatize them…anything you like.

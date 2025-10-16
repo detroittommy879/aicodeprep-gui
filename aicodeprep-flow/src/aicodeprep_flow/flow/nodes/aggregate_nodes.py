@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional
 import logging
 
 from .base import BaseExecNode
-from aicodeprep_gui.pro.llm.litellm_client import LLMClient, LLMError
+from ..llm.litellm_client import LLMClient, LLMError
 
 # Import NodeGraphQt constants for property widget types
 try:
@@ -15,7 +15,6 @@ except ImportError:
         QLINE_EDIT = 3
         QTEXT_EDIT = 4
         QCOMBO_BOX = 5
-        QSPINBOX = 9  # For numeric spinners
 
 # Guard Qt import for popups
 try:
@@ -45,11 +44,8 @@ class BestOfNNode(BaseExecNode):
         super().__init__()
         # Inputs
         self.add_input("context")  # the original context text
-
-        # Create up to 10 candidate input slots
-        # The node will automatically use however many are connected
-        self.MAX_CANDIDATES = 10
-        for i in range(1, self.MAX_CANDIDATES + 1):
+        # We'll provide 5 inputs by default: candidate1..candidate5
+        for i in range(1, 6):
             self.add_input(f"candidate{i}")
 
         self.add_output("text")
@@ -90,21 +86,16 @@ class BestOfNNode(BaseExecNode):
         """Execute the Best-of-N synthesis."""
         context = (inputs.get("context") or "").strip()
         candidates = []
-
-        # Automatically collect all connected candidates
-        # Iterate through candidate1, candidate2, etc. and collect what's present
-        for i in range(1, self.MAX_CANDIDATES + 1):
+        # Check all possible candidate inputs, don't break on first missing one
+        for i in range(1, 100):  # support more than 5 later
             key = f"candidate{i}"
             if key in inputs:
                 v = (inputs.get(key) or "").strip()
                 if v:
                     candidates.append(v)
-            else:
-                # Stop at first unconnected slot
-                break
 
         logging.info(
-            f"[{self.NODE_NAME}] Auto-detected {len(candidates)} connected candidate(s), context length: {len(context)}")
+            f"[{self.NODE_NAME}] Received {len(candidates)} candidate(s), context length: {len(context)}")
         logging.info(
             f"[{self.NODE_NAME}] All input keys: {list(inputs.keys())}")
         for idx, cand in enumerate(candidates, 1):
@@ -124,6 +115,17 @@ class BestOfNNode(BaseExecNode):
                     f"[{self.NODE_NAME}] {key}: {type(val)} = {repr(val)[:100]}")
             return {}
 
+        # If we have fewer than expected candidates, warn but continue
+        if len(candidates) < 5:
+            msg = f"Only {len(candidates)} candidate(s) available (expected 5). Continuing with available candidates."
+            logging.warning(f"[{self.NODE_NAME}] {msg}")
+            if QtWidgets is not None:
+                try:
+                    QtWidgets.QMessageBox.information(
+                        None, self.NODE_NAME, msg)
+                except Exception:
+                    pass
+
         provider = (self.get_property("provider")
                     or "openrouter").strip().lower()
         api_key = self.get_property("api_key") or ""
@@ -137,13 +139,13 @@ class BestOfNNode(BaseExecNode):
         # Resolve API key from config if missing
         if not api_key:
             try:
-                from aicodeprep_gui.config import get_api_key
+                from ...config import get_api_key
                 api_key = get_api_key(provider)
             except Exception:
                 pass
 
         if not api_key:
-            from aicodeprep_gui.config import get_config_dir
+            from ...config import get_config_dir
             config_dir = get_config_dir()
             self._warn(
                 f"Missing API key for provider '{provider}'.\n\nPlease edit: {config_dir / 'api-keys.toml'}\n\nAdd your API key under [{provider}] section.")

@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aicodeprep-flow"
+version = "1.0.0"
+description = "A standalone visual AI workflow editor and MCP server."
+readme = "README.md"
+authors = [{ name = "AI Code Prep", email = "tom@wuu73.org" }]
+license = { text = "figure-out-later" }
+requires-python = ">=3.12"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "PySide6>=6.9.0",
+    "NodeGraphQt>=0.6.30",
+    "toml",
+    "requests",
+    "packaging",
+    "pathspec",
+    "Pygments>=2.18.0",
+    "litellm>=1.40.0",
+    "fastmcp>=0.1.0",
+    "httpx>=0.25.0"
+]
+
+[project.scripts]
+aicodeprep-flow = "aicodeprep_flow.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+aicodeprep_flow = ["data/*.json", "data/*.html"]

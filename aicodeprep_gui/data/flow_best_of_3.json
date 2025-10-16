@@ -21,7 +21,7 @@
       "visible": true,
       "width": 191.515625,
       "height": 60,
-      "pos": [19.0, -380.0],
+      "pos": [19.0, -180.0],
       "layout_direction": 0,
       "port_deletion_allowed": false,
       "subgraph_session": {},
@@ -34,7 +34,7 @@
     "0x1f6a8c60b50": {
       "type_": "aicp.flow.OpenRouterNode",
       "icon": null,
-      "name": "gpt-5-codex",
+      "name": "grok-4-fast",
       "color": [50, 200, 100, 255],
       "border_color": [74, 84, 85, 255],
       "text_color": [255, 255, 255, 180],
@@ -43,7 +43,7 @@
       "visible": true,
       "width": 160,
       "height": 74.2,
-      "pos": [380.06894860099146, -439.193712736119],
+      "pos": [380.0, -380.0],
       "layout_direction": 0,
       "port_deletion_allowed": false,
       "subgraph_session": {},
@@ -51,7 +51,7 @@
         "version": "1.0.0",
         "provider": "openrouter",
         "model_mode": "choose",
-        "model": "openai/gpt-5-codex",
+        "model": "x-ai/grok-4-fast",
         "base_url": "https://openrouter.ai/api/v1",
         "output_file": "~/Downloads/LLM1.md",
         "temperature": 0.7,
@@ -67,11 +67,11 @@
       "border_color": [74, 84, 85, 255],
       "text_color": [255, 255, 255, 180],
       "disabled": false,
-      "selected": true,
+      "selected": false,
       "visible": true,
       "width": 160,
       "height": 74.2,
-      "pos": [359.0, 190.0],
+      "pos": [380.0, -180.0],
       "layout_direction": 0,
       "port_deletion_allowed": false,
       "subgraph_session": {},
@@ -81,7 +81,7 @@
         "model_mode": "choose",
         "model": "qwen/qwen3-next-80b-a3b-thinking",
         "base_url": "https://openrouter.ai/api/v1",
-        "output_file": "~/Downloads/LLM4.md",
+        "output_file": "~/Downloads/LLM2.md",
         "temperature": 0.7,
         "top_p": 1.0,
         "ui_hint_models": "Choose a model id, or set model_mode to 'random' or 'random_free'"
@@ -90,7 +90,7 @@
     "0x1f6a8c621d0": {
       "type_": "aicp.flow.OpenRouterNode",
       "icon": null,
-      "name": "o4-mini",
+      "name": "gpt-5-mini",
       "color": [50, 200, 100, 255],
       "border_color": [74, 84, 85, 255],
       "text_color": [255, 255, 255, 180],
@@ -99,7 +99,7 @@
       "visible": true,
       "width": 160,
       "height": 74.2,
-      "pos": [359.0, 380.0],
+      "pos": [380.0, 20.0],
       "layout_direction": 0,
       "port_deletion_allowed": false,
       "subgraph_session": {},
@@ -107,65 +107,9 @@
         "version": "1.0.0",
         "provider": "openrouter",
         "model_mode": "choose",
-        "model": "openai/o4-mini",
-        "base_url": "https://openrouter.ai/api/v1",
-        "output_file": "~/Downloads/LLM5.md",
-        "temperature": 0.7,
-        "top_p": 1.0,
-        "ui_hint_models": "Choose a model id, or set model_mode to 'random' or 'random_free'"
-      }
-    },
-    "0x1f6a8c65290": {
-      "type_": "aicp.flow.OpenRouterNode",
-      "icon": null,
-      "name": "glm-4.6",
-      "color": [50, 200, 100, 255],
-      "border_color": [74, 84, 85, 255],
-      "text_color": [255, 255, 255, 180],
-      "disabled": false,
-      "selected": false,
-      "visible": true,
-      "width": 160,
-      "height": 74.2,
-      "pos": [359.0, 0.0],
-      "layout_direction": 0,
-      "port_deletion_allowed": false,
-      "subgraph_session": {},
-      "custom": {
-        "version": "1.0.0",
-        "provider": "openrouter",
-        "model_mode": "choose",
-        "model": "z-ai/glm-4.6\n",
+        "model": "gpt-5-mini",
         "base_url": "https://openrouter.ai/api/v1",
         "output_file": "~/Downloads/LLM3.md",
-        "temperature": 0.7,
-        "top_p": 1.0,
-        "ui_hint_models": "Choose a model id, or set model_mode to 'random' or 'random_free'"
-      }
-    },
-    "0x1f6a8c66e10": {
-      "type_": "aicp.flow.OpenRouterNode",
-      "icon": null,
-      "name": "claude-sonnet-4.5",
-      "color": [50, 200, 100, 255],
-      "border_color": [74, 84, 85, 255],
-      "text_color": [255, 255, 255, 180],
-      "disabled": false,
-      "selected": false,
-      "visible": true,
-      "width": 160,
-      "height": 74.2,
-      "pos": [359.0, -190.0],
-      "layout_direction": 0,
-      "port_deletion_allowed": false,
-      "subgraph_session": {},
-      "custom": {
-        "version": "1.0.0",
-        "provider": "openrouter",
-        "model_mode": "choose",
-        "model": "anthropic/claude-sonnet-4.5",
-        "base_url": "https://openrouter.ai/api/v1",
-        "output_file": "~/Downloads/LLM2.md",
         "temperature": 0.7,
         "top_p": 1.0,
         "ui_hint_models": "Choose a model id, or set model_mode to 'random' or 'random_free'"
@@ -183,7 +127,7 @@
       "visible": true,
       "width": 160,
       "height": 166.6,
-      "pos": [699.0, -380.0],
+      "pos": [699.0, -180.0],
       "layout_direction": 0,
       "port_deletion_allowed": false,
       "subgraph_session": {},
@@ -208,7 +152,7 @@
       "visible": true,
       "width": 160,
       "height": 60,
-      "pos": [1039.0, -380.0],
+      "pos": [1039.0, -180.0],
       "layout_direction": 0,
       "port_deletion_allowed": false,
       "subgraph_session": {},
@@ -219,7 +163,7 @@
     "0x1f6a8c6de50": {
       "type_": "aicp.flow.FileWriteNode",
       "icon": null,
-      "name": "File Write: best_of_n.txt: ..._of_all1.txt: ..._of_all1.txt",
+      "name": "File Write: best_of_3.txt",
       "color": [50, 200, 100, 255],
       "border_color": [74, 84, 85, 255],
       "text_color": [255, 255, 255, 180],
@@ -228,13 +172,13 @@
       "visible": true,
       "width": 235.84375,
       "height": 60,
-      "pos": [1039.0, -190.0],
+      "pos": [1039.0, 20.0],
       "layout_direction": 0,
       "port_deletion_allowed": false,
       "subgraph_session": {},
       "custom": {
         "version": "1.0.0",
-        "path": "~/Downloads/best_of_all1.txt"
+        "path": "~/Downloads/best_of_3.txt"
       }
     },
     "0x1f6a3eba690": {
@@ -274,14 +218,6 @@
     },
     {
       "out": ["0x1f6a8c4ce10", "text"],
-      "in": ["0x1f6a8c65290", "text"]
-    },
-    {
-      "out": ["0x1f6a8c4ce10", "text"],
-      "in": ["0x1f6a8c66e10", "text"]
-    },
-    {
-      "out": ["0x1f6a8c4ce10", "text"],
       "in": ["0x1f6a8c66150", "context"]
     },
     {
@@ -295,14 +231,6 @@
     {
       "out": ["0x1f6a8c621d0", "text"],
       "in": ["0x1f6a8c66150", "candidate3"]
-    },
-    {
-      "out": ["0x1f6a8c65290", "text"],
-      "in": ["0x1f6a8c66150", "candidate4"]
-    },
-    {
-      "out": ["0x1f6a8c66e10", "text"],
-      "in": ["0x1f6a8c66150", "candidate5"]
     },
     {
       "out": ["0x1f6a8c66150", "text"],

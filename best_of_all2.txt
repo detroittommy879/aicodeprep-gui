@@ -1,0 +1,384 @@
+This is an excellent and ambitious project. Creating a standalone, server-capable version of the Flow Studio is a great evolution of the tool.
+
+Here is a comprehensive, step-by-step plan designed for an AI agent to extract the necessary components from `aicodeprep-gui` and build the new `aicodeprep-flow` application. This plan synthesizes the best ideas from all candidates, focusing on a clear, robust, and achievable implementation.
+
+### **Analysis of Candidate Answers**
+
+*   **Candidate 1:** Extremely detailed and well-structured, providing a solid repository layout and a step-by-step plan that is perfect for an AI agent. It correctly identifies concurrency challenges and offers a sound solution for result extraction.
+*   **Candidate 2:** Excellent use of checklists and summaries ("What's Removed/Added/Kept"), which greatly improves clarity. The proposed structure is good, but the implementation details for the MCP server were less robust than other candidates.
+*   **Candidate 3:** Provided useful concrete code snippets but had some flawed logic, particularly in its MCP server implementation (e.g., capturing stdout, which is incorrect for this architecture).
+*   **Candidate 4:** Offered the most sophisticated and technically sound approach for integrating the MCP server with the GUI (using a `QThread`). Its idea for a new `TriggerInputNode` is very elegant, though perhaps more complex than needed for a first version. Its `MainWindow` proposal is the cleanest.
+*   **Candidate 5:** Very concise and correctly identified the simplest way to extract results (`OutputDisplayNode` property). However, it was too high-level to serve as a detailed plan for an AI agent.
+
+### **Synthesized "Best-of-All" Plan**
+
+This plan combines the **detailed structure of Candidate 1**, the **clarity of Candidate 2**, the **clean GUI architecture of Candidate 4**, and the **simple result extraction logic of Candidate 5**. It prioritizes a robust, file-based input mechanism for the MCP server to maximize code reuse.
+
+---
+
+### **Project Plan: Create Standalone `aicodeprep-flow` App**
+
+**Project Goal:**
+To create a new, standalone application named `aicodeprep-flow` by extracting the Flow Studio from `aicodeprep-gui`. The new application will function both as a visual graph editor and as a headless MCP server that can execute flows triggered by other applications. 
+
+---
+
+### **Phase 1: Project Scaffolding**
+
+**Action:** Create the new project's directory structure.
+
+```
+aicodeprep-flow/
+├── pyproject.toml
+├── README.md
+├── mcp_config.json
+└── src/
+    └── aicodeprep_flow/
+        ├── __init__.py
+        ├── main.py                # New: Main entry point and CLI logic
+        ├── main_window.py         # New: The main GUI window
+        ├── apptheme.py            # Copied: For UI styling
+        ├── config.py              # Adapted: Manages API keys
+        ├── data/                  # Copied: Default flow, help file
+        │   ├── flow.json
+        │   └── flow_studio_help.html
+        ├── flow/                  # Copied & Adapted: Core of Flow Studio
+        │   ├── __init__.py
+        │   ├── api_key_dialog.py
+        │   ├── engine.py
+        │   ├── flow_dock.py
+        │   ├── progress_dialog.py
+        │   └── serializer.py
+        │   └── nodes/
+        │        ├── __init__.py
+        │        ├── aggregate_nodes.py
+        │        ├── base.py
+        │        ├── io_nodes.py
+        │        └── llm_nodes.py
+        ├── llm/                   # Copied: LiteLLM client
+        │   ├── __init__.py
+        │   └── litellm_client.py
+        └── mcp/                   # New: MCP Server implementation
+            └── server.py
+```
+
+**Action:** Create `pyproject.toml` with the combined dependencies.
+
+```toml
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aicodeprep-flow"
+version = "1.0.0"
+description = "A standalone visual AI workflow editor and MCP server."
+readme = "README.md"
+authors = [{ name = "AI Code Prep", email = "tom@wuu73.org" }]
+license = { text = "figure-out-later" }
+requires-python = ">=3.12"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "PySide6>=6.9.0",
+    "NodeGraphQt>=0.6.30",
+    "toml",
+    "requests",
+    "packaging",
+    "pathspec",
+    "Pygments>=2.18.0",
+    "litellm>=1.40.0",
+    "fastmcp>=0.1.0",
+    "httpx>=0.25.0"
+]
+
+[project.scripts]
+aicodeprep-flow = "aicodeprep_flow.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+aicodeprep_flow = ["data/*.json", "data/*.html"]
+```
+
+---
+
+### **Phase 2: Code Migration and Adaptation**
+
+**Action:** Copy the following files/directories from `aicodeprep-gui` into the new `aicodeprep-flow/src/aicodeprep_flow/` directory.
+
+-   **[✅] Copy `aicodeprep_gui/pro/flow/` → `src/aicodeprep_flow/flow/`**
+    *(This includes `flow_dock.py`, `engine.py`, `serializer.py`, `api_key_dialog.py`, `progress_dialog.py`, and the `nodes/` subdirectory.)*
+-   **[✅] Copy `aicodeprep_gui/pro/llm/` → `src/aicodeprep_flow/llm/`**
+-   **[✅] Copy `aicodeprep_gui/config.py` → `src/aicodeprep_flow/config.py`**
+-   **[✅] Copy `aicodeprep_gui/apptheme.py` → `src/aicodeprep_flow/apptheme.py`**
+-   **[✅] Copy `aicodeprep_gui/data/flow.json` → `src/aicodeprep_flow/data/flow.json`**
+-   **[✅] Copy `aicodeprep_gui/data/flow_studio_help.html` → `src/aicodeprep_flow/data/flow_studio_help.html`**
+
+**Action:** Adapt the copied files. This is a global search-and-replace task.
+
+1.  **Update Imports:** In all new `.py` files inside `src/aicodeprep_flow/`, replace all instances of `from aicodeprep_gui...` with the new relative package structure.
+    -   `from aicodeprep_gui.pro.llm...` → `from ..llm...`
+    -   `from aicodeprep_gui.config...` → `from ..config...`
+    -   `from aicodeprep_gui.apptheme...` → `from ..apptheme...`
+2.  **Adapt `config.py`:**
+    -   Find the `get_config_dir()` function.
+    -   Change the directory name from `".aicodeprep-gui"` to `".aicodeprep-flow"`. This isolates the new app's configuration.
+    -   Update any user-facing messages in the file to refer to `aicodeprep-flow`.
+3.  **Adapt `flow/flow_dock.py`:**
+    -   Remove any logic related to "Pro" mode, licensing, or `read_only` status. This new app is fully featured by default.
+    -   Delete any references to `aicodeprep_gui.main_window` or parent window dependencies. It will be hosted in our new `MainWindow`.
+
+---
+
+### **Phase 3: Create the Standalone GUI Application**
+
+**Action:** Create `src/aicodeprep_flow/main_window.py`. This window will host the `FlowStudioDock`.
+
+```python
+# src/aicodeprep_flow/main_window.py
+import sys
+from PySide6.QtWidgets import QMainWindow
+from PySide6.QtGui import QAction
+from .flow.flow_dock import FlowStudioDock
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("AICodePrep Flow Editor")
+        self.setGeometry(100, 100, 1400, 900)
+
+        # Instantiate FlowStudioDock and set it as the central widget.
+        # Set read_only=False to ensure full editing capabilities.
+        self.flow_studio = FlowStudioDock(parent=self, read_only=False)
+        self.setCentralWidget(self.flow_studio)
+
+        self._setup_menus()
+        self.show()
+
+    def _setup_menus(self):
+        menu_bar = self.menuBar()
+        file_menu = menu_bar.addMenu("&File")
+
+        import_action = QAction("Import Flow...", self)
+        import_action.triggered.connect(self.flow_studio._on_import_clicked)
+        file_menu.addAction(import_action)
+
+        export_action = QAction("Export Flow...", self)
+        export_action.triggered.connect(self.flow_studio._on_export_clicked)
+        file_menu.addAction(export_action)
+        
+        file_menu.addSeparator()
+        
+        quit_action = QAction("Quit", self)
+        quit_action.triggered.connect(self.close)
+        file_menu.addAction(quit_action)
+
+        help_menu = menu_bar.addMenu("&Help")
+        help_action = QAction("Flow Studio Guide...", self)
+        help_action.triggered.connect(self.flow_studio._show_help)
+        help_menu.addAction(help_action)
+```
+
+**Action:** Create `src/aicodeprep_flow/main.py`. This is the main entry point that handles CLI arguments.
+
+```python
+# src/aicodeprep_flow/main.py
+import sys
+import argparse
+import logging
+from PySide6.QtWidgets import QApplication
+
+def main():
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    
+    parser = argparse.ArgumentParser(description="AICodePrep Flow: Visual Editor and MCP Server.")
+    parser.add_argument("--mcp", action="store_true", help="Run in headless MCP server mode (stdio).")
+    args = parser.parse_args()
+
+    if args.mcp:
+        # Run in headless MCP server mode
+        from .mcp.server import main_sync as run_mcp_server
+        print("Starting aicodeprep-flow in headless MCP server mode...")
+        run_mcp_server()
+    else:
+        # Run the GUI editor
+        from .main_window import MainWindow
+        from .apptheme import apply_dark_palette, load_custom_fonts
+
+        app = QApplication(sys.argv)
+        app.setStyle("Fusion")
+        apply_dark_palette(app) # Default to dark theme for consistency
+        load_custom_fonts()
+        
+        window = MainWindow()
+        sys.exit(app.exec())
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+### **Phase 4: Implement the Headless MCP Server**
+
+This phase implements the server logic, inspired by `parallel-llm-mcp`.
+
+**Action:** Create `src/aicodeprep_flow/mcp/server.py`.
+
+```python
+# src/aicodeprep_flow/mcp/server.py
+import asyncio
+import logging
+import os
+import tempfile
+from typing import Dict
+from pathlib import Path
+
+# Important: These are local package imports
+from ..flow.engine import execute_graph
+from ..flow.serializer import load_session
+from ..flow.nodes.io_nodes import ContextOutputNode, OutputDisplayNode, FileWriteNode
+
+logger = logging.getLogger(__name__)
+
+class FlowMCPServer:
+    def __init__(self):
+        try:
+            from fastmcp import FastMCP
+            from NodeGraphQt import NodeGraph
+            self.mcp = FastMCP("aicodeprep-flow-server")
+            self.NodeGraph = NodeGraph
+        except ImportError as e:
+            raise ImportError(f"Missing dependency for MCP Server: {e}")
+            
+        self._register_nodes_globally()
+        self._register_mcp_tools()
+
+    def _register_nodes_globally(self):
+        # We need to register nodes with the NodeGraphQt framework itself
+        # so they can be deserialized correctly.
+        from ..flow.nodes.io_nodes import ContextOutputNode, ClipboardNode, FileWriteNode, OutputDisplayNode
+        from ..flow.nodes.llm_nodes import OpenRouterNode, OpenAINode, GeminiNode, OpenAICompatibleNode
+        from ..flow.nodes.aggregate_nodes import BestOfNNode
+        from NodeGraphQt import setup_context_menu
+
+        nodes_to_register = [
+            ContextOutputNode, ClipboardNode, FileWriteNode, OutputDisplayNode,
+            OpenRouterNode, OpenAINode, GeminiNode, OpenAICompatibleNode, BestOfNNode,
+        ]
+        
+        menu_items = {'graph': {}, 'nodes': {}}
+        for node_cls in nodes_to_register:
+            # This is a bit of a workaround to register nodes without a graph instance
+            category = "I/O"
+            if "LLM" in node_cls.__name__: category = "LLM"
+            if "BestOfN" in node_cls.__name__: category = "Aggregate"
+                
+            if category not in menu_items['nodes']:
+                menu_items['nodes'][category] = {}
+            
+            menu_items['nodes'][category][node_cls.NODE_NAME] = f"{node_cls.__identifier__}.{node_cls.__name__}"
+            
+        setup_context_menu(node_menu=menu_items)
+        logger.info("Globally registered all flow nodes.")
+
+    def _register_mcp_tools(self):
+        @self.mcp.tool()
+        async def execute_flow(graph_path: str, context_text: str) -> str:
+            """Executes a flow graph with the provided text and returns the result."""
+            if not Path(graph_path).is_file():
+                return f"Error: Graph file not found at '{graph_path}'"
+
+            # Create a temporary file for the context input
+            with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix=".txt", encoding='utf-8') as tmp:
+                tmp.write(context_text)
+                context_file_path = tmp.name
+                
+            logger.info(f"Wrote context to temporary file: {context_file_path}")
+
+            try:
+                # Run the graph execution in a separate thread to avoid blocking asyncio loop
+                result = await asyncio.to_thread(
+                    self._run_graph_sync, graph_path, context_file_path
+                )
+                return result
+            except Exception as e:
+                logger.error(f"Error during graph execution: {e}", exc_info=True)
+                return f"Error: {e}"
+            finally:
+                os.unlink(context_file_path)
+
+    def _run_graph_sync(self, graph_path: str, context_file_path: str) -> str:
+        """Synchronous wrapper for executing the graph."""
+        graph = self.NodeGraph()
+        
+        if not load_session(graph, graph_path):
+            raise RuntimeError(f"Failed to load graph session: {graph_path}")
+        
+        # Modify the ContextOutputNode to point to our temporary input file
+        for node in graph.all_nodes():
+            if isinstance(node, ContextOutputNode):
+                node.set_property('path', context_file_path)
+                logger.info(f"Patched ContextOutputNode to use '{context_file_path}'")
+
+        # Execute the graph
+        execute_graph(graph, parent_widget=None, show_progress=False)
+
+        # Extract the result
+        # Strategy: Find OutputDisplayNode and get its 'last_result' property.
+        for node in graph.all_nodes():
+             if isinstance(node, OutputDisplayNode):
+                result_text = node.get_property('last_result')
+                if result_text:
+                    logger.info("Extracted result from OutputDisplayNode.")
+                    return result_text
+
+        # Fallback Strategy: Find the last FileWriteNode and read its output
+        for node in graph.all_nodes():
+            if isinstance(node, FileWriteNode):
+                output_path = node.get_property('path')
+                if output_path and Path(output_path).exists():
+                    logger.info(f"Extracted result from FileWriteNode file: {output_path}")
+                    return Path(output_path).read_text(encoding='utf-8')
+        
+        return "Flow executed, but no result could be extracted from OutputDisplayNode or FileWriteNode."
+
+def main_sync():
+    """Entry point for running the MCP server."""
+    try:
+        server = FlowMCPServer()
+        server.mcp.run(transport="stdio")
+    except Exception as e:
+        logger.error(f"Failed to start MCP server: {e}", exc_info=True)
+
+```
+
+---
+
+### **Phase 5: Final Touches**
+
+1.  **`README.md`**: Create a `README.md` for the new project, explaining its purpose, installation (`pip install .`), and how to run it in GUI mode (`aicodeprep-flow`) vs. MCP server mode (`aicodeprep-flow --mcp`).
+2.  **`mcp_config.json`**: Create a sample `mcp_config.json` file in the root for users who want to integrate `aicodeprep-flow` with their MCP clients (like Claude Desktop).
+
+    ```json
+    {
+      "mcpServers": {
+        "aicodeprep-flow": {
+          "command": "aicodeprep-flow",
+          "args": ["--mcp"],
+          "env": {
+            "OPENROUTER_API_KEY": ""
+          }
+        }
+      }
+    }
+    ```
+
+3.  **Testing**:
+    *   Run `aicodeprep-flow` to launch the GUI. Verify you can create, edit, save, load, and run flows.
+    *   Run `aicodeprep-flow --mcp` to start the headless server.
+    *   Use an MCP client to call the `execute_flow` tool, providing a path to `data/flow.json` and some input text. Verify it returns the synthesized output.

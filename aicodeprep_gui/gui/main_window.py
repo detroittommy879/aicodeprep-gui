@@ -317,6 +317,25 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         flow_bestof5_config_act.triggered.connect(_load_bestof5_configured)
         flow_menu.addAction(flow_bestof5_config_act)
 
+        # Add configured Best-of-3 template
+        flow_bestof3_config_act = QtGui.QAction(
+            "Load Built-in: Best-of-3 (Configured)", self)
+
+        def _load_bestof3_configured():
+            if not self._ensure_flow_dock():
+                QtWidgets.QMessageBox.warning(
+                    self, "Flow Studio", "Flow Studio could not be initialized.")
+                return
+            if hasattr(self.flow_dock, "load_template_best_of_3_configured"):
+                self.flow_dock.load_template_best_of_3_configured()
+                self.flow_dock.show()
+            else:
+                QtWidgets.QMessageBox.warning(
+                    self, "Flow Studio", "Dock missing 'load_template_best_of_3_configured'.")
+
+        flow_bestof3_config_act.triggered.connect(_load_bestof3_configured)
+        flow_menu.addAction(flow_bestof3_config_act)
+
         flow_menu.addSeparator()
 
         flow_run_act = QtGui.QAction("Run Current Flow", self)
@@ -1890,10 +1909,6 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
     def _is_pro_enabled(self):
         """Check if pro mode is enabled globally."""
-        # Check command line flag
-        if '--pro' in sys.argv:
-            return True
-
         # Check global settings for pro_enabled, license key, and verification
         try:
             settings = QtCore.QSettings("aicodeprep-gui", "ProLicense")

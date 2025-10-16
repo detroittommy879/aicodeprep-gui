@@ -12,7 +12,7 @@
     "0x1f6a8c4ce10": {
       "type_": "aicp.flow.ContextOutputNode",
       "icon": null,
-      "name": "Context Output: fullcode.txt",
+      "name": "Context Output: fullcode.txt: fullcode.txt",
       "color": [50, 200, 100, 255],
       "border_color": [74, 84, 85, 255],
       "text_color": [255, 255, 255, 180],
@@ -53,7 +53,7 @@
         "model_mode": "choose",
         "model": "openai/gpt-5-codex",
         "base_url": "https://openrouter.ai/api/v1",
-        "output_file": "~/Downloads/LLM1.md",
+        "output_file": "LLM1.md",
         "temperature": 0.7,
         "top_p": 1.0,
         "ui_hint_models": "Choose a model id, or set model_mode to 'random' or 'random_free'"
@@ -81,7 +81,7 @@
         "model_mode": "choose",
         "model": "qwen/qwen3-next-80b-a3b-thinking",
         "base_url": "https://openrouter.ai/api/v1",
-        "output_file": "~/Downloads/LLM4.md",
+        "output_file": "LLM4.md",
         "temperature": 0.7,
         "top_p": 1.0,
         "ui_hint_models": "Choose a model id, or set model_mode to 'random' or 'random_free'"
@@ -109,7 +109,7 @@
         "model_mode": "choose",
         "model": "openai/o4-mini",
         "base_url": "https://openrouter.ai/api/v1",
-        "output_file": "~/Downloads/LLM5.md",
+        "output_file": "LLM5.md",
         "temperature": 0.7,
         "top_p": 1.0,
         "ui_hint_models": "Choose a model id, or set model_mode to 'random' or 'random_free'"
@@ -135,9 +135,9 @@
         "version": "1.0.0",
         "provider": "openrouter",
         "model_mode": "choose",
-        "model": "z-ai/glm-4.6\n",
+        "model": "z-ai/glm-4.6",
         "base_url": "https://openrouter.ai/api/v1",
-        "output_file": "~/Downloads/LLM3.md",
+        "output_file": "LLM3.md",
         "temperature": 0.7,
         "top_p": 1.0,
         "ui_hint_models": "Choose a model id, or set model_mode to 'random' or 'random_free'"
@@ -165,7 +165,7 @@
         "model_mode": "choose",
         "model": "anthropic/claude-sonnet-4.5",
         "base_url": "https://openrouter.ai/api/v1",
-        "output_file": "~/Downloads/LLM2.md",
+        "output_file": "LLM2.md",
         "temperature": 0.7,
         "top_p": 1.0,
         "ui_hint_models": "Choose a model id, or set model_mode to 'random' or 'random_free'"
@@ -234,7 +234,7 @@
       "subgraph_session": {},
       "custom": {
         "version": "1.0.0",
-        "path": "~/Downloads/best_of_all1.txt"
+        "path": "best_of_all1.txt"
       }
     },
     "0x1f6a3eba690": {

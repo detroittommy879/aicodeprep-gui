@@ -12,9 +12,6 @@ from PySide6 import QtWidgets, QtCore
 from PySide6.QtWidgets import QGraphicsView
 from PySide6.QtCore import Qt, QEvent, QObject, QTimer
 
-# Import pro module to check license status
-from aicodeprep_gui import pro
-
 try:
     from NodeGraphQt import NodeGraph, PropertiesBinWidget
     NG_AVAILABLE = True
@@ -1388,69 +1385,6 @@ class FlowStudioDock(QtWidgets.QDockWidget):
         except Exception as e:
             logging.error(f"Failed to apply Flow Studio read-only mode: {e}")
 
-    def _load_flow_from_file(self, flow_path: str) -> bool:
-        """Load a flow from a JSON file path. Used for loading built-in flows from ~/flows/"""
-        try:
-            from pathlib import Path
-            from .serializer import import_from_json
-
-            flow_file = Path(flow_path)
-            if not flow_file.exists():
-                logging.error(f"[FlowDock] Flow file not found: {flow_path}")
-                return False
-
-            logging.info(
-                f"[FlowDock] Attempting to load flow from: {flow_path}")
-
-            # Clear the graph first
-            try:
-                if hasattr(self.graph, "clear_session"):
-                    logging.debug(
-                        "[FlowDock] Clearing graph using clear_session")
-                    self.graph.clear_session()
-                else:
-                    logging.debug(
-                        "[FlowDock] Clearing graph by deleting nodes")
-                    for n in list(getattr(self.graph, "all_nodes", lambda: [])()):
-                        try:
-                            if hasattr(self.graph, "delete_node"):
-                                self.graph.delete_node(n)
-                        except Exception as del_err:
-                            logging.warning(
-                                f"[FlowDock] Failed to delete node: {del_err}")
-            except Exception as clear_err:
-                logging.warning(
-                    f"[FlowDock] Error clearing graph: {clear_err}")
-
-            # Import the flow
-            logging.info(
-                f"[FlowDock] Calling import_from_json for: {flow_path}")
-            result = import_from_json(self.graph, str(flow_file))
-
-            if result:
-                logging.info(
-                    f"[FlowDock] Successfully loaded flow from: {flow_path}")
-
-                # Re-register nodes to update properties panel
-                try:
-                    self._register_nodes()
-                    logging.info(
-                        "[FlowDock] Re-registered nodes after loading")
-                except Exception as reg_err:
-                    logging.warning(
-                        f"[FlowDock] Failed to re-register nodes: {reg_err}")
-
-                return True
-            else:
-                logging.error(
-                    f"[FlowDock] import_from_json returned False for: {flow_path}")
-                return False
-
-        except Exception as e:
-            logging.error(
-                f"[FlowDock] Exception loading flow file: {e}", exc_info=True)
-            return False
-
     # ---- Toolbar handlers (Phase 1: stubs) ----
     def _on_import_clicked(self):
         """Phase 2: Import a flow JSON, replacing current graph(Pro only)."""
@@ -1563,33 +1497,6 @@ class FlowStudioDock(QtWidgets.QDockWidget):
 
     def _on_run_clicked(self):
         """Handle Run Flow button click."""
-        # Check if user has Pro license
-        if not pro.enabled:
-            msg_box = QtWidgets.QMessageBox(self)
-            msg_box.setIcon(QtWidgets.QMessageBox.Information)
-            msg_box.setWindowTitle("Upgrade to Pro")
-            msg_box.setText(
-                "<b>Flow Studio Execution Requires Pro</b>"
-            )
-            msg_box.setInformativeText(
-                "You can view and configure flows in the free version, "
-                "but running flows requires a Pro license.\n\n"
-                "Get lifetime access to all Pro features:"
-            )
-
-            # Add clickable link
-            link_label = QtWidgets.QLabel(
-                '<a href="https://tombrothers.gumroad.com/l/zthvs" '
-                'style="color: #28a745; font-size: 14px;">Buy Lifetime Pro License</a>'
-            )
-            link_label.setOpenExternalLinks(True)
-            link_label.setAlignment(QtCore.Qt.AlignCenter)
-            msg_box.layout().addWidget(link_label, 1, 1)
-
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msg_box.exec()
-            return
-
         try:
             from .engine import execute_graph
             execute_graph(self.graph, parent_widget=self)
@@ -1663,7 +1570,6 @@ class FlowStudioDock(QtWidgets.QDockWidget):
             if best and hasattr(best, "set_property"):
                 best.set_property("provider", "openrouter")
                 best.set_property("model_mode", "random_free")
-                # Auto-detects connected candidates (no need to set num_candidates)
                 # base_url already defaulted to OpenRouter
             logging.info(f"Created BestOfN node: {best}")
             if best:
@@ -1818,79 +1724,209 @@ class FlowStudioDock(QtWidgets.QDockWidget):
             logging.error(f"load_template_best_of_5_openrouter failed: {e}")
 
     def load_template_best_of_5_configured(self):
-        """Load the preconfigured Best-of-5 flow from ~/flows/flow.json"""
+        """Load the preconfigured Best-of-5 flow with all settings from data/flow.json."""
         try:
-            from pathlib import Path
-            from aicodeprep_gui.config import get_flows_dir
+            # Clear graph first
+            try:
+                if hasattr(self.graph, "clear_session"):
+                    self.graph.clear_session()
+                else:
+                    for n in list(getattr(self.graph, "all_nodes", lambda: [])()):
+                        try:
+                            if hasattr(self.graph, "delete_node"):
+                                self.graph.delete_node(n)
+                        except Exception:
+                            continue
+            except Exception:
+                pass
 
-            flows_dir = get_flows_dir()
-            flow_file = flows_dir / "flow.json"
+            # Create nodes with the exact configuration from flow.json
+            from .nodes.io_nodes import ContextOutputNode, ClipboardNode, FileWriteNode, OutputDisplayNode
+            from .nodes.llm_nodes import OpenRouterNode
+            from .nodes.aggregate_nodes import BestOfNNode
 
-            if not flow_file.exists():
-                logging.error(
-                    f"Best-of-5 flow template not found at: {flow_file}")
-                QtWidgets.QMessageBox.warning(
-                    self, "Flow Template Not Found",
-                    f"Best-of-5 flow template not found.\n\nExpected location: {flow_file}"
-                )
-                return
+            # Create Context Output node
+            ctx = self._create_node_compat(
+                ContextOutputNode, "aicp.flow", "Context Output: fullcode.txt: fullcode.txt", (19.0, -380.0))
+            if ctx and hasattr(ctx, "set_property"):
+                ctx.set_property("path", "fullcode.txt")
+                ctx.set_property("use_latest_generated", True)
 
-            if self._load_flow_from_file(str(flow_file)):
-                logging.info("Best-of-5 flow template loaded successfully")
-                QtWidgets.QMessageBox.information(
-                    self,
-                    "Flow Template Loaded",
-                    "✅ Preconfigured Best-of-5 flow loaded successfully!\n\n"
-                    "🔑 Next step: Add your API keys\n"
-                    "Click the '🔑 Manage API Keys' button in the toolbar."
-                )
-            else:
-                QtWidgets.QMessageBox.warning(
-                    self, "Flow Load Error",
-                    "Failed to load Best-of-5 flow template"
-                )
-        except Exception as e:
-            logging.error(f"Error loading Best-of-5 template: {e}")
-            QtWidgets.QMessageBox.warning(
-                self, "Flow Load Error",
-                f"Error loading Best-of-5 template: {e}"
+            # Create 5 OpenRouter LLM nodes with specific configurations
+            llm_configs = [
+                {"name": "gpt-5-codex", "model": "openai/gpt-5-codex",
+                    "output_file": "LLM1.md", "pos": (380.06894860099146, -439.193712736119)},
+                {"name": "claude-sonnet-4.5", "model": "anthropic/claude-sonnet-4.5",
+                    "output_file": "LLM2.md", "pos": (359.0, -190.0)},
+                {"name": "glm-4.6", "model": "z-ai/glm-4.6\n",
+                    "output_file": "LLM3.md", "pos": (359.0, 0.0)},
+                {"name": "qwen3-next-80b-a3...", "model": "qwen/qwen3-next-80b-a3b-thinking",
+                    "output_file": "LLM4.md", "pos": (359.0, 190.0)},
+                {"name": "o4-mini", "model": "openai/o4-mini",
+                    "output_file": "LLM5.md", "pos": (359.0, 380.0)},
+            ]
+
+            or_nodes = []
+            for i, config in enumerate(llm_configs):
+                n = self._create_node_compat(
+                    OpenRouterNode, "aicp.flow", config["name"], config["pos"])
+                if n and hasattr(n, "set_property"):
+                    n.set_property("model_mode", "choose")
+                    n.set_property("model", config["model"])
+                    n.set_property("output_file", config["output_file"])
+                    n.set_property("temperature", 0.7)
+                    n.set_property("top_p", 1.0)
+                    n.set_property("provider", "openrouter")
+                    n.set_property("base_url", "https://openrouter.ai/api/v1")
+                logging.info(
+                    f"Created OpenRouter node {i}: {n} with model {config['model']}")
+                or_nodes.append(n)
+
+            # Create Best-of-N node with detailed configuration
+            best = self._create_node_compat(
+                BestOfNNode, "aicp.flow", "Best-of-N Synthesizer", (699.0, -380.0))
+            if best and hasattr(best, "set_property"):
+                best.set_property("provider", "openrouter")
+                best.set_property("base_url", "https://openrouter.ai/api/v1")
+                best.set_property("model", "google/gemini-2.5-pro")
+                best.set_property("model_mode", "choose")
+                extra_prompt = """You are an expert coder and you are good at looking at many different suggested solutions to a problem and coming up with a better or 'best of all of them' solution. You can use all of the available information to try and create an even better solution. Don't assume that all of the suggested solutions are correct, sometimes they can be wrong so use your best judgement and abilities, think critically, etc.
+
+You will receive:
+- The original code files and the user question/prompt,
+- N candidate answers from different AI models.
+
+Task:
+1) Analyze the strengths and weaknesses of each candidate.
+2) Synthesize a 'best of all' answer that is better than any single one.
+3) Where relevant, cite brief pros/cons observed.
+4) Ensure the final answer is complete, correct, and practical.
+"""
+                best.set_property("extra_prompt", extra_prompt)
+            logging.info(f"Created BestOfN node: {best}")
+
+            # Create Clipboard node
+            clip = self._create_node_compat(
+                ClipboardNode, "aicp.flow", "Clipboard", (1039.0, -380.0))
+            logging.info(f"Created Clipboard node: {clip}")
+
+            # Create FileWrite node
+            fwr = self._create_node_compat(
+                FileWriteNode, "aicp.flow", "File Write: best_of_n.txt: ..._of_all1.txt: ..._of_all1.txt", (1039.0, -190.0))
+            if fwr and hasattr(fwr, "set_property"):
+                fwr.set_property("path", "best_of_all1.txt")
+            logging.info(f"Created FileWrite node: {fwr}")
+
+            # Create Output Display node
+            output_display = self._create_node_compat(
+                OutputDisplayNode, "aicp.flow", "Output Display", (653.9412200232489, 25.1956336961672))
+            logging.info(f"Created Output Display node: {output_display}")
+
+            # Wire connections: ctx.text -> each OpenRouter input.text
+            try:
+                out_text = self._find_port(ctx, "text", "output")
+                logging.info(f"Context output port: {out_text}")
+
+                # Connect context to each OpenRouter node
+                for i, or_node in enumerate(or_nodes):
+                    if or_node and out_text:
+                        in_text = self._find_port(or_node, "text", "input")
+                        if out_text and in_text:
+                            try:
+                                out_text.connect_to(in_text)
+                                logging.info(
+                                    f"Connected ctx -> OpenRouter {i}")
+                            except Exception as e:
+                                logging.error(
+                                    f"Failed to connect ctx -> OpenRouter {i}: {e}")
+
+                # Connect context to Best-of-N context input
+                best_in_ctx = self._find_port(best, "context", "input")
+                if out_text and best_in_ctx:
+                    try:
+                        out_text.connect_to(best_in_ctx)
+                        logging.info("Connected ctx -> Best-of-N context")
+                    except Exception as e:
+                        logging.error(
+                            f"Failed to connect ctx -> Best-of-N context: {e}")
+
+                # Connect each OpenRouter output to Best-of-N candidate inputs
+                for i, or_node in enumerate(or_nodes):
+                    if or_node and best:
+                        or_out = self._find_port(or_node, "text", "output")
+                        best_in = self._find_port(
+                            best, f"candidate{i+1}", "input")
+                        if or_out and best_in:
+                            try:
+                                or_out.connect_to(best_in)
+                                logging.info(
+                                    f"Connected OpenRouter {i} -> Best-of-N candidate{i+1}")
+                            except Exception as e:
+                                logging.error(
+                                    f"Failed to connect OpenRouter {i} -> Best-of-N: {e}")
+
+                # Connect Best-of-N output to Clipboard and FileWrite
+                best_out = self._find_port(best, "text", "output")
+                if best_out:
+                    if clip:
+                        clip_in = self._find_port(clip, "text", "input")
+                        if clip_in:
+                            try:
+                                best_out.connect_to(clip_in)
+                                logging.info(
+                                    "Connected Best-of-N -> Clipboard")
+                            except Exception as e:
+                                logging.error(
+                                    f"Failed to connect Best-of-N -> Clipboard: {e}")
+
+                    if fwr:
+                        fwr_in = self._find_port(fwr, "text", "input")
+                        if fwr_in:
+                            try:
+                                best_out.connect_to(fwr_in)
+                                logging.info(
+                                    "Connected Best-of-N -> FileWrite")
+                            except Exception as e:
+                                logging.error(
+                                    f"Failed to connect Best-of-N -> FileWrite: {e}")
+
+                    if output_display:
+                        display_in = self._find_port(
+                            output_display, "text", "input")
+                        if display_in:
+                            try:
+                                best_out.connect_to(display_in)
+                                logging.info(
+                                    "Connected Best-of-N -> OutputDisplay")
+                            except Exception as e:
+                                logging.error(
+                                    f"Failed to connect Best-of-N -> OutputDisplay: {e}")
+
+            except Exception as e:
+                logging.error(f"Failed wiring nodes: {e}", exc_info=True)
+
+            # Re-register nodes to update properties panel
+            self._register_nodes()
+
+            QtWidgets.QMessageBox.information(
+                self,
+                "Flow Template Loaded",
+                "✅ Preconfigured Best-of-5 flow loaded successfully!\n\n"
+                "📋 This flow includes:\n"
+                "• 5 AI models: GPT-5 Codex, Claude Sonnet 4.5, GLM-4.6, Qwen3, O4-Mini\n"
+                "• Best-of-N synthesis with Gemini 2.5 Pro\n"
+                "• Pre-configured outputs to clipboard and file\n\n"
+                "🔑 Next step: Add your OpenRouter API key\n"
+                "Click the '🔑 Manage API Keys' button in the toolbar."
             )
+
+        except Exception as e:
+            logging.error(
+                f"load_template_best_of_5_configured failed: {e}", exc_info=True)
             QtWidgets.QMessageBox.warning(
                 self,
                 "Flow Template",
                 f"❌ Error loading template:\n\n{e}"
-            )
-
-    def load_template_best_of_3_configured(self):
-        """Load the preconfigured Best-of-3 flow from ~/flows/flow_best_of_3.json"""
-        try:
-            from pathlib import Path
-            from aicodeprep_gui.config import get_flows_dir
-
-            flows_dir = get_flows_dir()
-            flow_file = flows_dir / "flow_best_of_3.json"
-
-            if not flow_file.exists():
-                logging.error(
-                    f"Best-of-3 flow template not found at: {flow_file}")
-                QtWidgets.QMessageBox.warning(
-                    self, "Flow Template Not Found",
-                    f"Best-of-3 flow template not found.\n\nExpected location: {flow_file}"
-                )
-                return
-
-            if self._load_flow_from_file(str(flow_file)):
-                logging.info("Best-of-3 flow template loaded successfully")
-            else:
-                QtWidgets.QMessageBox.warning(
-                    self, "Flow Load Error",
-                    "Failed to load Best-of-3 flow template"
-                )
-        except Exception as e:
-            logging.error(f"Error loading Best-of-3 template: {e}")
-            QtWidgets.QMessageBox.warning(
-                self, "Flow Load Error",
-                f"Error loading Best-of-3 template: {e}"
             )
 
     def _on_manage_api_keys_clicked(self):
@@ -1965,7 +2001,7 @@ class FlowStudioDock(QtWidgets.QDockWidget):
     def _check_and_show_config_instructions(self):
         """Check if API keys are configured and show instructions if not ."""
         try:
-            from aicodeprep_gui.config import load_api_config, get_config_dir
+            from ..config import load_api_config, get_config_dir
             config = load_api_config()
 
             # Check if any provider has an API key configured

@@ -5,7 +5,6 @@ Handles API keys, endpoints, and other user settings stored in ~/.aicodeprep-gui
 
 import os
 import toml
-import shutil
 from pathlib import Path
 from typing import Dict, Any, Optional
 import logging
@@ -24,66 +23,6 @@ def get_config_dir() -> Path:
 def get_api_keys_file() -> Path:
     """Get the API keys configuration file path."""
     return get_config_dir() / "api-keys.toml"
-
-
-def get_flows_dir() -> Path:
-    """Get the directory for storing built-in and user-generated flows."""
-    flows_dir = get_config_dir() / "flows"
-    flows_dir.mkdir(exist_ok=True)
-    return flows_dir
-
-
-def copy_builtin_flows():
-    """Copy built-in flow templates from data/ to ~/.aicodeprep-gui/flows/
-
-    Only copies files that don't already exist in the user's flows directory.
-    This preserves any user modifications while ensuring new flows are available.
-    """
-    try:
-        # Get the data directory where built-in flows are stored
-        package_dir = Path(__file__).parent
-        builtin_flows_dir = package_dir / "data"
-
-        # Get the user flows directory (creates it if needed)
-        user_flows_dir = get_flows_dir()
-
-        # Verify the builtin flows directory exists
-        if not builtin_flows_dir.exists():
-            logger.warning(
-                f"Built-in flows directory not found: {builtin_flows_dir}")
-            return
-
-        # Copy all flow template JSON files (flow.json, flow_*.json)
-        copied_count = 0
-        skipped_count = 0
-
-        # Collect all flow files: flow.json and flow_*.json
-        flow_files = list(builtin_flows_dir.glob("flow_*.json"))
-        if (builtin_flows_dir / "flow.json").exists():
-            flow_files.append(builtin_flows_dir / "flow.json")
-
-        for flow_file in flow_files:
-            dest_file = user_flows_dir / flow_file.name
-
-            # Check if destination already exists
-            if dest_file.exists():
-                logger.debug(
-                    f"Flow already exists, skipping: {flow_file.name}")
-                skipped_count += 1
-            else:
-                try:
-                    shutil.copy2(flow_file, dest_file)
-                    logger.info(f"Copied built-in flow: {flow_file.name}")
-                    copied_count += 1
-                except Exception as e:
-                    logger.error(f"Failed to copy {flow_file.name}: {e}")
-
-        if copied_count > 0 or skipped_count > 0:
-            logger.info(
-                f"Flow initialization: copied {copied_count}, skipped {skipped_count} existing")
-
-    except Exception as e:
-        logger.error(f"Failed to copy built-in flows: {e}")
 
 
 def ensure_api_keys_file():

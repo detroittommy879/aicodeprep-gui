@@ -237,27 +237,13 @@ class FileWriteNode(BaseExecNode):
 
     def run(self, inputs: Dict[str, Any], settings: Optional[Dict] = None) -> Dict[str, Any]:
         """Write input text to configured file path."""
-        from pathlib import Path
-
         text = inputs.get("text") or ""
         path = self.get_property("path") or "output.txt"
-
-        # Expand ~ and make absolute
-        if path.startswith("~"):
-            abspath = Path(path).expanduser()
-        else:
-            abspath = Path(os.getcwd()) / path
-
+        abspath = os.path.join(os.getcwd(), path)
         try:
-            # Ensure parent directory exists
-            abspath.parent.mkdir(parents=True, exist_ok=True)
-            abspath.write_text(text, encoding="utf-8")
-
-            # Log the full path so user can find it
-            logging.info(f"✅ File saved: {abspath}")
-
+            with open(abspath, "w", encoding="utf-8") as f:
+                f.write(text)
         except Exception as e:
-            logging.error(f"Failed writing file: {e}")
             if QtWidgets is not None:
                 QtWidgets.QMessageBox.warning(
                     None, self.NODE_NAME, f"Failed writing file: {e}")

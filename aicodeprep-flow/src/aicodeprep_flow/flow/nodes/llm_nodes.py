@@ -5,7 +5,7 @@ import logging
 from typing import Any, Dict, Optional
 
 from .base import BaseExecNode
-from aicodeprep_gui.pro.llm.litellm_client import LLMClient, LLMError
+from ..llm.litellm_client import LLMClient, LLMError
 
 # Guard Qt import for popups
 try:
@@ -201,7 +201,7 @@ class LLMBaseNode(BaseExecNode):
 
         # Config file fallback by provider name
         try:
-            from aicodeprep_gui.config import get_api_key
+            from ...config import get_api_key
             provider = self.get_property("provider") or self.default_provider()
             ak = get_api_key(provider)
             if ak:
@@ -218,7 +218,7 @@ class LLMBaseNode(BaseExecNode):
                 return bu
 
             # Config file fallback
-            from aicodeprep_gui.config import get_provider_config
+            from ...config import get_provider_config
             provider = self.get_property("provider") or self.default_provider()
             config = get_provider_config(provider)
             bu = config.get("base_url", "")
@@ -379,12 +379,11 @@ class LLMBaseNode(BaseExecNode):
                     output_file = self.get_property("output_file") or ""
                     if output_file and out:
                         from pathlib import Path
-                        # Expand ~ for home directory
-                        out_path = Path(output_file).expanduser()
+                        out_path = Path(output_file)
                         out_path.parent.mkdir(parents=True, exist_ok=True)
                         out_path.write_text(out, encoding="utf-8")
                         logging.info(
-                            f"[{self.NODE_NAME}] Wrote output to {out_path}")
+                            f"[{self.NODE_NAME}] Wrote output to {output_file}")
                 except Exception as write_err:
                     logging.warning(
                         f"[{self.NODE_NAME}] Failed to write output file: {write_err}")
