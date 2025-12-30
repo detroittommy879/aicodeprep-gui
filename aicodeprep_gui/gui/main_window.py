@@ -396,26 +396,20 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         main_layout.addWidget(self.token_label)
         main_layout.addSpacing(8)
 
-        self.vibe_label = QtWidgets.QLabel("AI Code Prep GUI")
-        vibe_font = QtGui.QFont(self.default_font)
-        vibe_font.setBold(True)
-        vibe_font.setPointSize(
-            self.default_font.pointSize() + 8 + self.font_size_multiplier)
-        self.vibe_label.setFont(vibe_font)
-        self.vibe_label.setAlignment(
-            QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
-        # Set initial vibe_label style based on theme
-        if self.is_dark_mode:
-            self.vibe_label.setStyleSheet(
-                "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #353535, stop:0.33 #909f90, stop:0.67 #ffc590, stop:1 #353535); "
-                "color: black; padding: 0px 0px 0px 0px; border-radius: 8px;"
-            )
-        else:
-            self.vibe_label.setStyleSheet(
-                "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #f8f970, stop:0.33 #207020, stop:0.67 #ff8c50, stop:1 #f8f900); "
-                "color: black; padding: 0px 0px 0px 0px; border-radius: 8px;"
-            )
+        # Use SVG logo instead of text label
+        from PySide6.QtSvgWidgets import QSvgWidget
+        import os
+        
+        # Path to the SVG logo
+        svg_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'images', 'aicp.svg')
+        
+        self.vibe_label = QSvgWidget(svg_path)
+        # Set a fixed height similar to the original text label
         self.vibe_label.setFixedHeight(44)
+        # The SVG will scale proportionally to maintain aspect ratio
+        # Original SVG is 1024x434, so at height 44, width will be ~103px
+        # But we'll let it stretch to available width for better visibility
+        self.vibe_label.setMinimumWidth(100)
 
         banner_wrap = QtWidgets.QWidget()
         banner_layout = QtWidgets.QHBoxLayout(banner_wrap)
