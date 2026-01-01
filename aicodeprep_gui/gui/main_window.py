@@ -396,20 +396,39 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         main_layout.addWidget(self.token_label)
         main_layout.addSpacing(8)
 
-        # Use SVG logo instead of text label
-        from PySide6.QtSvgWidgets import QSvgWidget
+        # Use PNG logo with transparent background
         import os
         
-        # Path to the SVG logo
-        svg_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'images', 'aicp.svg')
+        # Path to the PNG logo
+        png_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'images', 'aicp-transparent-min.png')
         
-        self.vibe_label = QSvgWidget(svg_path)
-        # Set a fixed height similar to the original text label
-        self.vibe_label.setFixedHeight(44)
-        # The SVG will scale proportionally to maintain aspect ratio
-        # Original SVG is 1024x434, so at height 44, width will be ~103px
-        # But we'll let it stretch to available width for better visibility
+        self.vibe_label = QtWidgets.QLabel()
+        pixmap = QtGui.QPixmap(png_path)
+        # Increase the height for better y-axis stretching with transparent background
+        # Zoom to 1.5x: 80 * 1.5 = 120
+        self.vibe_label.setFixedHeight(120)
+        # Scale the pixmap to fit the label while maintaining aspect ratio
+        scaled_pixmap = pixmap.scaled(
+            self.vibe_label.width(), 120,
+            QtCore.Qt.KeepAspectRatio,
+            QtCore.Qt.SmoothTransformation
+        )
+        self.vibe_label.setPixmap(scaled_pixmap)
+        self.vibe_label.setScaledContents(False)
+        self.vibe_label.setAlignment(QtCore.Qt.AlignCenter)
         self.vibe_label.setMinimumWidth(100)
+        
+        # Set background based on dark mode
+        if self.is_dark_mode:
+            self.vibe_label.setStyleSheet(
+                "background: #000000; "
+                "padding: 10px; border-radius: 8px;"
+            )
+        else:
+            self.vibe_label.setStyleSheet(
+                "background: #d3d3d3; "
+                "padding: 10px; border-radius: 8px;"
+            )
 
         banner_wrap = QtWidgets.QWidget()
         banner_layout = QtWidgets.QHBoxLayout(banner_wrap)
@@ -1304,13 +1323,13 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             # Update vibe label style
             if self.is_dark_mode:
                 self.vibe_label.setStyleSheet(
-                    "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #353535, stop:0.33 #90ee90, stop:0.67 #ffa500, stop:1 #353535); "
-                    "color: #ffffff; padding: 0px 0px 0px 0px; border-radius: 8px;"
+                    "background: #000000; "
+                    "padding: 10px; border-radius: 8px;"
                 )
             else:
                 self.vibe_label.setStyleSheet(
-                    "background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #f8f900, stop:0.33 #20c020, stop:0.67 #ff8c50, stop:1 #f8f900); "
-                    "color: #000000; padding: 0px 0px 0px 0px; border-radius: 8px;"
+                    "background: #d3d3d3; "
+                    "padding: 10px; border-radius: 8px;"
                 )
 
             # Update preview window theme
