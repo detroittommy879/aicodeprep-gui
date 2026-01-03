@@ -5,9 +5,9 @@
 ### Infrastructure
 
 - [x] Screenshot system working
-- [ ] Translation manager implemented
-- [ ] System language detection working
-- [ ] Language selection UI added
+- [x] Translation manager implemented
+- [x] System language detection working
+- [x] Language selection UI added
 - [ ] Dynamic retranslation working
 - [ ] On-demand download system working
 
@@ -57,7 +57,7 @@
 
 ## Testing
 
-- [ ] All i18n tests passing
+- [x] All i18n tests passing
 - [ ] All a11y tests passing
 - [x] Screenshot baseline captured
 - [ ] Manual testing completed
@@ -84,3 +84,21 @@
   - All baseline tests passing
   - Screenshots being captured successfully
 - Starting Phase 1: i18n Infrastructure
+- ✅ Phase 1 (Partial) Complete: i18n infrastructure
+  - TranslationManager implemented with full API
+  - System language detection working (auto-detects OS language)
+  - Language selection dialog created and integrated
+  - Edit → Language menu added
+  - Translation files generated for 4 bundled languages (en, es, zh_CN, fr)
+  - Translation system integrated into app initialization
+  - All i18n tests passing (8/8)
+  - Test mode infrastructure added for clean testing
+  - Proper cleanup implemented for GUI tests
+  
+Next Steps for Phase 1:
+- Mark hardcoded UI strings as translatable using tr()
+- Provide actual translations for Spanish, Chinese, French
+- Test dynamic retranslation (language switching without restart)
+- Implement on-demand language download
+
+Next: Phase 2 - Accessibility implementation
