@@ -195,6 +195,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         def _resize_event(event):
             try:
                 self.apply_gradient_to_central()
+                self.update_logo_size()  # Update logo size based on window width
             except Exception:
                 pass
             if original_resize:
@@ -398,26 +399,22 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         # Use PNG logo with transparent background
         import os
-        
+
         # Path to the PNG logo
-        png_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'images', 'aicp-transparent-min.png')
-        
+        self.logo_path = os.path.join(os.path.dirname(
+            os.path.dirname(__file__)), 'images', 'aicp-transparent-min.png')
+        self.logo_pixmap = QtGui.QPixmap(self.logo_path)
+
         self.vibe_label = QtWidgets.QLabel()
-        pixmap = QtGui.QPixmap(png_path)
-        # Increase the height for better y-axis stretching with transparent background
-        # Zoom to 1.5x: 80 * 1.5 = 120
-        self.vibe_label.setFixedHeight(120)
-        # Scale the pixmap to fit the label while maintaining aspect ratio
-        scaled_pixmap = pixmap.scaled(
-            self.vibe_label.width(), 120,
-            QtCore.Qt.KeepAspectRatio,
-            QtCore.Qt.SmoothTransformation
-        )
-        self.vibe_label.setPixmap(scaled_pixmap)
+        self.vibe_label.setPixmap(self.logo_pixmap)
+        # Don't force scaling, use pixmap scaling
         self.vibe_label.setScaledContents(False)
         self.vibe_label.setAlignment(QtCore.Qt.AlignCenter)
-        self.vibe_label.setMinimumWidth(100)
-        
+        # Let it maintain aspect ratio naturally
+        self.vibe_label.setMaximumHeight(100)  # Maximum logo height
+        self.vibe_label.setSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Maximum)
+
         # Set background based on dark mode
         if self.is_dark_mode:
             self.vibe_label.setStyleSheet(
@@ -430,10 +427,22 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 "padding: 10px; border-radius: 8px;"
             )
 
+        # Create toggle button for logo visibility
+        self.logo_toggle_btn = QtWidgets.QPushButton("⏶")  # Up arrow
+        self.logo_toggle_btn.setFixedSize(30, 30)
+        self.logo_toggle_btn.setToolTip("Hide/Show Logo")
+        self.logo_toggle_btn.clicked.connect(self.toggle_logo_visibility)
+        self.logo_visible = True
+
         banner_wrap = QtWidgets.QWidget()
         banner_layout = QtWidgets.QHBoxLayout(banner_wrap)
         banner_layout.setContentsMargins(14, 0, 14, 0)
+        banner_layout.addStretch()
         banner_layout.addWidget(self.vibe_label)
+        banner_layout.addWidget(self.logo_toggle_btn)
+        banner_layout.addStretch()
+
+        self.banner_wrap = banner_wrap  # Store reference for hiding/showing
         main_layout.addWidget(banner_wrap)
         main_layout.addSpacing(8)
 
@@ -1366,6 +1375,51 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         except Exception as e:
             logging.error(f"toggle_dark_mode failed: {e}")
+
+    def toggle_logo_visibility(self):
+        """Toggle the visibility of the logo banner."""
+        try:
+            self.logo_visible = not self.logo_visible
+            self.vibe_label.setVisible(self.logo_visible)
+
+            # Update button icon
+            if self.logo_visible:
+                self.logo_toggle_btn.setText("⏶")  # Up arrow (hide)
+                self.logo_toggle_btn.setToolTip("Hide Logo")
+            else:
+                self.logo_toggle_btn.setText("⏷")  # Down arrow (show)
+                self.logo_toggle_btn.setToolTip("Show Logo")
+        except Exception as e:
+            logging.error(f"toggle_logo_visibility failed: {e}")
+
+    def update_logo_size(self):
+        """Update logo size based on window width."""
+        try:
+            if not self.logo_visible or not hasattr(self, 'vibe_label'):
+                return
+
+            window_width = self.width()
+
+            # Calculate responsive height: scale down logo when window is narrow
+            if window_width < 600:
+                logo_height = 60  # Small but readable
+            elif window_width < 800:
+                logo_height = 80  # Medium-small
+            elif window_width < 1000:
+                logo_height = 90  # Medium
+            else:
+                logo_height = 100  # Full size
+
+            # Scale the pixmap to fit while maintaining aspect ratio
+            scaled_pixmap = self.logo_pixmap.scaledToHeight(
+                logo_height,
+                QtCore.Qt.SmoothTransformation
+            )
+            self.vibe_label.setPixmap(scaled_pixmap)
+            self.vibe_label.setMaximumHeight(logo_height)
+
+        except Exception as e:
+            logging.error(f"update_logo_size failed: {e}")
 
     def on_item_expanded(self, item):
         return self.tree_manager.on_item_expanded(item)
