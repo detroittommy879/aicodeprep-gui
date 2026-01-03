@@ -1,5 +1,8 @@
 # Implementation Progress
 
+**Branch:** `feature/i18n-accessibility` ✅  
+**Package Manager:** Always use `uv` for all Python commands
+
 ## Internationalization
 
 ### Infrastructure
@@ -8,15 +11,16 @@
 - [x] Translation manager implemented
 - [x] System language detection working
 - [x] Language selection UI added
-- [ ] Dynamic retranslation working
+- [x] Auto-close timer for GUI tests (no manual closing needed)
+- [ ] Dynamic retranslation working (changeEvent handler)
 - [ ] On-demand download system working
 
 ### Bundled Languages (High Priority)
 
-- [ ] English (en) - source, always bundled
-- [ ] Spanish (es) - bundled
-- [ ] Chinese Simplified (zh_CN) - bundled
-- [ ] French (fr) - bundled
+- [x] English (en) - source, always bundled ✅
+- [x] Spanish (es) - bundled ✅ (14 strings translated)
+- [x] Chinese Simplified (zh_CN) - bundled ✅ (14 strings translated)
+- [x] French (fr) - bundled ✅ (14 strings translated)
 
 ### On-Demand Languages (Download When Selected)
 
@@ -76,30 +80,48 @@
 ### 2026-01-03
 
 - Created progress tracking file
+- Created feature branch: `feature/i18n-accessibility`
 - Starting Phase 0: Screenshot system
 - ✅ Phase 0 Complete: Screenshot system implemented
   - Created screenshot_helper.py utility module
-  - Created ScreenshotTester helper class
+  - Created ScreenshotTester helper class with auto-close timer
   - Added debug menu to main window (Screenshot, Language Info, A11y Check)
-  - All baseline tests passing
-  - Screenshots being captured successfully
+  - All baseline tests passing (3/3)
+  - Screenshots being captured successfully to screenshots/test_captures/
 - Starting Phase 1: i18n Infrastructure
-- ✅ Phase 1 (Partial) Complete: i18n infrastructure
+- ✅ Phase 1 (~80%) Complete: i18n infrastructure fully functional
   - TranslationManager implemented with full API
   - System language detection working (auto-detects OS language)
   - Language selection dialog created and integrated
-  - Edit → Language menu added
+  - Edit → Language menu added to main window
   - Translation files generated for 4 bundled languages (en, es, zh_CN, fr)
+  - 14 key UI strings translated to Spanish/Chinese/French:
+    * Menu items: File, Edit, Flow, Help, Debug
+    * Major buttons: GENERATE CONTEXT!, Select All, Deselect All
+    * Window titles and labels
+    * Flow-related UI elements
   - Translation system integrated into app initialization
   - All i18n tests passing (8/8)
-  - Test mode infrastructure added for clean testing
-  - Proper cleanup implemented for GUI tests
+  - Test mode infrastructure added (AICODEPREP_TEST_MODE, AICODEPREP_AUTO_CLOSE)
+  - Proper cleanup implemented for GUI tests (no hanging processes)
+  - Users can switch languages via Edit → Language and see real translations
 
-Next Steps for Phase 1:
+**Current Status:**
+- Translation system is WORKING - users can switch between EN/ES/ZH_CN/FR
+- App auto-detects system language on first launch
+- Language preference saved in QSettings
+- All .qm files compiled and working
 
-- Mark hardcoded UI strings as translatable using tr()
-- Provide actual translations for Spanish, Chinese, French
+**Next Steps for Phase 1:**
+- Mark remaining ~80-100 UI strings with tr() throughout codebase
+  * Dialogs (file selection, error messages)
+  * Tooltips
+  * Status messages
+  * Preset button names
+  * Tree widget labels
+- Add translations for those strings using scripts/add_translations.py pattern
 - Test dynamic retranslation (language switching without restart)
-- Implement on-demand language download
+- Implement on-demand language download system for non-bundled languages
 
-Next: Phase 2 - Accessibility implementation
+**Next Phase:**
+- Phase 2: Accessibility implementation (screen reader, keyboard nav, contrast)

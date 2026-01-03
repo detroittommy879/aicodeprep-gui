@@ -4,6 +4,19 @@
 
 Implement comprehensive internationalization (i18n) and accessibility (a11y) features for aicodeprep-gui, working iteratively with self-verification through UI screenshots until the application is fully accessible and multilingual.
 
+## Important Setup Instructions
+
+**ALWAYS use `uv` for Python package management:**
+- Run commands with: `uv run <command>`
+- Install packages with: `uv pip install <package>`
+- Run tests with: `uv run pytest`
+- Run app with: `uv run aicodeprep-gui`
+
+**Work on the feature branch:**
+- Branch name: `feature/i18n-accessibility`
+- All work should be committed to this branch
+- Do NOT commit directly to `main`
+
 ---
 
 ## Phase 0: Setup Screenshot Capability for AI Feedback
@@ -140,11 +153,13 @@ Set up the framework for translating all UI text into multiple languages.
 5. **Generate Initial Translation Files**
 
    ```bash
-   # Command to extract strings and create .ts files for bundled languages
-   pylupdate6 aicodeprep_gui/**/*.py -ts aicodeprep_gui/i18n/translations/aicodeprep_gui_en.ts
-   pylupdate6 aicodeprep_gui/**/*.py -ts aicodeprep_gui/i18n/translations/aicodeprep_gui_es.ts
-   pylupdate6 aicodeprep_gui/**/*.py -ts aicodeprep_gui/i18n/translations/aicodeprep_gui_zh_CN.ts
-   pylupdate6 aicodeprep_gui/**/*.py -ts aicodeprep_gui/i18n/translations/aicodeprep_gui_fr.ts
+   # Use the provided script (already uses uv internally)
+   uv run python scripts/generate_translations.py
+   
+   # This script handles:
+   # - Extracting strings with lupdate
+   # - Creating/updating .ts files for bundled languages (en, es, zh_CN, fr)
+   # - Compiling .qm files with lrelease
    ```
 
 6. **Implement System Language Detection**
@@ -177,6 +192,7 @@ Write tests FIRST (TDD approach):
 
 ```python
 # tests/test_i18n.py
+# Run with: uv run pytest tests/test_i18n.py -v
 
 def test_translation_manager_initializes():
     """Translation manager loads without errors"""
@@ -600,7 +616,7 @@ def test_wcag_aa_compliance():
 
    ```bash
    # Example for Spanish support
-   pytest tests/test_i18n.py::test_switch_to_spanish -v
+   uv run pytest tests/test_i18n.py::test_switch_to_spanish -v
    # Should FAIL
    ```
 
@@ -637,7 +653,7 @@ def test_wcag_aa_compliance():
 6. **Verify Test Passes**
 
    ```bash
-   pytest tests/test_i18n.py::test_switch_to_spanish -v
+   uv run pytest tests/test_i18n.py::test_switch_to_spanish -v
    # Should PASS
    ```
 
@@ -651,6 +667,7 @@ def test_wcag_aa_compliance():
    - Marked strings as translatable in main_window.py
    - Verified UI renders correctly
    - All tests pass"
+   # Remember: commit to feature/i18n-accessibility branch
    ```
 
 8. **Move to Next Feature/Language**
@@ -746,8 +763,8 @@ All of the following must be TRUE:
 1. **All Tests Pass**
 
    ```bash
-   pytest tests/test_i18n.py -v
-   pytest tests/test_accessibility*.py -v
+   uv run pytest tests/test_i18n.py -v
+   uv run pytest tests/test_accessibility*.py -v
    # 100% pass rate
    ```
 
