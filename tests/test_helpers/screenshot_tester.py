@@ -180,7 +180,7 @@ class ScreenshotTester:
                 logger.warning(f"Error closing main window: {e}")
             finally:
                 self.main_window = None
-        
+
         # Process events to ensure cleanup
         if self.app:
             QtWidgets.QApplication.processEvents()

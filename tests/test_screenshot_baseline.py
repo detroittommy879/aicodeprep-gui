@@ -51,13 +51,14 @@ class TestScreenshotBaseline:
         """Baseline test - current UI should render without errors."""
         # This will test that we can launch the app in test mode
         from tests.test_helpers.screenshot_tester import ScreenshotTester
-        
+
         tester = ScreenshotTester()
         try:
             screenshot_path = tester.launch_and_capture()
-            
+
             assert screenshot_path is not None, "Should capture main window screenshot"
-            assert os.path.exists(screenshot_path), "Screenshot file should exist"
+            assert os.path.exists(
+                screenshot_path), "Screenshot file should exist"
         finally:
             # Always cleanup even if test fails
             tester.cleanup()

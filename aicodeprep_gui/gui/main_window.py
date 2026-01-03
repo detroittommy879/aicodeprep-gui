@@ -168,7 +168,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.network_manager.get(request)
 
         self.update_thread = None
-        self.setWindowTitle("aicodeprep-gui - File Selection")
+        self.setWindowTitle(self.tr("aicodeprep-gui - File Selection"))
         self.app = QtWidgets.QApplication.instance()
         if self.app is None:
             self.app = QtWidgets.QApplication([])
@@ -249,7 +249,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         main_layout.setContentsMargins(20, 10, 20, 10)
 
         mb = self.menuBar()
-        file_menu = mb.addMenu("&File")
+        file_menu = mb.addMenu(self.tr("&File"))
 
         # Add OS-specific installer menu items
         if platform.system() == "Windows":
@@ -308,17 +308,17 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         edit_menu.addAction(language_act)
 
         # Flow menu (Phase 2)
-        flow_menu = mb.addMenu("&Flow")
+        flow_menu = mb.addMenu(self.tr("&Flow"))
 
-        flow_import_act = QtGui.QAction("Import Flow JSON…", self)
+        flow_import_act = QtGui.QAction(self.tr("Import Flow JSON…"), self)
         flow_import_act.triggered.connect(self._flow_import_action)
         flow_menu.addAction(flow_import_act)
 
-        flow_export_act = QtGui.QAction("Export Flow JSON…", self)
+        flow_export_act = QtGui.QAction(self.tr("Export Flow JSON…"), self)
         flow_export_act.triggered.connect(self._flow_export_action)
         flow_menu.addAction(flow_export_act)
 
-        flow_reset_act = QtGui.QAction("Reset to Default Flow", self)
+        flow_reset_act = QtGui.QAction(self.tr("Reset to Default Flow"), self)
         flow_reset_act.triggered.connect(self._flow_reset_action)
         flow_menu.addAction(flow_reset_act)
 
@@ -398,22 +398,22 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         flow_run_act.triggered.connect(_run_current_flow)
         flow_menu.addAction(flow_run_act)
 
-        help_menu = mb.addMenu("&Help")
-        links_act = QtGui.QAction("Help / Links and Guides", self)
+        help_menu = mb.addMenu(self.tr("&Help"))
+        links_act = QtGui.QAction(self.tr("Help / Links and Guides"), self)
         links_act.triggered.connect(self.open_links_dialog)
         help_menu.addAction(links_act)
         help_menu.addSeparator()
 
-        about_act = QtGui.QAction("&About", self)
+        about_act = QtGui.QAction(self.tr("&About"), self)
         about_act.triggered.connect(self.open_about_dialog)
         help_menu.addAction(about_act)
 
-        complain_act = QtGui.QAction("Send Ideas, bugs, thoughts!", self)
+        complain_act = QtGui.QAction(self.tr("Send Ideas, bugs, thoughts!"), self)
         complain_act.triggered.connect(self.open_complain_dialog)
         help_menu.addAction(complain_act)
 
         if not self._is_pro_enabled():
-            act = QtGui.QAction("Activate Pro…", self)
+            act = QtGui.QAction(self.tr("Activate Pro…"), self)
             act.triggered.connect(self.dialog_manager.open_activate_pro_dialog)
             help_menu.addAction(act)
 
@@ -443,14 +443,14 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.format_combo.setCurrentIndex(idx)
         self.format_combo.currentIndexChanged.connect(self._save_format_choice)
 
-        output_label = QtWidgets.QLabel("&Output format:")
+        output_label = QtWidgets.QLabel(self.tr("&Output format:"))
         output_label.setBuddy(self.format_combo)
 
         self.dark_mode_box = QtWidgets.QCheckBox("Dark mode")
         self.dark_mode_box.setChecked(self.is_dark_mode)
         self.dark_mode_box.stateChanged.connect(self.toggle_dark_mode)
 
-        self.token_label = QtWidgets.QLabel("Estimated tokens: 0")
+        self.token_label = QtWidgets.QLabel(self.tr("Estimated tokens: 0"))
         main_layout.addWidget(self.token_label)
         main_layout.addSpacing(8)
 
@@ -509,7 +509,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         main_layout.addWidget(banner_wrap)
         main_layout.addSpacing(8)
 
-        self.info_label = QtWidgets.QLabel("The selected files will be added to the LLM Context Block along with your prompt, written to fullcode.txt and copied to clipboard, ready to paste into <a href='https://www.kimi.com/chat'>Kimi K2</a>, <a href='https://aistudio.google.com/'>Gemini</a>, <a href='https://chat.deepseek.com/'>Deepseek</a>, <a href='https://openrouter.ai/'>Openrouter</a>, <a href='https://chatgpt.com/'>ChatGPT</a>, <a href='https://claude.ai'>Claude</a>")
+        self.info_label = QtWidgets.QLabel(self.tr("The selected files will be added to the LLM Context Block along with your prompt, written to fullcode.txt and copied to clipboard, ready to paste into your AI assistant."))
         self.info_label.setWordWrap(True)
         self.info_label.setOpenExternalLinks(True)
         self.info_label.setAlignment(QtCore.Qt.AlignHCenter)

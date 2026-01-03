@@ -94,8 +94,9 @@
   - All i18n tests passing (8/8)
   - Test mode infrastructure added for clean testing
   - Proper cleanup implemented for GUI tests
-  
+
 Next Steps for Phase 1:
+
 - Mark hardcoded UI strings as translatable using tr()
 - Provide actual translations for Spanish, Chinese, French
 - Test dynamic retranslation (language switching without restart)
