@@ -6,6 +6,20 @@ These tests verify the screenshot system works before implementing i18n/a11y.
 import pytest
 import os
 from pathlib import Path
+from PySide6 import QtWidgets, QtCore
+
+
+@pytest.fixture(scope="function")
+def qapp():
+    """Fixture to ensure QApplication instance is available and cleaned up."""
+    app = QtWidgets.QApplication.instance()
+    if app is None:
+        app = QtWidgets.QApplication([])
+    yield app
+    # Process events to ensure cleanup
+    QtWidgets.QApplication.processEvents()
+    QtCore.QTimer.singleShot(0, lambda: None)
+    QtWidgets.QApplication.processEvents()
 
 
 class TestScreenshotBaseline:
@@ -36,20 +50,17 @@ class TestScreenshotBaseline:
     def test_ui_renders_without_errors(self):
         """Baseline test - current UI should render without errors."""
         # This will test that we can launch the app in test mode
-        # Will fail initially until we implement test mode
         from tests.test_helpers.screenshot_tester import ScreenshotTester
-
+        
         tester = ScreenshotTester()
-        screenshot_path = tester.launch_and_capture()
-
-        assert screenshot_path is not None, "Should capture main window screenshot"
-        assert os.path.exists(screenshot_path), "Screenshot file should exist"
-
-        # Cleanup
-        tester.cleanup()
-
-    def test_screenshot_directory_created(self):
-        """Verify screenshot directory is created automatically."""
+        try:
+            screenshot_path = tester.launch_and_capture()
+            
+            assert screenshot_path is not None, "Should capture main window screenshot"
+            assert os.path.exists(screenshot_path), "Screenshot file should exist"
+        finally:
+            # Always cleanup even if test fails
+            tester.cleanup()
         from aicodeprep_gui.utils.screenshot_helper import get_screenshot_directory
 
         screenshot_dir = get_screenshot_directory()

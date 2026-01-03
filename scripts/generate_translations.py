@@ -19,45 +19,49 @@ def main():
     project_root = script_dir.parent
     gui_dir = project_root / "aicodeprep_gui"
     trans_dir = project_root / "aicodeprep_gui" / "i18n" / "translations"
-    
+
     # Ensure translations directory exists
     trans_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # Find lupdate and lrelease tools
     venv_dir = project_root / ".venv"
     if sys.platform == "win32":
         lupdate = venv_dir / "Lib" / "site-packages" / "PySide6" / "lupdate.exe"
         lrelease = venv_dir / "Lib" / "site-packages" / "PySide6" / "lrelease.exe"
     else:
-        lupdate = venv_dir / "lib" / f"python{sys.version_info.major}.{sys.version_info.minor}" / "site-packages" / "PySide6" / "lupdate"
-        lrelease = venv_dir / "lib" / f"python{sys.version_info.major}.{sys.version_info.minor}" / "site-packages" / "PySide6" / "lrelease"
-    
+        lupdate = venv_dir / "lib" / \
+            f"python{sys.version_info.major}.{sys.version_info.minor}" / \
+            "site-packages" / "PySide6" / "lupdate"
+        lrelease = venv_dir / "lib" / \
+            f"python{sys.version_info.major}.{sys.version_info.minor}" / \
+            "site-packages" / "PySide6" / "lrelease"
+
     if not lupdate.exists():
         print(f"Error: lupdate not found at {lupdate}")
         print("Make sure PySide6 is installed")
         return 1
-    
+
     # List of languages to generate
     languages = ['en', 'es', 'zh_CN', 'fr']
-    
+
     # Find all Python files in gui directory
     py_files = []
     for py_file in gui_dir.rglob("*.py"):
         if "__pycache__" not in str(py_file):
             py_files.append(str(py_file))
-    
+
     print(f"Found {len(py_files)} Python files")
-    
+
     # Generate .ts files for each language
     for lang in languages:
         ts_file = trans_dir / f"aicodeprep_gui_{lang}.ts"
         print(f"\nGenerating {ts_file.name}...")
-        
+
         # Build lupdate command
         cmd = [str(lupdate), "-no-obsolete"]
         cmd.extend(py_files)
         cmd.extend(["-ts", str(ts_file)])
-        
+
         try:
             result = subprocess.run(cmd, capture_output=True, text=True)
             if result.returncode == 0:
@@ -67,26 +71,26 @@ def main():
                 print(result.stderr)
         except Exception as e:
             print(f"✗ Exception: {e}")
-    
+
     # Compile .ts files to .qm files
     print("\nCompiling translation files...")
     if not lrelease.exists():
         print(f"Warning: lrelease not found at {lrelease}")
         print("Translation files (.ts) created but not compiled to .qm")
         return 0
-    
+
     for lang in languages:
         ts_file = trans_dir / f"aicodeprep_gui_{lang}.ts"
         qm_file = trans_dir / f"aicodeprep_gui_{lang}.qm"
-        
+
         if not ts_file.exists():
             continue
-        
+
         print(f"Compiling {ts_file.name} -> {qm_file.name}...")
-        
+
         try:
-            result = subprocess.run([str(lrelease), str(ts_file), "-qm", str(qm_file)], 
-                                  capture_output=True, text=True)
+            result = subprocess.run([str(lrelease), str(ts_file), "-qm", str(qm_file)],
+                                    capture_output=True, text=True)
             if result.returncode == 0:
                 print(f"✓ Successfully compiled {qm_file.name}")
             else:
@@ -94,7 +98,7 @@ def main():
                 print(result.stderr)
         except Exception as e:
             print(f"✗ Exception: {e}")
-    
+
     print("\n=== Translation file generation complete ===")
     print(f"Translation files are in: {trans_dir}")
     return 0

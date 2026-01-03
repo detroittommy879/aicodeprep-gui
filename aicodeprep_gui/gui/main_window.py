@@ -300,9 +300,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         open_settings_folder_act = QtGui.QAction("Open Settings Folder…", self)
         open_settings_folder_act.triggered.connect(self.open_settings_folder)
         edit_menu.addAction(open_settings_folder_act)
-        
+
         edit_menu.addSeparator()
-        
+
         language_act = QtGui.QAction("&Language / Idioma / 语言…", self)
         language_act.triggered.connect(self.open_language_dialog)
         edit_menu.addAction(language_act)
@@ -422,11 +422,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         screenshot_act = QtGui.QAction("Take Screenshot", self)
         screenshot_act.triggered.connect(self._take_debug_screenshot)
         debug_menu.addAction(screenshot_act)
-        
+
         lang_info_act = QtGui.QAction("Current Language Info", self)
         lang_info_act.triggered.connect(self._show_language_info)
         debug_menu.addAction(lang_info_act)
-        
+
         a11y_check_act = QtGui.QAction("Accessibility Check", self)
         a11y_check_act.triggered.connect(self._run_accessibility_check)
         debug_menu.addAction(a11y_check_act)
@@ -1528,7 +1528,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
     def open_settings_folder(self):
         return self.window_helpers.open_settings_folder()
-    
+
     def open_language_dialog(self):
         """Open the language selection dialog."""
         from .components.language_dialog import LanguageSelectionDialog
@@ -2069,14 +2069,15 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             return False
 
     # ===== Debug Menu Methods (for i18n/a11y testing) =====
-    
+
     def _take_debug_screenshot(self):
         """Debug menu: Take a screenshot of the main window."""
         try:
             from aicodeprep_gui.utils.screenshot_helper import capture_window_screenshot
-            screenshot_path = capture_window_screenshot(self, filename_prefix="debug")
+            screenshot_path = capture_window_screenshot(
+                self, filename_prefix="debug")
             QtWidgets.QMessageBox.information(
-                self, 
+                self,
                 "Screenshot Captured",
                 f"Screenshot saved to:\n{screenshot_path}"
             )
@@ -2087,15 +2088,15 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 "Screenshot Error",
                 f"Failed to capture screenshot:\n{str(e)}"
             )
-    
+
     def _show_language_info(self):
         """Debug menu: Show current language information."""
         try:
             from PySide6.QtCore import QLocale
-            
+
             app = QtWidgets.QApplication.instance()
             system_locale = QLocale.system()
-            
+
             # Get translation manager if available
             current_ui_lang = "English (default)"
             if hasattr(app, 'translation_manager'):
@@ -2106,7 +2107,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     if code == current_code:
                         current_ui_lang = f"{name} ({code})"
                         break
-            
+
             info = f"""Current Language Information:
 
 System Locale: {system_locale.name()}
@@ -2126,15 +2127,15 @@ Note: Use Preferences → Language to change UI language
             logging.error(f"Error showing language info: {e}")
             QtWidgets.QMessageBox.warning(
                 self,
-                "Language Info Error", 
+                "Language Info Error",
                 f"Failed to retrieve language info:\n{str(e)}"
             )
-    
+
     def _run_accessibility_check(self):
         """Debug menu: Run accessibility compliance check."""
         try:
             from aicodeprep_gui.utils.screenshot_helper import get_text_color_contrast
-            
+
             # Collect contrast info from various widgets
             results = []
             widgets_to_check = [
@@ -2142,7 +2143,7 @@ Note: Use Preferences → Language to change UI language
                 ("Tree Widget", self.tree_widget),
                 ("Token Label", self.token_label),
             ]
-            
+
             for name, widget in widgets_to_check:
                 try:
                     contrast_info = get_text_color_contrast(widget)
@@ -2152,10 +2153,11 @@ Note: Use Preferences → Language to change UI language
                     )
                 except Exception as e:
                     results.append(f"{name}: Error - {str(e)}")
-            
-            info = "Accessibility Check Results (WCAG AA):\n\n" + "\n".join(results)
+
+            info = "Accessibility Check Results (WCAG AA):\n\n" + \
+                "\n".join(results)
             info += "\n\nNote: Full accessibility features coming in Phase 2"
-            
+
             QtWidgets.QMessageBox.information(
                 self,
                 "Accessibility Check",

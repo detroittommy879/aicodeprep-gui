@@ -240,7 +240,7 @@ def main():
     # Initialize internationalization (i18n)
     from aicodeprep_gui.i18n.translator import TranslationManager
     translation_manager = TranslationManager(app)
-    
+
     # Load saved language preference or detect system language
     saved_lang = translation_manager.get_saved_language_preference()
     if saved_lang:
@@ -254,7 +254,7 @@ def main():
         else:
             # Use English for non-bundled languages (user can change later)
             translation_manager.set_language('en')
-    
+
     # Store translation manager in app for global access
     app.translation_manager = translation_manager
 

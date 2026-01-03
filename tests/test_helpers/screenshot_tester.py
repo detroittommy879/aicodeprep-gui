@@ -171,9 +171,19 @@ class ScreenshotTester:
     def cleanup(self):
         """Clean up test resources."""
         if self.main_window:
-            self.main_window.close()
-            self.main_window = None
-
-        # Don't quit the app as it might be shared
-        # if self.app:
-        #     self.app.quit()
+            try:
+                # Force close without confirmation
+                self.main_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+                self.main_window.close()
+                self.main_window.deleteLater()
+            except Exception as e:
+                logger.warning(f"Error closing main window: {e}")
+            finally:
+                self.main_window = None
+        
+        # Process events to ensure cleanup
+        if self.app:
+            QtWidgets.QApplication.processEvents()
+            # Give time for cleanup
+            QtCore.QTimer.singleShot(100, lambda: None)
+            QtWidgets.QApplication.processEvents()

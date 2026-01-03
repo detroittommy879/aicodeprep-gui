@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from datetime import datetime
 from PySide6 import QtNetwork, QtCore
 
@@ -8,6 +9,11 @@ class MetricsManager:
         self.main_window = main_window
 
     def _send_metric_event(self, event_type, token_count=None):
+        # Skip metrics in test mode
+        if os.environ.get('AICODEPREP_TEST_MODE') == '1' or os.environ.get('AICODEPREP_NO_METRICS') == '1':
+            logging.debug(f"Test mode: skipping metric event: {event_type}")
+            return
+        
         try:
             if not hasattr(self.main_window, 'user_uuid') or not self.main_window.user_uuid:
                 logging.warning("Metrics: user_uuid not found, skipping event.")
