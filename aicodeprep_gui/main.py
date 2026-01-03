@@ -237,6 +237,27 @@ def main():
     with resources.as_file(resources.files('aicodeprep_gui.images').joinpath('favicon.ico')) as icon_path:
         app.setWindowIcon(QIcon(str(icon_path)))
 
+    # Initialize internationalization (i18n)
+    from aicodeprep_gui.i18n.translator import TranslationManager
+    translation_manager = TranslationManager(app)
+    
+    # Load saved language preference or detect system language
+    saved_lang = translation_manager.get_saved_language_preference()
+    if saved_lang:
+        logger.info(f"Loading saved language: {saved_lang}")
+        translation_manager.set_language(saved_lang)
+    else:
+        detected_lang = translation_manager.detect_system_language()
+        logger.info(f"Detected system language: {detected_lang}")
+        if translation_manager.is_language_bundled(detected_lang):
+            translation_manager.set_language(detected_lang)
+        else:
+            # Use English for non-bundled languages (user can change later)
+            translation_manager.set_language('en')
+    
+    # Store translation manager in app for global access
+    app.translation_manager = translation_manager
+
     # Load custom fonts
     loaded_fonts = load_custom_fonts()
     if loaded_fonts:

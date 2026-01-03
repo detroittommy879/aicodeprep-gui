@@ -46,6 +46,7 @@ Enable the AI agent to capture and analyze screenshots of the running applicatio
    - Add "Accessibility Check" action
 
 4. **Write Initial Screenshot Tests**
+
    ```python
    # tests/test_screenshot_baseline.py
    def test_capture_main_window():
@@ -115,6 +116,7 @@ Set up the framework for translating all UI text into multiple languages.
 4. **Create Translation Files Structure**
 
    **Bundled Languages (included in package):**
+
    ```
    aicodeprep_gui/i18n/translations/
    ├── aicodeprep_gui_en.ts    (English - source, always bundled)
@@ -124,11 +126,13 @@ Set up the framework for translating all UI text into multiple languages.
    ```
 
    **On-Demand Languages (downloaded when selected):**
+
    - Store at: `~/.aicodeprep-gui/translations/` or `%APPDATA%/aicodeprep-gui/translations/`
    - Available: German, Japanese, Korean, Arabic, Hebrew, Russian, Portuguese, etc.
    - Downloaded from GitHub releases or CDN when user selects them
-   
+
    **System Language Detection:**
+
    - Use `QLocale.system().name()` to detect OS language
    - Auto-load if bundled, offer to download if not
    - Fall back to English if detection fails

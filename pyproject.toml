@@ -59,7 +59,8 @@ aicodeprep_gui = [
     "images/*.png",
     "images/*.ico",
     "data/AICodePrep.workflow.zip",
-    "data/fonts/*.ttf"
+    "data/fonts/*.ttf",
+    "i18n/translations/*.qm"
 ]
 
 # SUGGESTION: Create optional dependencies for developers/builders
