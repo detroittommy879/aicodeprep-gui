@@ -37,6 +37,43 @@ from .utils.metrics import MetricsManager
 from .utils.helpers import WindowHelpers
 
 
+class LogoTreeWidget(QtWidgets.QTreeWidget):
+    """Custom QTreeWidget with a logo watermark in the background."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.logo_pixmap = None
+        self.logo_opacity = 0.15  # Subtle watermark
+
+    def set_logo(self, pixmap, opacity=0.15):
+        """Set the logo pixmap and opacity for the background watermark."""
+        self.logo_pixmap = pixmap
+        self.logo_opacity = opacity
+        self.viewport().update()
+
+    def paintEvent(self, event):
+        """Override paint event to draw logo in the background."""
+        # First draw the normal tree widget
+        super().paintEvent(event)
+
+        # Then draw the logo as a watermark
+        if self.logo_pixmap and not self.logo_pixmap.isNull():
+            painter = QtGui.QPainter(self.viewport())
+            painter.setOpacity(self.logo_opacity)
+
+            # Calculate position to center the logo
+            viewport_rect = self.viewport().rect()
+            logo_width = self.logo_pixmap.width()
+            logo_height = self.logo_pixmap.height()
+
+            x = (viewport_rect.width() - logo_width) // 2
+            y = (viewport_rect.height() - logo_height) // 2
+
+            # Draw the logo centered
+            painter.drawPixmap(x, y, self.logo_pixmap)
+            painter.end()
+
+
 class FileSelectionGUI(QtWidgets.QMainWindow):
     GUMROAD_PRODUCT_ID = "KpjO4PdY2mQNCZC1k_ZkPQ=="  # set your Gumroad product_id
     GUMROAD_PRODUCT_ID_2 = "O1LkPokDSKDZdhSitEvvrA=="  # set your Gumroad product_id
@@ -443,6 +480,12 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         banner_layout.addStretch()
 
         self.banner_wrap = banner_wrap  # Store reference for hiding/showing
+        # Hide the banner by default since logo is now in tree widget background
+        self.banner_wrap.setVisible(False)
+        self.logo_visible = False  # Logo banner is hidden by default
+        self.logo_toggle_btn.setText("⏷")  # Down arrow (show)
+        self.logo_toggle_btn.setToolTip("Show Logo Banner")
+
         main_layout.addWidget(banner_wrap)
         main_layout.addSpacing(8)
 
@@ -510,7 +553,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         # Tree widget and prompt setup
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
 
-        self.tree_widget = QtWidgets.QTreeWidget()
+        self.tree_widget = LogoTreeWidget()  # Use custom tree widget with logo support
         # Start with two columns but hide the second one initially (Pro feature)
         self.tree_widget.setHeaderLabels(["File/Folder", "Skeleton Level"])
         # Hide level column by default
@@ -532,6 +575,15 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         checkbox_style = get_checkbox_style_dark(
         ) if self.is_dark_mode else get_checkbox_style_light()
         self.tree_widget.setStyleSheet(base_style + checkbox_style)
+
+        # Set the logo as a background watermark in the tree widget
+        # Scale logo to reasonable size for watermark (around 200px height)
+        watermark_logo = self.logo_pixmap.scaledToHeight(
+            200,
+            QtCore.Qt.SmoothTransformation
+        )
+        # Very subtle watermark
+        self.tree_widget.set_logo(watermark_logo, opacity=0.1)
 
         self.splitter.addWidget(self.tree_widget)
 
@@ -1377,18 +1429,18 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             logging.error(f"toggle_dark_mode failed: {e}")
 
     def toggle_logo_visibility(self):
-        """Toggle the visibility of the logo banner."""
+        """Toggle the visibility of the logo banner (watermark stays in tree background)."""
         try:
             self.logo_visible = not self.logo_visible
-            self.vibe_label.setVisible(self.logo_visible)
+            self.banner_wrap.setVisible(self.logo_visible)
 
             # Update button icon
             if self.logo_visible:
                 self.logo_toggle_btn.setText("⏶")  # Up arrow (hide)
-                self.logo_toggle_btn.setToolTip("Hide Logo")
+                self.logo_toggle_btn.setToolTip("Hide Logo Banner")
             else:
                 self.logo_toggle_btn.setText("⏷")  # Down arrow (show)
-                self.logo_toggle_btn.setToolTip("Show Logo")
+                self.logo_toggle_btn.setToolTip("Show Logo Banner")
         except Exception as e:
             logging.error(f"toggle_logo_visibility failed: {e}")
 
