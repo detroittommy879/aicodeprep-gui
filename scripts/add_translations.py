@@ -120,27 +120,27 @@ TRANSLATIONS = {
 def add_translations_to_ts_file(ts_file_path: Path, lang_code: str):
     """Add translations to a .ts file."""
     print(f"\nProcessing {ts_file_path.name} ({lang_code})...")
-    
+
     translations = TRANSLATIONS.get(lang_code, {})
     if not translations:
         print(f"  No translations defined for {lang_code}")
         return
-    
+
     try:
         # Parse the XML
         tree = ET.parse(ts_file_path)
         root = tree.getroot()
-        
+
         translated_count = 0
-        
+
         # Find all message elements
         for message in root.findall('.//message'):
             source_elem = message.find('source')
             translation_elem = message.find('translation')
-            
+
             if source_elem is not None and translation_elem is not None:
                 source_text = source_elem.text
-                
+
                 # Check if we have a translation
                 if source_text in translations:
                     # Update the translation
@@ -149,11 +149,11 @@ def add_translations_to_ts_file(ts_file_path: Path, lang_code: str):
                     if 'type' in translation_elem.attrib:
                         del translation_elem.attrib['type']
                     translated_count += 1
-        
+
         # Write back to file
         tree.write(ts_file_path, encoding='utf-8', xml_declaration=True)
         print(f"  ✓ Added {translated_count} translations")
-        
+
     except Exception as e:
         print(f"  ✗ Error: {e}")
 
@@ -162,7 +162,7 @@ def main():
     """Add translations to all .ts files."""
     project_root = Path(__file__).parent.parent
     trans_dir = project_root / "aicodeprep_gui" / "i18n" / "translations"
-    
+
     # Add translations for each language
     for lang_code in ['es', 'zh_CN', 'fr']:
         ts_file = trans_dir / f"aicodeprep_gui_{lang_code}.ts"
@@ -170,7 +170,7 @@ def main():
             add_translations_to_ts_file(ts_file, lang_code)
         else:
             print(f"Warning: {ts_file} not found")
-    
+
     print("\n=== Translation addition complete ===")
     print("Run generate_translations.py to recompile .qm files")
 

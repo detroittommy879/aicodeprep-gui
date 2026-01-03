@@ -408,7 +408,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         about_act.triggered.connect(self.open_about_dialog)
         help_menu.addAction(about_act)
 
-        complain_act = QtGui.QAction(self.tr("Send Ideas, bugs, thoughts!"), self)
+        complain_act = QtGui.QAction(
+            self.tr("Send Ideas, bugs, thoughts!"), self)
         complain_act.triggered.connect(self.open_complain_dialog)
         help_menu.addAction(complain_act)
 
@@ -509,7 +510,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         main_layout.addWidget(banner_wrap)
         main_layout.addSpacing(8)
 
-        self.info_label = QtWidgets.QLabel(self.tr("The selected files will be added to the LLM Context Block along with your prompt, written to fullcode.txt and copied to clipboard, ready to paste into your AI assistant."))
+        self.info_label = QtWidgets.QLabel(self.tr(
+            "The selected files will be added to the LLM Context Block along with your prompt, written to fullcode.txt and copied to clipboard, ready to paste into your AI assistant."))
         self.info_label.setWordWrap(True)
         self.info_label.setOpenExternalLinks(True)
         self.info_label.setAlignment(QtCore.Qt.AlignHCenter)

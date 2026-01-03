@@ -27,6 +27,7 @@ class ScreenshotTester:
         self.app = None
         self.main_window = None
         self.screenshots = []
+        self.auto_close_timer = None
 
     def launch_and_capture(self, test_files: Optional[List[str]] = None) -> str:
         """
@@ -58,6 +59,14 @@ class ScreenshotTester:
             # Give window time to fully render
             QtCore.QTimer.singleShot(100, lambda: None)
             QtWidgets.QApplication.processEvents()
+
+            # Set up auto-close timer if enabled
+            if os.environ.get('AICODEPREP_AUTO_CLOSE') == '1':
+                logger.info("Auto-close enabled: window will close in 10 seconds")
+                self.auto_close_timer = QtCore.QTimer()
+                self.auto_close_timer.timeout.connect(self._auto_close)
+                self.auto_close_timer.setSingleShot(True)
+                self.auto_close_timer.start(10000)  # 10 seconds
 
             # Capture screenshot
             screenshot_path = capture_window_screenshot(
@@ -168,8 +177,21 @@ class ScreenshotTester:
 
         return results
 
+    def _auto_close(self):
+        """Internal method to auto-close the window after timer expires."""
+        logger.info("Auto-close timer expired, closing window...")
+        self.cleanup()
+        # Exit the application event loop if running
+        if self.app:
+            self.app.quit()
+
     def cleanup(self):
         """Clean up test resources."""
+        # Stop auto-close timer if active
+        if self.auto_close_timer:
+            self.auto_close_timer.stop()
+            self.auto_close_timer = None
+
         if self.main_window:
             try:
                 # Force close without confirmation
