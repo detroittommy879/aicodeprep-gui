@@ -582,8 +582,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             200,
             QtCore.Qt.SmoothTransformation
         )
-        # Very subtle watermark
-        self.tree_widget.set_logo(watermark_logo, opacity=0.1)
+        # Brighter watermark (0.2 = 20% opacity for better visibility)
+        self.tree_widget.set_logo(watermark_logo, opacity=0.2)
 
         self.splitter.addWidget(self.tree_widget)
 
