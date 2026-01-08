@@ -7,12 +7,14 @@ Implement comprehensive internationalization (i18n) and accessibility (a11y) fea
 ## Important Setup Instructions
 
 **ALWAYS use `uv` for Python package management:**
+
 - Run commands with: `uv run <command>`
 - Install packages with: `uv pip install <package>`
 - Run tests with: `uv run pytest`
 - Run app with: `uv run aicodeprep-gui`
 
 **Work on the feature branch:**
+
 - Branch name: `feature/i18n-accessibility`
 - All work should be committed to this branch
 - Do NOT commit directly to `main`
@@ -155,7 +157,7 @@ Set up the framework for translating all UI text into multiple languages.
    ```bash
    # Use the provided script (already uses uv internally)
    uv run python scripts/generate_translations.py
-   
+
    # This script handles:
    # - Extracting strings with lupdate
    # - Creating/updating .ts files for bundled languages (en, es, zh_CN, fr)

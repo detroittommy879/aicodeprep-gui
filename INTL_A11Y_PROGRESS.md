@@ -96,10 +96,10 @@
   - Edit → Language menu added to main window
   - Translation files generated for 4 bundled languages (en, es, zh_CN, fr)
   - 14 key UI strings translated to Spanish/Chinese/French:
-    * Menu items: File, Edit, Flow, Help, Debug
-    * Major buttons: GENERATE CONTEXT!, Select All, Deselect All
-    * Window titles and labels
-    * Flow-related UI elements
+    - Menu items: File, Edit, Flow, Help, Debug
+    - Major buttons: GENERATE CONTEXT!, Select All, Deselect All
+    - Window titles and labels
+    - Flow-related UI elements
   - Translation system integrated into app initialization
   - All i18n tests passing (8/8)
   - Test mode infrastructure added (AICODEPREP_TEST_MODE, AICODEPREP_AUTO_CLOSE)
@@ -107,21 +107,24 @@
   - Users can switch languages via Edit → Language and see real translations
 
 **Current Status:**
+
 - Translation system is WORKING - users can switch between EN/ES/ZH_CN/FR
 - App auto-detects system language on first launch
 - Language preference saved in QSettings
 - All .qm files compiled and working
 
 **Next Steps for Phase 1:**
+
 - Mark remaining ~80-100 UI strings with tr() throughout codebase
-  * Dialogs (file selection, error messages)
-  * Tooltips
-  * Status messages
-  * Preset button names
-  * Tree widget labels
+  - Dialogs (file selection, error messages)
+  - Tooltips
+  - Status messages
+  - Preset button names
+  - Tree widget labels
 - Add translations for those strings using scripts/add_translations.py pattern
 - Test dynamic retranslation (language switching without restart)
 - Implement on-demand language download system for non-bundled languages
 
 **Next Phase:**
+
 - Phase 2: Accessibility implementation (screen reader, keyboard nav, contrast)
