@@ -4,6 +4,16 @@
 <context>
     <name>FileSelectionGUI</name>
     <message>
+        <location filename="../../gui/main_window.py" line="110"/>
+        <source>Show</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/main_window.py" line="111"/>
+        <source>Quit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../../gui/main_window.py" line="171"/>
         <source>aicodeprep-gui - File Selection</source>
         <translation type="unfinished"></translation>
@@ -49,28 +59,48 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="411"/>
+        <location filename="../../gui/main_window.py" line="412"/>
         <source>Send Ideas, bugs, thoughts!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="416"/>
+        <location filename="../../gui/main_window.py" line="417"/>
         <source>Activate Pro…</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="446"/>
+        <location filename="../../gui/main_window.py" line="422"/>
+        <source>&amp;Debug</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/main_window.py" line="423"/>
+        <source>Take Screenshot</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/main_window.py" line="447"/>
         <source>&amp;Output format:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="453"/>
+        <location filename="../../gui/main_window.py" line="454"/>
         <source>Estimated tokens: 0</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="512"/>
+        <location filename="../../gui/main_window.py" line="508"/>
+        <source>Show Logo Banner</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/main_window.py" line="514"/>
         <source>The selected files will be added to the LLM Context Block along with your prompt, written to fullcode.txt and copied to clipboard, ready to paste into your AI assistant.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../gui/main_window.py" line="531"/>
+        <source>Prompt Preset Buttons:</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

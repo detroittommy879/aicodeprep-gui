@@ -92,7 +92,8 @@ def main():
         tm = TranslationManager(app)
         print("Available languages:")
         for code, name in sorted(tm.get_available_languages()):
-            current = " (current)" if tm.get_saved_language_preference() == code else ""
+            current = " (current)" if tm.get_saved_language_preference(
+            ) == code else ""
             print(f"  {code:8} - {name}{current}")
         sys.exit(0)
 
@@ -263,7 +264,8 @@ def main():
             logger.info(f"Setting language from command line: {args.language}")
             translation_manager.set_language(args.language)
         else:
-            logger.warning(f"Language '{args.language}' not available. Use --list-languages to see available languages.")
+            logger.warning(
+                f"Language '{args.language}' not available. Use --list-languages to see available languages.")
             sys.exit(1)
     else:
         # Load saved language preference or detect system language

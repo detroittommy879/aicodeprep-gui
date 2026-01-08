@@ -41,8 +41,12 @@ def main():
         print("Make sure PySide6 is installed")
         return 1
 
-    # List of languages to generate
-    languages = ['en', 'es', 'zh_CN', 'fr']
+    # List of all bundled languages (top 20)
+    languages = [
+        'en', 'es', 'fr', 'de', 'pt', 'it', 'ru',
+        'zh_CN', 'zh_TW', 'ja', 'ko', 'ar', 'hi',
+        'tr', 'pl', 'nl', 'sv', 'da', 'fi', 'no'
+    ]
 
     # Find all Python files in gui directory
     py_files = []

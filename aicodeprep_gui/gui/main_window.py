@@ -107,8 +107,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             from PySide6.QtGui import QAction
             tray = QSystemTrayIcon(app_icon, parent=self)
             menu = QMenu()
-            show_act = QAction("Show", self)
-            quit_act = QAction("Quit", self)
+            show_act = QAction(self.tr("Show"), self)
+            quit_act = QAction(self.tr("Quit"), self)
             show_act.triggered.connect(self.show)
             quit_act.triggered.connect(self.quit_without_processing)
             menu.addAction(show_act)
@@ -419,8 +419,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             help_menu.addAction(act)
 
         # Debug menu (always available for testing i18n/a11y)
-        debug_menu = mb.addMenu("&Debug")
-        screenshot_act = QtGui.QAction("Take Screenshot", self)
+        debug_menu = mb.addMenu(self.tr("&Debug"))
+        screenshot_act = QtGui.QAction(self.tr("Take Screenshot"), self)
         screenshot_act.triggered.connect(self._take_debug_screenshot)
         debug_menu.addAction(screenshot_act)
 
@@ -505,7 +505,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.banner_wrap.setVisible(False)
         self.logo_visible = False  # Logo banner is hidden by default
         self.logo_toggle_btn.setText("⏷")  # Down arrow (show)
-        self.logo_toggle_btn.setToolTip("Show Logo Banner")
+        self.logo_toggle_btn.setToolTip(self.tr("Show Logo Banner"))
 
         main_layout.addWidget(banner_wrap)
         main_layout.addSpacing(8)
@@ -527,7 +527,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.total_tokens = 0
 
         # Preset buttons setup
-        prompt_header_label = QtWidgets.QLabel("Prompt Preset Buttons:")
+        prompt_header_label = QtWidgets.QLabel(
+            self.tr("Prompt Preset Buttons:"))
         main_layout.addWidget(prompt_header_label)
 
         presets_wrapper = QtWidgets.QHBoxLayout()
