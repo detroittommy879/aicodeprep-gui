@@ -66,6 +66,10 @@ def main():
                         help="Force update check (ignore 24h limit)")
     parser.add_argument("-s", "--skipui", nargs='?', const='', default=None,
                         help="Pro: Skip UI and generate context immediately. Optionally provide a prompt string after the flag.")
+    parser.add_argument("--list-languages", action="store_true",
+                        help="List all available languages and exit")
+    parser.add_argument("--language", type=str, metavar="CODE",
+                        help="Set application language (e.g., --language es for Spanish)")
 
     # --- ADD THESE NEW ARGUMENTS ---
     if platform.system() == "Windows":
@@ -79,6 +83,18 @@ def main():
     # --- END OF NEW ARGUMENTS ---
 
     args = parser.parse_args()
+
+    # Handle --list-languages
+    if args.list_languages:
+        from aicodeprep_gui.i18n.translator import TranslationManager
+        # Create minimal app just for TranslationManager
+        app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
+        tm = TranslationManager(app)
+        print("Available languages:")
+        for code, name in sorted(tm.get_available_languages()):
+            current = " (current)" if tm.get_saved_language_preference() == code else ""
+            print(f"  {code:8} - {name}{current}")
+        sys.exit(0)
 
     # --- START: Headless / Skip-UI Mode ---
     if args.skipui is not None:
@@ -241,19 +257,28 @@ def main():
     from aicodeprep_gui.i18n.translator import TranslationManager
     translation_manager = TranslationManager(app)
 
-    # Load saved language preference or detect system language
-    saved_lang = translation_manager.get_saved_language_preference()
-    if saved_lang:
-        logger.info(f"Loading saved language: {saved_lang}")
-        translation_manager.set_language(saved_lang)
-    else:
-        detected_lang = translation_manager.detect_system_language()
-        logger.info(f"Detected system language: {detected_lang}")
-        if translation_manager.is_language_bundled(detected_lang):
-            translation_manager.set_language(detected_lang)
+    # Handle --language command line option
+    if args.language:
+        if translation_manager.is_language_available(args.language):
+            logger.info(f"Setting language from command line: {args.language}")
+            translation_manager.set_language(args.language)
         else:
-            # Use English for non-bundled languages (user can change later)
-            translation_manager.set_language('en')
+            logger.warning(f"Language '{args.language}' not available. Use --list-languages to see available languages.")
+            sys.exit(1)
+    else:
+        # Load saved language preference or detect system language
+        saved_lang = translation_manager.get_saved_language_preference()
+        if saved_lang:
+            logger.info(f"Loading saved language: {saved_lang}")
+            translation_manager.set_language(saved_lang)
+        else:
+            detected_lang = translation_manager.detect_system_language()
+            logger.info(f"Detected system language: {detected_lang}")
+            if translation_manager.is_language_bundled(detected_lang):
+                translation_manager.set_language(detected_lang)
+            else:
+                # Use English for non-bundled languages (user can change later)
+                translation_manager.set_language('en')
 
     # Store translation manager in app for global access
     app.translation_manager = translation_manager

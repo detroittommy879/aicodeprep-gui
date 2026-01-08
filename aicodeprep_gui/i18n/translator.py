@@ -18,25 +18,29 @@ logger = logging.getLogger(__name__)
 class TranslationManager:
     """Manages UI translations for the application."""
 
-    # Bundled languages (shipped with the application)
+    # All languages bundled with the application (top 20 world languages)
+    # Fonts are handled by OS, so no size concerns
     BUNDLED_LANGUAGES = {
         'en': 'English',
         'es': 'Español (Spanish)',
-        'zh_CN': '简体中文 (Chinese Simplified)',
-        'fr': 'Français (French)'
-    }
-
-    # On-demand languages (downloaded when user selects them)
-    ONDEMAND_LANGUAGES = {
+        'fr': 'Français (French)',
         'de': 'Deutsch (German)',
+        'pt': 'Português (Portuguese)',
+        'it': 'Italiano (Italian)',
+        'ru': 'Русский (Russian)',
+        'zh_CN': '简体中文 (Chinese Simplified)',
+        'zh_TW': '繁體中文 (Chinese Traditional)',
         'ja': '日本語 (Japanese)',
         'ko': '한국어 (Korean)',
         'ar': 'العربية (Arabic)',
-        'he': 'עברית (Hebrew)',
-        'ru': 'Русский (Russian)',
-        'pt': 'Português (Portuguese)',
-        'zh_TW': '繁體中文 (Chinese Traditional)',
-        'it': 'Italiano (Italian)'
+        'hi': 'हिन्दी (Hindi)',
+        'tr': 'Türkçe (Turkish)',
+        'pl': 'Polski (Polish)',
+        'nl': 'Nederlands (Dutch)',
+        'sv': 'Svenska (Swedish)',
+        'da': 'Dansk (Danish)',
+        'fi': 'Suomi (Finnish)',
+        'no': 'Norsk (Norwegian)'
     }
 
     def __init__(self, app: QtWidgets.QApplication):
@@ -89,33 +93,17 @@ class TranslationManager:
 
     def get_available_languages(self) -> List[Tuple[str, str]]:
         """
-        Get list of all available languages (bundled + downloaded).
+        Get list of all available languages (all are bundled).
 
         Returns:
             List of tuples: [(language_code, language_name), ...]
         """
-        available = []
-
-        # Add bundled languages
-        for code, name in self.BUNDLED_LANGUAGES.items():
-            available.append((code, name))
-
-        # Check which on-demand languages are downloaded
-        user_trans_dir = self._get_user_translations_directory()
-        for code, name in self.ONDEMAND_LANGUAGES.items():
-            trans_file = user_trans_dir / f"aicodeprep_gui_{code}.qm"
-            if trans_file.exists():
-                name_with_mark = f"{name} ✓"  # Mark as downloaded
-                available.append((code, name_with_mark))
-            else:
-                name_with_download = f"{name} (download)"
-                available.append((code, name_with_download))
-
-        return available
+        # Return all bundled languages
+        return [(code, name) for code, name in self.BUNDLED_LANGUAGES.items()]
 
     def is_language_available(self, lang_code: str) -> bool:
         """
-        Check if a language is available (bundled or downloaded).
+        Check if a language is available (all are bundled now).
 
         Args:
             lang_code: Language code (e.g., 'en', 'es', 'zh_CN')
@@ -123,15 +111,7 @@ class TranslationManager:
         Returns:
             True if language is available
         """
-        if lang_code in self.BUNDLED_LANGUAGES:
-            return True
-
-        if lang_code in self.ONDEMAND_LANGUAGES:
-            user_trans_dir = self._get_user_translations_directory()
-            trans_file = user_trans_dir / f"aicodeprep_gui_{lang_code}.qm"
-            return trans_file.exists()
-
-        return False
+        return lang_code in self.BUNDLED_LANGUAGES
 
     def is_language_bundled(self, lang_code: str) -> bool:
         """
@@ -158,16 +138,14 @@ class TranslationManager:
         logger.info(f"Detected system locale: {locale_name}")
 
         # Try exact match first
-        if locale_name in self.BUNDLED_LANGUAGES or locale_name in self.ONDEMAND_LANGUAGES:
+        if locale_name in self.BUNDLED_LANGUAGES:
             return locale_name
 
         # Try language code only (first 2 chars)
         lang_code = locale_name.split('_')[0]
 
         # Check if base language is available
-        all_codes = list(self.BUNDLED_LANGUAGES.keys()) + \
-            list(self.ONDEMAND_LANGUAGES.keys())
-        for code in all_codes:
+        for code in self.BUNDLED_LANGUAGES.keys():
             if code.startswith(lang_code):
                 return code
 
@@ -176,35 +154,15 @@ class TranslationManager:
 
     def download_language_if_needed(self, lang_code: str) -> bool:
         """
-        Download a language file if it's an on-demand language.
-
-        For now, this is a placeholder. In a real implementation, this would
-        download from a CDN or GitHub releases.
+        Check if language is available (no downloads needed, all bundled).
 
         Args:
-            lang_code: Language code to download
+            lang_code: Language code to check
 
         Returns:
-            True if download successful or not needed
+            True if language is available
         """
-        # If it's bundled, no download needed
-        if self.is_language_bundled(lang_code):
-            return True
-
-        # If already downloaded, no need
-        if self.is_language_available(lang_code):
-            logger.info(f"Language {lang_code} already downloaded")
-            return True
-
-        # Check if it's a valid on-demand language
-        if lang_code not in self.ONDEMAND_LANGUAGES:
-            logger.warning(f"Unknown language code: {lang_code}")
-            return False
-
-        # TODO: Implement actual download from CDN/GitHub
-        logger.info(f"Would download language: {lang_code}")
-        logger.info("Note: On-demand language download not yet implemented")
-        return False
+        return self.is_language_available(lang_code)
 
     def set_language(self, lang_code: str) -> bool:
         """
@@ -238,11 +196,8 @@ class TranslationManager:
             # Load translation file
             translator = QTranslator()
 
-            # Determine where to load from
-            if self.is_language_bundled(lang_code):
-                trans_dir = self.translations_dir
-            else:
-                trans_dir = self._get_user_translations_directory()
+            # Determine where to load from (all bundled now)
+            trans_dir = self.translations_dir
 
             trans_file = trans_dir / f"aicodeprep_gui_{lang_code}.qm"
 
