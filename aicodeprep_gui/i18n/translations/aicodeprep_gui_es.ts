@@ -30,47 +30,47 @@
     <message>
         <location filename="../../gui/main_window.py" line="262"/>
         <source>Install Right-Click Menu...</source>
-        <translation type="unfinished"></translation>
+        <translation>Instalar menú de clic derecho...</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="274"/>
         <source>Install Finder Quick Action...</source>
-        <translation type="unfinished"></translation>
+        <translation>Instalar acción rápida del Finder...</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="286"/>
         <source>Install File Manager Action...</source>
-        <translation type="unfinished"></translation>
+        <translation>Instalar acción del administrador de archivos...</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="291"/>
         <location filename="../../gui/main_window.py" line="1582"/>
         <source>&amp;Quit</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Salir</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="295"/>
         <location filename="../../gui/main_window.py" line="1585"/>
         <source>&amp;Edit</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Editar</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="296"/>
         <location filename="../../gui/main_window.py" line="1587"/>
         <source>&amp;New Preset…</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Nuevo preajuste…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="301"/>
         <location filename="../../gui/main_window.py" line="1590"/>
         <source>Open Settings Folder…</source>
-        <translation type="unfinished"></translation>
+        <translation>Abrir carpeta de configuración…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="309"/>
         <location filename="../../gui/main_window.py" line="1592"/>
         <source>&amp;Language / Idioma / 语言…</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Idioma / Language…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="314"/>
@@ -94,27 +94,27 @@
         <location filename="../../gui/main_window.py" line="327"/>
         <location filename="../../gui/main_window.py" line="1601"/>
         <source>Reset to Default Flow</source>
-        <translation>Restaurar flujo predeterminado</translation>
+        <translation>Restablecer a flujo predeterminado</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="334"/>
         <source>Load Built-in: Best-of-5 (Blank)</source>
-        <translation type="unfinished"></translation>
+        <translation>Cargar integrado: Mejor de 5 (En blanco)</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="353"/>
         <source>Load Built-in: Best-of-5 (Configured)</source>
-        <translation type="unfinished"></translation>
+        <translation>Cargar integrado: Mejor de 5 (Configurado)</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="372"/>
         <source>Load Built-in: Best-of-3 (Configured)</source>
-        <translation type="unfinished"></translation>
+        <translation>Cargar integrado: Mejor de 3 (Configurado)</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="391"/>
         <source>Run Current Flow</source>
-        <translation type="unfinished"></translation>
+        <translation>Ejecutar flujo actual</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="407"/>
@@ -156,19 +156,19 @@
         <location filename="../../gui/main_window.py" line="432"/>
         <location filename="../../gui/main_window.py" line="1617"/>
         <source>Take Screenshot</source>
-        <translation>Capturar pantalla</translation>
+        <translation>Tomar captura de pantalla</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="437"/>
         <location filename="../../gui/main_window.py" line="1619"/>
         <source>Current Language Info</source>
-        <translation type="unfinished"></translation>
+        <translation>Información del idioma actual</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="442"/>
         <location filename="../../gui/main_window.py" line="1621"/>
         <source>Accessibility Check</source>
-        <translation type="unfinished"></translation>
+        <translation>Comprobación de accesibilidad</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="458"/>
@@ -180,7 +180,7 @@
         <location filename="../../gui/main_window.py" line="461"/>
         <location filename="../../gui/main_window.py" line="1627"/>
         <source>Dark mode</source>
-        <translation type="unfinished"></translation>
+        <translation>Modo oscuro</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="465"/>
@@ -192,7 +192,7 @@
     <message>
         <location filename="../../gui/main_window.py" line="502"/>
         <source>Hide/Show Logo</source>
-        <translation type="unfinished"></translation>
+        <translation>Ocultar/Mostrar logotipo</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="519"/>
@@ -209,195 +209,195 @@
     <message>
         <location filename="../../gui/main_window.py" line="542"/>
         <source>Prompt Preset Buttons:</source>
-        <translation>Botones de instrucciones preestablecidas:</translation>
+        <translation>Botones de preajuste de instrucción:</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="560"/>
         <source>New Preset…</source>
-        <translation type="unfinished"></translation>
+        <translation>Nuevo preajuste…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="566"/>
         <source>Delete a preset…</source>
-        <translation type="unfinished"></translation>
+        <translation>Eliminar un preajuste…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="578"/>
         <location filename="../../gui/main_window.py" line="1648"/>
         <source>Presets help you save more time and will be saved for later use</source>
-        <translation type="unfinished"></translation>
+        <translation>Los preajustes te ayudan a ahorrar más tiempo y se guardarán para su uso posterior</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="628"/>
         <location filename="../../gui/main_window.py" line="1651"/>
         <source>Optional prompt/question for LLM (will be appended to the end):</source>
-        <translation type="unfinished"></translation>
+        <translation>Instrucción/pregunta opcional para LLM (se agregará al final):</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="634"/>
         <location filename="../../gui/main_window.py" line="1654"/>
         <source>Type your question or prompt here (optional)…</source>
-        <translation type="unfinished"></translation>
+        <translation>Escribe tu pregunta o instrucción aquí (opcional)…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="637"/>
         <location filename="../../gui/main_window.py" line="1656"/>
         <source>Clear</source>
-        <translation type="unfinished"></translation>
+        <translation>Borrar</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="638"/>
         <location filename="../../gui/main_window.py" line="1657"/>
         <source>Clear the prompt box</source>
-        <translation type="unfinished"></translation>
+        <translation>Borrar el cuadro de instrucción</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="712"/>
         <location filename="../../gui/main_window.py" line="1675"/>
         <source>Remember checked files for this folder, window size information</source>
-        <translation type="unfinished"></translation>
+        <translation>Recordar archivos marcados para esta carpeta, información del tamaño de la ventana</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="716"/>
         <source>Add prompt/question to top</source>
-        <translation type="unfinished"></translation>
+        <translation>Agregar instrucción/pregunta arriba</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="718"/>
         <source>Add prompt/question to bottom</source>
-        <translation type="unfinished"></translation>
+        <translation>Agregar instrucción/pregunta abajo</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="730"/>
         <location filename="../../gui/main_window.py" line="1673"/>
         <source>Options</source>
-        <translation type="unfinished"></translation>
+        <translation>Opciones</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="765"/>
         <location filename="../../gui/main_window.py" line="1677"/>
         <source>Font Size:</source>
-        <translation type="unfinished"></translation>
+        <translation>Tamaño de fuente:</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="795"/>
         <location filename="../../gui/main_window.py" line="1681"/>
         <source>Pro Features</source>
-        <translation type="unfinished"></translation>
+        <translation>Funciones Pro</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="818"/>
         <location filename="../../gui/main_window.py" line="1683"/>
         <source>Enable file preview window</source>
-        <translation type="unfinished"></translation>
+        <translation>Habilitar ventana de vista previa de archivo</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="823"/>
         <source>Shows a docked window on the right that previews file contents when you select them in the tree</source>
-        <translation type="unfinished"></translation>
+        <translation>Muestra una ventana acoplada a la derecha que previsualiza el contenido del archivo cuando los seleccionas en el árbol</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="836"/>
         <location filename="../../gui/main_window.py" line="1685"/>
         <source>Enable syntax highlighting in preview</source>
-        <translation type="unfinished"></translation>
+        <translation>Habilitar resaltado de sintaxis en la vista previa</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="840"/>
         <source>Apply syntax highlighting to code in the preview window</source>
-        <translation type="unfinished"></translation>
+        <translation>Aplicar resaltado de sintaxis al código en la ventana de vista previa</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="853"/>
         <location filename="../../gui/main_window.py" line="1687"/>
         <source>Enable Flow Studio (currently testing alpha version - might be glitchy!)</source>
-        <translation type="unfinished"></translation>
+        <translation>Habilitar Flow Studio (actualmente probando versión alfa - ¡puede tener fallos!)</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="857"/>
         <source>Show the Flow Studio dock. Free mode is read-only; Pro can edit and save flows.</source>
-        <translation type="unfinished"></translation>
+        <translation>Mostrar el dock de Flow Studio. El modo gratuito es de solo lectura; Pro puede editar y guardar flujos.</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="901"/>
         <location filename="../../gui/main_window.py" line="1689"/>
         <source>Font Weight:</source>
-        <translation type="unfinished"></translation>
+        <translation>Peso de fuente:</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="911"/>
         <source>Adjust font weight for preview window</source>
-        <translation type="unfinished"></translation>
+        <translation>Ajustar peso de fuente para ventana de vista previa</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="927"/>
         <location filename="../../gui/main_window.py" line="1691"/>
         <source>Add prompt/question to top - Adding to top AND bottom often gets better responses from AI models</source>
-        <translation type="unfinished"></translation>
+        <translation>Agregar instrucción/pregunta arriba - Agregar arriba Y abajo a menudo obtiene mejores respuestas de los modelos de IA</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="929"/>
         <location filename="../../gui/main_window.py" line="1693"/>
         <source>Add prompt/question to bottom - Adding to top AND bottom often gets better responses from AI models</source>
-        <translation type="unfinished"></translation>
+        <translation>Agregar instrucción/pregunta abajo - Agregar arriba Y abajo a menudo obtiene mejores respuestas de los modelos de IA</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="936"/>
         <location filename="../../gui/main_window.py" line="948"/>
         <source>Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these</source>
-        <translation type="unfinished"></translation>
+        <translation>¡La investigación muestra que hacer tu pregunta antes Y después del contexto del código puede mejorar la calidad y la capacidad de las respuestas de la IA! Se recomienda encarecidamente marcar ambos</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="1024"/>
         <location filename="../../gui/main_window.py" line="1695"/>
         <source>Enable Context Compression Modes - does not work yet, still experimenting!</source>
-        <translation type="unfinished"></translation>
+        <translation>Habilitar modos de compresión de contexto - ¡aún no funciona, todavía experimentando!</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="1028"/>
         <location filename="../../gui/main_window.py" line="1038"/>
         <source>Show a second column that marks skeleton level per item</source>
-        <translation type="unfinished"></translation>
+        <translation>Mostrar una segunda columna que marca el nivel de esqueleto por elemento</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="1042"/>
         <source>Pro Feature</source>
-        <translation type="unfinished"></translation>
+        <translation>Función Pro</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="1061"/>
         <location filename="../../gui/main_window.py" line="1661"/>
         <source>GENERATE CONTEXT!</source>
-        <translation type="unfinished"></translation>
+        <translation>¡GENERAR CONTEXTO!</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="1065"/>
         <location filename="../../gui/main_window.py" line="1663"/>
         <source>Select All</source>
-        <translation type="unfinished"></translation>
+        <translation>Seleccionar todo</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="1069"/>
         <location filename="../../gui/main_window.py" line="1665"/>
         <source>Deselect All</source>
-        <translation type="unfinished"></translation>
+        <translation>Deseleccionar todo</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="1074"/>
         <location filename="../../gui/main_window.py" line="1667"/>
         <source>Load preferences</source>
-        <translation type="unfinished"></translation>
+        <translation>Cargar preferencias</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="1078"/>
         <location filename="../../gui/main_window.py" line="1669"/>
         <source>Scan</source>
-        <translation type="unfinished"></translation>
+        <translation>Escanear</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="1643"/>
         <source>Hide Logo Banner</source>
-        <translation type="unfinished"></translation>
+        <translation>Ocultar banner del logotipo</translation>
     </message>
 </context>
 <context>
@@ -406,55 +406,55 @@
         <location filename="../../gui/components/language_dialog.py" line="27"/>
         <location filename="../../gui/components/language_dialog.py" line="211"/>
         <source>Select Language / Seleccionar idioma / 选择语言</source>
-        <translation type="unfinished"></translation>
+        <translation>Seleccionar idioma / Select Language</translation>
     </message>
     <message>
         <location filename="../../gui/components/language_dialog.py" line="40"/>
         <location filename="../../gui/components/language_dialog.py" line="213"/>
         <source>Select Application Language:</source>
-        <translation type="unfinished"></translation>
+        <translation>Seleccionar idioma de la aplicación:</translation>
     </message>
     <message>
         <location filename="../../gui/components/language_dialog.py" line="54"/>
         <location filename="../../gui/components/language_dialog.py" line="221"/>
         <source>Choose the language for the user interface. Bundled languages are available immediately. Other languages can be downloaded on demand.</source>
-        <translation type="unfinished"></translation>
+        <translation>Elige el idioma para la interfaz de usuario. Los idiomas incluidos están disponibles de inmediato. Otros idiomas se pueden descargar a pedido.</translation>
     </message>
     <message>
         <location filename="../../gui/components/language_dialog.py" line="71"/>
         <location filename="../../gui/components/language_dialog.py" line="223"/>
         <source>✓ = Downloaded / Bundled</source>
-        <translation type="unfinished"></translation>
+        <translation>✓ = Descargado / Incluido</translation>
     </message>
     <message>
         <location filename="../../gui/components/language_dialog.py" line="76"/>
         <location filename="../../gui/components/language_dialog.py" line="225"/>
         <source>(download) = Needs download</source>
-        <translation type="unfinished"></translation>
+        <translation>(descargar) = Necesita descarga</translation>
     </message>
     <message>
         <location filename="../../gui/components/language_dialog.py" line="88"/>
         <location filename="../../gui/components/language_dialog.py" line="184"/>
         <location filename="../../gui/components/language_dialog.py" line="233"/>
         <source>Current language: {code}</source>
-        <translation type="unfinished"></translation>
+        <translation>Idioma actual: {code}</translation>
     </message>
     <message>
         <location filename="../../gui/components/language_dialog.py" line="96"/>
         <location filename="../../gui/components/language_dialog.py" line="227"/>
         <source>Select</source>
-        <translation type="unfinished"></translation>
+        <translation>Seleccionar</translation>
     </message>
     <message>
         <location filename="../../gui/components/language_dialog.py" line="101"/>
         <location filename="../../gui/components/language_dialog.py" line="229"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Cancelar</translation>
     </message>
     <message>
         <location filename="../../gui/components/language_dialog.py" line="157"/>
         <source>Download Language</source>
-        <translation type="unfinished"></translation>
+        <translation>Descargar idioma</translation>
     </message>
     <message>
         <location filename="../../gui/components/language_dialog.py" line="163"/>
@@ -463,29 +463,35 @@
 Download functionality is not yet implemented. Only bundled languages can be used for now.
 
 Would you like to continue anyway?</source>
-        <translation type="unfinished"></translation>
+        <translation>El idioma '{name}' necesita ser descargado.
+
+La funcionalidad de descarga aún no está implementada. Solo se pueden usar idiomas incluidos por ahora.
+
+¿Te gustaría continuar de todos modos?</translation>
     </message>
     <message>
         <location filename="../../gui/components/language_dialog.py" line="178"/>
         <source>Language Changed</source>
-        <translation type="unfinished"></translation>
+        <translation>Idioma cambiado</translation>
     </message>
     <message>
         <location filename="../../gui/components/language_dialog.py" line="179"/>
         <source>Language changed to: {name}</source>
-        <translation type="unfinished"></translation>
+        <translation>Idioma cambiado a: {name}</translation>
     </message>
     <message>
         <location filename="../../gui/components/language_dialog.py" line="191"/>
         <source>Language Change Failed</source>
-        <translation type="unfinished"></translation>
+        <translation>Error al cambiar de idioma</translation>
     </message>
     <message>
         <location filename="../../gui/components/language_dialog.py" line="195"/>
         <source>Failed to change language to: {name}
 
 The language files may not be available.</source>
-        <translation type="unfinished"></translation>
+        <translation>Error al cambiar el idioma a: {name}
+
+Es posible que los archivos de idioma no estén disponibles.</translation>
     </message>
 </context>
 </TS>

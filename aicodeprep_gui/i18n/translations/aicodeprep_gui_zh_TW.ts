@@ -30,47 +30,47 @@
     <message>
         <location filename="../../gui/main_window.py" line="262"/>
         <source>Install Right-Click Menu...</source>
-        <translation type="unfinished"></translation>
+        <translation>安裝右鍵選單...</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="274"/>
         <source>Install Finder Quick Action...</source>
-        <translation type="unfinished"></translation>
+        <translation>安裝 Finder 快速動作...</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="286"/>
         <source>Install File Manager Action...</source>
-        <translation type="unfinished"></translation>
+        <translation>安裝檔案管理員動作...</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="291"/>
         <location filename="../../gui/main_window.py" line="1582"/>
         <source>&amp;Quit</source>
-        <translation type="unfinished"></translation>
+        <translation>退出(&amp;Q)</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="295"/>
         <location filename="../../gui/main_window.py" line="1585"/>
         <source>&amp;Edit</source>
-        <translation type="unfinished"></translation>
+        <translation>編輯(&amp;E)</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="296"/>
         <location filename="../../gui/main_window.py" line="1587"/>
         <source>&amp;New Preset…</source>
-        <translation type="unfinished"></translation>
+        <translation>新增預設(&amp;N)…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="301"/>
         <location filename="../../gui/main_window.py" line="1590"/>
         <source>Open Settings Folder…</source>
-        <translation type="unfinished"></translation>
+        <translation>開啟設定資料夾…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="309"/>
         <location filename="../../gui/main_window.py" line="1592"/>
         <source>&amp;Language / Idioma / 语言…</source>
-        <translation type="unfinished"></translation>
+        <translation>語言 / Language(&amp;L)…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="314"/>
@@ -99,22 +99,22 @@
     <message>
         <location filename="../../gui/main_window.py" line="334"/>
         <source>Load Built-in: Best-of-5 (Blank)</source>
-        <translation type="unfinished"></translation>
+        <translation>載入內建：5選1 (空白)</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="353"/>
         <source>Load Built-in: Best-of-5 (Configured)</source>
-        <translation type="unfinished"></translation>
+        <translation>載入內建：5選1 (已設定)</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="372"/>
         <source>Load Built-in: Best-of-3 (Configured)</source>
-        <translation type="unfinished"></translation>
+        <translation>載入內建：3選1 (已設定)</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="391"/>
         <source>Run Current Flow</source>
-        <translation type="unfinished"></translation>
+        <translation>執行目前流程</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="407"/>
@@ -162,13 +162,13 @@
         <location filename="../../gui/main_window.py" line="437"/>
         <location filename="../../gui/main_window.py" line="1619"/>
         <source>Current Language Info</source>
-        <translation type="unfinished"></translation>
+        <translation>目前語言資訊</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="442"/>
         <location filename="../../gui/main_window.py" line="1621"/>
         <source>Accessibility Check</source>
-        <translation type="unfinished"></translation>
+        <translation>存取性檢查</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="458"/>
@@ -180,7 +180,7 @@
         <location filename="../../gui/main_window.py" line="461"/>
         <location filename="../../gui/main_window.py" line="1627"/>
         <source>Dark mode</source>
-        <translation type="unfinished"></translation>
+        <translation>深色模式</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="465"/>
@@ -192,7 +192,7 @@
     <message>
         <location filename="../../gui/main_window.py" line="502"/>
         <source>Hide/Show Logo</source>
-        <translation type="unfinished"></translation>
+        <translation>隱藏/顯示 Logo</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="519"/>
@@ -214,190 +214,190 @@
     <message>
         <location filename="../../gui/main_window.py" line="560"/>
         <source>New Preset…</source>
-        <translation type="unfinished"></translation>
+        <translation>新增預設…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="566"/>
         <source>Delete a preset…</source>
-        <translation type="unfinished"></translation>
+        <translation>刪除預設…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="578"/>
         <location filename="../../gui/main_window.py" line="1648"/>
         <source>Presets help you save more time and will be saved for later use</source>
-        <translation type="unfinished"></translation>
+        <translation>預設可協助您節省更多時間，並儲存供日後使用</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="628"/>
         <location filename="../../gui/main_window.py" line="1651"/>
         <source>Optional prompt/question for LLM (will be appended to the end):</source>
-        <translation type="unfinished"></translation>
+        <translation>LLM 的選用提示/問題 (將附加在最後)：</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="634"/>
         <location filename="../../gui/main_window.py" line="1654"/>
         <source>Type your question or prompt here (optional)…</source>
-        <translation type="unfinished"></translation>
+        <translation>在此輸入您的問題或提示 (選用)…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="637"/>
         <location filename="../../gui/main_window.py" line="1656"/>
         <source>Clear</source>
-        <translation type="unfinished"></translation>
+        <translation>清除</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="638"/>
         <location filename="../../gui/main_window.py" line="1657"/>
         <source>Clear the prompt box</source>
-        <translation type="unfinished"></translation>
+        <translation>清除提示方塊</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="712"/>
         <location filename="../../gui/main_window.py" line="1675"/>
         <source>Remember checked files for this folder, window size information</source>
-        <translation type="unfinished"></translation>
+        <translation>記住此資料夾的已勾選檔案、視窗大小資訊</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="716"/>
         <source>Add prompt/question to top</source>
-        <translation type="unfinished"></translation>
+        <translation>新增提示/問題至頂部</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="718"/>
         <source>Add prompt/question to bottom</source>
-        <translation type="unfinished"></translation>
+        <translation>新增提示/問題至底部</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="730"/>
         <location filename="../../gui/main_window.py" line="1673"/>
         <source>Options</source>
-        <translation type="unfinished"></translation>
+        <translation>選項</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="765"/>
         <location filename="../../gui/main_window.py" line="1677"/>
         <source>Font Size:</source>
-        <translation type="unfinished"></translation>
+        <translation>字型大小：</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="795"/>
         <location filename="../../gui/main_window.py" line="1681"/>
         <source>Pro Features</source>
-        <translation type="unfinished"></translation>
+        <translation>Pro 功能</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="818"/>
         <location filename="../../gui/main_window.py" line="1683"/>
         <source>Enable file preview window</source>
-        <translation type="unfinished"></translation>
+        <translation>啟用檔案預覽視窗</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="823"/>
         <source>Shows a docked window on the right that previews file contents when you select them in the tree</source>
-        <translation type="unfinished"></translation>
+        <translation>在右側顯示停靠視窗，當您在樹狀結構中選取檔案時預覽檔案內容</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="836"/>
         <location filename="../../gui/main_window.py" line="1685"/>
         <source>Enable syntax highlighting in preview</source>
-        <translation type="unfinished"></translation>
+        <translation>啟用預覽中的語法突顯</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="840"/>
         <source>Apply syntax highlighting to code in the preview window</source>
-        <translation type="unfinished"></translation>
+        <translation>將語法突顯套用至預覽視窗中的程式碼</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="853"/>
         <location filename="../../gui/main_window.py" line="1687"/>
         <source>Enable Flow Studio (currently testing alpha version - might be glitchy!)</source>
-        <translation type="unfinished"></translation>
+        <translation>啟用 Flow Studio (目前正在測試 alpha 版本 - 可能不穩定！)</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="857"/>
         <source>Show the Flow Studio dock. Free mode is read-only; Pro can edit and save flows.</source>
-        <translation type="unfinished"></translation>
+        <translation>顯示 Flow Studio 面板。免費模式為唯讀；Pro 可編輯並儲存流程。</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="901"/>
         <location filename="../../gui/main_window.py" line="1689"/>
         <source>Font Weight:</source>
-        <translation type="unfinished"></translation>
+        <translation>字型粗細：</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="911"/>
         <source>Adjust font weight for preview window</source>
-        <translation type="unfinished"></translation>
+        <translation>調整預覽視窗的字型粗細</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="927"/>
         <location filename="../../gui/main_window.py" line="1691"/>
         <source>Add prompt/question to top - Adding to top AND bottom often gets better responses from AI models</source>
-        <translation type="unfinished"></translation>
+        <translation>新增提示/問題至頂部 - 新增至頂部和底部通常可從 AI 模型獲得更好的回應</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="929"/>
         <location filename="../../gui/main_window.py" line="1693"/>
         <source>Add prompt/question to bottom - Adding to top AND bottom often gets better responses from AI models</source>
-        <translation type="unfinished"></translation>
+        <translation>新增提示/問題至底部 - 新增至頂部和底部通常可從 AI 模型獲得更好的回應</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="936"/>
         <location filename="../../gui/main_window.py" line="948"/>
         <source>Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these</source>
-        <translation type="unfinished"></translation>
+        <translation>研究顯示，在程式碼上下文之前和之後詢問您的問題，可以改善 AI 回應的品質和能力！強烈建議勾選這兩項</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="1024"/>
         <location filename="../../gui/main_window.py" line="1695"/>
         <source>Enable Context Compression Modes - does not work yet, still experimenting!</source>
-        <translation type="unfinished"></translation>
+        <translation>啟用上下文壓縮模式 - 尚未運作，仍在實驗中！</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="1028"/>
         <location filename="../../gui/main_window.py" line="1038"/>
         <source>Show a second column that marks skeleton level per item</source>
-        <translation type="unfinished"></translation>
+        <translation>顯示第二欄，標記每個項目的骨架層級</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="1042"/>
         <source>Pro Feature</source>
-        <translation type="unfinished"></translation>
+        <translation>Pro 功能</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="1061"/>
         <location filename="../../gui/main_window.py" line="1661"/>
         <source>GENERATE CONTEXT!</source>
-        <translation type="unfinished"></translation>
+        <translation>產生上下文！</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="1065"/>
         <location filename="../../gui/main_window.py" line="1663"/>
         <source>Select All</source>
-        <translation type="unfinished"></translation>
+        <translation>全選</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="1069"/>
         <location filename="../../gui/main_window.py" line="1665"/>
         <source>Deselect All</source>
-        <translation type="unfinished"></translation>
+        <translation>取消全選</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="1074"/>
         <location filename="../../gui/main_window.py" line="1667"/>
         <source>Load preferences</source>
-        <translation type="unfinished"></translation>
+        <translation>載入偏好設定</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="1078"/>
         <location filename="../../gui/main_window.py" line="1669"/>
         <source>Scan</source>
-        <translation type="unfinished"></translation>
+        <translation>掃描</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="1643"/>
         <source>Hide Logo Banner</source>
-        <translation type="unfinished"></translation>
+        <translation>隱藏 Logo 橫幅</translation>
     </message>
 </context>
 <context>
@@ -406,55 +406,55 @@
         <location filename="../../gui/components/language_dialog.py" line="27"/>
         <location filename="../../gui/components/language_dialog.py" line="211"/>
         <source>Select Language / Seleccionar idioma / 选择语言</source>
-        <translation type="unfinished"></translation>
+        <translation>選擇語言 / Select Language</translation>
     </message>
     <message>
         <location filename="../../gui/components/language_dialog.py" line="40"/>
         <location filename="../../gui/components/language_dialog.py" line="213"/>
         <source>Select Application Language:</source>
-        <translation type="unfinished"></translation>
+        <translation>選擇應用程式語言：</translation>
     </message>
     <message>
         <location filename="../../gui/components/language_dialog.py" line="54"/>
         <location filename="../../gui/components/language_dialog.py" line="221"/>
         <source>Choose the language for the user interface. Bundled languages are available immediately. Other languages can be downloaded on demand.</source>
-        <translation type="unfinished"></translation>
+        <translation>選擇使用者介面的語言。內建語言可立即使用。其他語言可視需要下載。</translation>
     </message>
     <message>
         <location filename="../../gui/components/language_dialog.py" line="71"/>
         <location filename="../../gui/components/language_dialog.py" line="223"/>
         <source>✓ = Downloaded / Bundled</source>
-        <translation type="unfinished"></translation>
+        <translation>✓ = 已下載 / 內建</translation>
     </message>
     <message>
         <location filename="../../gui/components/language_dialog.py" line="76"/>
         <location filename="../../gui/components/language_dialog.py" line="225"/>
         <source>(download) = Needs download</source>
-        <translation type="unfinished"></translation>
+        <translation>(下載) = 需要下載</translation>
     </message>
     <message>
         <location filename="../../gui/components/language_dialog.py" line="88"/>
         <location filename="../../gui/components/language_dialog.py" line="184"/>
         <location filename="../../gui/components/language_dialog.py" line="233"/>
         <source>Current language: {code}</source>
-        <translation type="unfinished"></translation>
+        <translation>目前語言：{code}</translation>
     </message>
     <message>
         <location filename="../../gui/components/language_dialog.py" line="96"/>
         <location filename="../../gui/components/language_dialog.py" line="227"/>
         <source>Select</source>
-        <translation type="unfinished"></translation>
+        <translation>選擇</translation>
     </message>
     <message>
         <location filename="../../gui/components/language_dialog.py" line="101"/>
         <location filename="../../gui/components/language_dialog.py" line="229"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>取消</translation>
     </message>
     <message>
         <location filename="../../gui/components/language_dialog.py" line="157"/>
         <source>Download Language</source>
-        <translation type="unfinished"></translation>
+        <translation>下載語言</translation>
     </message>
     <message>
         <location filename="../../gui/components/language_dialog.py" line="163"/>
@@ -463,29 +463,35 @@
 Download functionality is not yet implemented. Only bundled languages can be used for now.
 
 Would you like to continue anyway?</source>
-        <translation type="unfinished"></translation>
+        <translation>需要下載語言 '{name}'。
+
+尚未實作下載功能。目前只能使用內建語言。
+
+您要繼續嗎？</translation>
     </message>
     <message>
         <location filename="../../gui/components/language_dialog.py" line="178"/>
         <source>Language Changed</source>
-        <translation type="unfinished"></translation>
+        <translation>語言已變更</translation>
     </message>
     <message>
         <location filename="../../gui/components/language_dialog.py" line="179"/>
         <source>Language changed to: {name}</source>
-        <translation type="unfinished"></translation>
+        <translation>語言已變更為：{name}</translation>
     </message>
     <message>
         <location filename="../../gui/components/language_dialog.py" line="191"/>
         <source>Language Change Failed</source>
-        <translation type="unfinished"></translation>
+        <translation>語言變更失敗</translation>
     </message>
     <message>
         <location filename="../../gui/components/language_dialog.py" line="195"/>
         <source>Failed to change language to: {name}
 
 The language files may not be available.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法變更語言為：{name}
+
+語言檔案可能無法使用。</translation>
     </message>
 </context>
 </TS>
