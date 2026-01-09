@@ -38,39 +38,57 @@ from .utils.helpers import WindowHelpers
 
 
 class LogoTreeWidget(QtWidgets.QTreeWidget):
-    """Custom QTreeWidget with a logo watermark in the background."""
+    """Custom QTreeWidget (logo now drawn on main window central widget instead)."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+
+class LogoCentralWidget(QtWidgets.QWidget):
+    """Custom central widget that draws a logo watermark in the bottom-left corner."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.logo_pixmap = None
-        self.logo_opacity = 0.15  # Subtle watermark
+        self.logo_opacity = 0.48
+        self.logo_padding = 5  # Padding from edges
 
-    def set_logo(self, pixmap, opacity=0.15):
+    def set_logo(self, pixmap, opacity=0.48):
         """Set the logo pixmap and opacity for the background watermark."""
         self.logo_pixmap = pixmap
         self.logo_opacity = opacity
-        self.viewport().update()
+        self.update()
 
     def paintEvent(self, event):
         """Override paint event to draw logo in the background."""
-        # First draw the normal tree widget
         super().paintEvent(event)
 
-        # Then draw the logo as a watermark
+        # Draw the logo as a watermark in bottom-left corner
         if self.logo_pixmap and not self.logo_pixmap.isNull():
-            painter = QtGui.QPainter(self.viewport())
-            painter.setOpacity(self.logo_opacity)
-
-            # Calculate position to center the logo
-            viewport_rect = self.viewport().rect()
+            # Calculate position for bottom-left corner
+            widget_rect = self.rect()
             logo_width = self.logo_pixmap.width()
             logo_height = self.logo_pixmap.height()
 
-            x = (viewport_rect.width() - logo_width) // 2
-            y = (viewport_rect.height() - logo_height) // 2
+            # Position in bottom-left with padding
+            x = self.logo_padding
+            y = widget_rect.height() - logo_height - self.logo_padding
 
-            # Draw the logo centered
-            painter.drawPixmap(x, y, self.logo_pixmap)
+            # Create a temporary pixmap to apply opacity
+            temp_pixmap = QtGui.QPixmap(self.logo_pixmap.size())
+            temp_pixmap.fill(QtCore.Qt.transparent)
+
+            # Draw the logo onto the temp pixmap with opacity
+            temp_painter = QtGui.QPainter(temp_pixmap)
+            temp_painter.setOpacity(self.logo_opacity)
+            temp_painter.drawPixmap(0, 0, self.logo_pixmap)
+            temp_painter.end()
+
+            # Now draw the temp pixmap with applied opacity
+            painter = QtGui.QPainter(self)
+            painter.setRenderHint(QtGui.QPainter.Antialiasing)
+            painter.setRenderHint(QtGui.QPainter.SmoothPixmapTransform)
+            painter.drawPixmap(x, y, temp_pixmap)
             painter.end()
 
 
@@ -216,7 +234,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         if self.is_dark_mode:
             apply_dark_palette(self.app)
 
-        central = QtWidgets.QWidget()
+        central = LogoCentralWidget()
         self.setCentralWidget(central)
         # Prefer palette-based gradient painting to reduce banding and allow multiple stops.
         # Store central as an attribute so helper can reapply on resize.
@@ -610,14 +628,14 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         ) if self.is_dark_mode else get_checkbox_style_light()
         self.tree_widget.setStyleSheet(base_style + checkbox_style)
 
-        # Set the logo as a background watermark in the tree widget
-        # Scale logo to reasonable size for watermark (around 200px height)
+        # Set the logo as a background watermark on the main window (bottom-left corner)
+        # Scale logo to small size for corner watermark (120px height)
         watermark_logo = self.logo_pixmap.scaledToHeight(
-            200,
+            120,
             QtCore.Qt.SmoothTransformation
         )
-        # Brighter watermark (0.2 = 20% opacity for better visibility)
-        self.tree_widget.set_logo(watermark_logo, opacity=0.2)
+        # Subtle watermark in corner (adjust opacity in LogoCentralWidget.__init__)
+        self.central_widget.set_logo(watermark_logo)
 
         self.splitter.addWidget(self.tree_widget)
 
