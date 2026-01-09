@@ -124,6 +124,123 @@ To complete translations for a language (e.g., Spanish):
 - `aicodeprep_gui/i18n/translations/` - All .ts and .qm files
 - `INTL_A11Y_PROGRESS.md` - Progress tracking for i18n/a11y work
 
+### i18n: Adding new UI elements (required workflow for devs/agents)
+
+When you add new UI elements (buttons, labels, tooltips, dialogs, etc.), you **MUST** follow this workflow to ensure translations work:
+
+#### 1. Wrap ALL user-visible strings in `self.tr()`
+
+In your Python code (typically `aicodeprep_gui/gui/main_window.py` or other GUI files):
+
+```python
+# CORRECT - wrapped in self.tr():
+button.setText(self.tr("Click Me"))
+button.setToolTip(self.tr("This button does something"))
+label.setText(self.tr("File Name:"))
+
+# WRONG - hardcoded English strings:
+button.setText("Click Me")  # ❌ Won't be translated
+button.setToolTip("This button does something")  # ❌ Won't be translated
+```
+
+**Critical locations to wrap:**
+
+- Button text: `button.setText(self.tr("..."))`
+- Labels: `label.setText(self.tr("..."))`
+- Tooltips: `widget.setToolTip(self.tr("..."))`
+- Checkbox text: `checkbox.setText(self.tr("..."))`
+- Dialog titles and messages: `QMessageBox.information(self, self.tr("Title"), self.tr("Message"))`
+- Group box titles: `groupbox.setTitle(self.tr("..."))`
+
+**Exception:** HTML/styling markup in labels with "?" icons can stay outside, e.g.:
+
+```python
+help_icon.setText("<b style='color:#0098e4;'>?</b>")  # OK, not user text
+help_icon.setToolTip(self.tr("This explains the feature"))  # Must wrap tooltip!
+```
+
+#### 2. Regenerate translation files to pick up new strings
+
+After adding/modifying `self.tr()` strings, run:
+
+```bash
+uv run python scripts/generate_translations.py
+```
+
+This will:
+
+- Update all 20 `.ts` files with new strings (marked `type="unfinished"`)
+- Compile `.qm` binaries
+
+New strings will appear in `.ts` files like:
+
+```xml
+<message>
+    <source>Your new English string</source>
+    <translation type="unfinished"></translation>
+</message>
+```
+
+#### 3. Add translations to .ts files
+
+Edit each language's `.ts` file in `aicodeprep_gui/i18n/translations/`:
+
+**Use ja (Japanese) or hi (Hindi) as reference** - they have complete translations.
+
+Example for Spanish (`aicodeprep_gui_es.ts`):
+
+```xml
+<message>
+    <source>Your new English string</source>
+    <translation>Tu nueva cadena en español</translation>  <!-- Add translation here -->
+</message>
+```
+
+**Remove `type="unfinished"` attribute** when translation is complete.
+
+#### 4. Recompile .qm files after editing translations
+
+After manually editing `.ts` files, recompile:
+
+```bash
+# Compile all languages:
+uv run python scripts/compile_translations.py
+
+# Or compile specific languages:
+uv run python scripts/compile_translations.py es fr de
+```
+
+This generates `.qm` files that Qt actually loads at runtime.
+
+#### 5. Test your translations
+
+```bash
+# Test specific language:
+uv run aicodeprep-gui --language es
+
+# Visual audit with screenshots:
+uv run python scripts/gui_language_screenshot_loop.py --language es
+```
+
+#### Common mistakes to avoid:
+
+1. **Forgetting to wrap tooltips** - Tooltips are easy to miss but critical for UX
+2. **Not recompiling after editing .ts** - Changes won't appear until `.qm` files are compiled
+3. **Hardcoding strings outside self.tr()** - These will stay English in all languages
+4. **Forgetting dynamic strings** - Strings set via `setText()` later must also use `self.tr()`
+5. **Skipping the regenerate step** - New strings won't appear in `.ts` files for translation
+
+#### Quick checklist for new features:
+
+- [ ] All button text wrapped in `self.tr()`
+- [ ] All labels wrapped in `self.tr()`
+- [ ] All tooltips wrapped in `self.tr()`
+- [ ] All dialog messages wrapped in `self.tr()`
+- [ ] Ran `uv run python scripts/generate_translations.py`
+- [ ] Added translations to key languages (at minimum: ja, hi, es, fr, de, zh_CN)
+- [ ] Ran `uv run python scripts/compile_translations.py`
+- [ ] Tested with `uv run aicodeprep-gui --language <lang>`
+
 ## CLAUDE.md (Reference Copy)
 
 The content below mirrors CLAUDE.md. If you update CLAUDE.md with new agent-relevant information, consider updating this section too.

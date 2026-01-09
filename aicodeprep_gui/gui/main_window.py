@@ -764,7 +764,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         remember_help = QtWidgets.QLabel(
             "<b style='color:#0098e4; font-size:14px; cursor:help;'>?</b>")
         remember_help.setToolTip(
-            "Saves which files are included in the context for this folder, so you don't have to keep doing it over and over")
+            self.tr("Saves which files are included in the context for this folder, so you don't have to keep doing it over and over"))
         remember_help.setAlignment(QtCore.Qt.AlignVCenter)
         remember_layout = QtWidgets.QHBoxLayout()
         remember_layout.setContentsMargins(0, 0, 0, 0)
@@ -1496,10 +1496,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             # Update button icon
             if self.logo_visible:
                 self.logo_toggle_btn.setText("⏶")  # Up arrow (hide)
-                self.logo_toggle_btn.setToolTip("Hide Logo Banner")
+                self.logo_toggle_btn.setToolTip(self.tr("Hide Logo Banner"))
             else:
                 self.logo_toggle_btn.setText("⏷")  # Down arrow (show)
-                self.logo_toggle_btn.setToolTip("Show Logo Banner")
+                self.logo_toggle_btn.setToolTip(self.tr("Show Logo Banner"))
         except Exception as e:
             logging.error(f"toggle_logo_visibility failed: {e}")
 

@@ -4,394 +4,401 @@
 <context>
     <name>FileSelectionGUI</name>
     <message>
-        <location filename="../../gui/main_window.py" line="110"/>
-        <location filename="../../gui/main_window.py" line="1580"/>
+        <location filename="../../gui/main_window.py" line="128"/>
+        <location filename="../../gui/main_window.py" line="1598"/>
         <source>Show</source>
         <translation>Visa</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="111"/>
-        <location filename="../../gui/main_window.py" line="1084"/>
-        <location filename="../../gui/main_window.py" line="1582"/>
-        <location filename="../../gui/main_window.py" line="1675"/>
+        <location filename="../../gui/main_window.py" line="129"/>
+        <location filename="../../gui/main_window.py" line="1102"/>
+        <location filename="../../gui/main_window.py" line="1600"/>
+        <location filename="../../gui/main_window.py" line="1693"/>
         <source>Quit</source>
         <translation>Avsluta</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="171"/>
-        <location filename="../../gui/main_window.py" line="1576"/>
+        <location filename="../../gui/main_window.py" line="189"/>
+        <location filename="../../gui/main_window.py" line="1594"/>
         <source>aicodeprep-gui - File Selection</source>
         <translation>aicodeprep-gui - Filval</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="252"/>
-        <location filename="../../gui/main_window.py" line="1586"/>
+        <location filename="../../gui/main_window.py" line="270"/>
+        <location filename="../../gui/main_window.py" line="1604"/>
         <source>&amp;File</source>
         <translation>&amp;Arkiv</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="262"/>
+        <location filename="../../gui/main_window.py" line="280"/>
         <source>Install Right-Click Menu...</source>
         <translation>Installera högerklicksmeny...</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="274"/>
+        <location filename="../../gui/main_window.py" line="292"/>
         <source>Install Finder Quick Action...</source>
         <translation>Installera Finder-snabbåtgärd...</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="286"/>
+        <location filename="../../gui/main_window.py" line="304"/>
         <source>Install File Manager Action...</source>
         <translation>Installera filhanteraråtgärd...</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="291"/>
-        <location filename="../../gui/main_window.py" line="1588"/>
+        <location filename="../../gui/main_window.py" line="309"/>
+        <location filename="../../gui/main_window.py" line="1606"/>
         <source>&amp;Quit</source>
         <translation>&amp;Avsluta</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="295"/>
-        <location filename="../../gui/main_window.py" line="1591"/>
+        <location filename="../../gui/main_window.py" line="313"/>
+        <location filename="../../gui/main_window.py" line="1609"/>
         <source>&amp;Edit</source>
         <translation>&amp;Redigera</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="296"/>
-        <location filename="../../gui/main_window.py" line="1593"/>
+        <location filename="../../gui/main_window.py" line="314"/>
+        <location filename="../../gui/main_window.py" line="1611"/>
         <source>&amp;New Preset…</source>
         <translation>&amp;Ny förinställning…</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="301"/>
-        <location filename="../../gui/main_window.py" line="1596"/>
+        <location filename="../../gui/main_window.py" line="319"/>
+        <location filename="../../gui/main_window.py" line="1614"/>
         <source>Open Settings Folder…</source>
         <translation>Öppna inställningsmapp…</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="309"/>
-        <location filename="../../gui/main_window.py" line="1598"/>
+        <location filename="../../gui/main_window.py" line="327"/>
+        <location filename="../../gui/main_window.py" line="1616"/>
         <source>&amp;Language / Idioma / 语言…</source>
         <translation>&amp;Språk / Language…</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="314"/>
-        <location filename="../../gui/main_window.py" line="1601"/>
+        <location filename="../../gui/main_window.py" line="332"/>
+        <location filename="../../gui/main_window.py" line="1619"/>
         <source>&amp;Flow</source>
         <translation>&amp;Flöde</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="317"/>
-        <location filename="../../gui/main_window.py" line="1603"/>
+        <location filename="../../gui/main_window.py" line="335"/>
+        <location filename="../../gui/main_window.py" line="1621"/>
         <source>Import Flow JSON…</source>
         <translation>Importera Flöde JSON…</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="322"/>
-        <location filename="../../gui/main_window.py" line="1605"/>
+        <location filename="../../gui/main_window.py" line="340"/>
+        <location filename="../../gui/main_window.py" line="1623"/>
         <source>Export Flow JSON…</source>
         <translation>Exportera Flöde JSON…</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="327"/>
-        <location filename="../../gui/main_window.py" line="1607"/>
+        <location filename="../../gui/main_window.py" line="345"/>
+        <location filename="../../gui/main_window.py" line="1625"/>
         <source>Reset to Default Flow</source>
         <translation>Återställ till standardflöde</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="334"/>
+        <location filename="../../gui/main_window.py" line="352"/>
         <source>Load Built-in: Best-of-5 (Blank)</source>
         <translation>Ladda inbyggd: Best-of-5 (Tom)</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="353"/>
+        <location filename="../../gui/main_window.py" line="371"/>
         <source>Load Built-in: Best-of-5 (Configured)</source>
         <translation>Ladda inbyggd: Best-of-5 (Konfigurerad)</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="372"/>
+        <location filename="../../gui/main_window.py" line="390"/>
         <source>Load Built-in: Best-of-3 (Configured)</source>
         <translation>Ladda inbyggd: Best-of-3 (Konfigurerad)</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="391"/>
+        <location filename="../../gui/main_window.py" line="409"/>
         <source>Run Current Flow</source>
         <translation>Kör nuvarande flöde</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="407"/>
-        <location filename="../../gui/main_window.py" line="1610"/>
+        <location filename="../../gui/main_window.py" line="425"/>
+        <location filename="../../gui/main_window.py" line="1628"/>
         <source>&amp;Help</source>
         <translation>&amp;Hjälp</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="409"/>
-        <location filename="../../gui/main_window.py" line="1612"/>
+        <location filename="../../gui/main_window.py" line="427"/>
+        <location filename="../../gui/main_window.py" line="1630"/>
         <source>Help / Links and Guides</source>
         <translation>Hjälp / Länkar och guider</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="414"/>
-        <location filename="../../gui/main_window.py" line="1614"/>
+        <location filename="../../gui/main_window.py" line="432"/>
+        <location filename="../../gui/main_window.py" line="1632"/>
         <source>&amp;About</source>
         <translation>&amp;Om</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="419"/>
-        <location filename="../../gui/main_window.py" line="1616"/>
+        <location filename="../../gui/main_window.py" line="437"/>
+        <location filename="../../gui/main_window.py" line="1634"/>
         <source>Send Ideas, bugs, thoughts!</source>
         <translation>Skicka idéer, buggar, tankar!</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="425"/>
-        <location filename="../../gui/main_window.py" line="1618"/>
+        <location filename="../../gui/main_window.py" line="443"/>
+        <location filename="../../gui/main_window.py" line="1636"/>
         <source>Activate Pro…</source>
         <translation>Aktivera Pro…</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="431"/>
-        <location filename="../../gui/main_window.py" line="1621"/>
+        <location filename="../../gui/main_window.py" line="449"/>
+        <location filename="../../gui/main_window.py" line="1639"/>
         <source>&amp;Debug</source>
         <translation>&amp;Felsök</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="432"/>
-        <location filename="../../gui/main_window.py" line="1623"/>
+        <location filename="../../gui/main_window.py" line="450"/>
+        <location filename="../../gui/main_window.py" line="1641"/>
         <source>Take Screenshot</source>
         <translation>Ta skärmdump</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="437"/>
-        <location filename="../../gui/main_window.py" line="1625"/>
+        <location filename="../../gui/main_window.py" line="455"/>
+        <location filename="../../gui/main_window.py" line="1643"/>
         <source>Current Language Info</source>
         <translation>Nuvarande språkinformation</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="442"/>
-        <location filename="../../gui/main_window.py" line="1627"/>
+        <location filename="../../gui/main_window.py" line="460"/>
+        <location filename="../../gui/main_window.py" line="1645"/>
         <source>Accessibility Check</source>
         <translation>Tillgänglighetskontroll</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="458"/>
-        <location filename="../../gui/main_window.py" line="1631"/>
+        <location filename="../../gui/main_window.py" line="476"/>
+        <location filename="../../gui/main_window.py" line="1649"/>
         <source>&amp;Output format:</source>
         <translation>&amp;Utdataformat:</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="461"/>
-        <location filename="../../gui/main_window.py" line="1633"/>
+        <location filename="../../gui/main_window.py" line="479"/>
+        <location filename="../../gui/main_window.py" line="1651"/>
         <source>Dark mode</source>
         <translation>Mörkt läge</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="465"/>
-        <location filename="../../gui/main_window.py" line="1640"/>
-        <location filename="../../gui/main_window.py" line="1642"/>
+        <location filename="../../gui/main_window.py" line="483"/>
+        <location filename="../../gui/main_window.py" line="1658"/>
+        <location filename="../../gui/main_window.py" line="1660"/>
         <source>Estimated tokens: 0</source>
         <translation>Uppskattade tokens: 0</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="502"/>
+        <location filename="../../gui/main_window.py" line="520"/>
         <source>Hide/Show Logo</source>
         <translation>Dölj/Visa logotyp</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="519"/>
-        <location filename="../../gui/main_window.py" line="1651"/>
+        <location filename="../../gui/main_window.py" line="537"/>
+        <location filename="../../gui/main_window.py" line="1502"/>
+        <location filename="../../gui/main_window.py" line="1669"/>
         <source>Show Logo Banner</source>
         <translation>Visa logobanner</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="525"/>
-        <location filename="../../gui/main_window.py" line="1645"/>
+        <location filename="../../gui/main_window.py" line="543"/>
+        <location filename="../../gui/main_window.py" line="1663"/>
         <source>The selected files will be added to the LLM Context Block along with your prompt, written to fullcode.txt and copied to clipboard, ready to paste into your AI assistant.</source>
         <translation>De valda filerna kommer att läggas till i LLM-kontextblocket tillsammans med din instruktion, skrivas till fullcode.txt och kopieras till urklipp, redo att klistras in i din AI-assistent.</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="542"/>
+        <location filename="../../gui/main_window.py" line="560"/>
         <source>Prompt Preset Buttons:</source>
         <translation>Instruktion förinställningsknappar:</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="560"/>
+        <location filename="../../gui/main_window.py" line="578"/>
         <source>New Preset…</source>
         <translation>Ny förinställning…</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="566"/>
+        <location filename="../../gui/main_window.py" line="584"/>
         <source>Delete a preset…</source>
         <translation>Ta bort en förinställning…</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="578"/>
-        <location filename="../../gui/main_window.py" line="1654"/>
+        <location filename="../../gui/main_window.py" line="596"/>
+        <location filename="../../gui/main_window.py" line="1672"/>
         <source>Presets help you save more time and will be saved for later use</source>
         <translation>Förinställningar sparar tid och sparas för framtida bruk</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="628"/>
-        <location filename="../../gui/main_window.py" line="1657"/>
+        <location filename="../../gui/main_window.py" line="646"/>
+        <location filename="../../gui/main_window.py" line="1675"/>
         <source>Optional prompt/question for LLM (will be appended to the end):</source>
         <translation>Valfri prompt/fråga till LLM (läggs till på slutet):</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="634"/>
-        <location filename="../../gui/main_window.py" line="1660"/>
+        <location filename="../../gui/main_window.py" line="652"/>
+        <location filename="../../gui/main_window.py" line="1678"/>
         <source>Type your question or prompt here (optional)…</source>
         <translation>Skriv din fråga eller prompt här (valfritt)…</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="637"/>
-        <location filename="../../gui/main_window.py" line="1662"/>
+        <location filename="../../gui/main_window.py" line="655"/>
+        <location filename="../../gui/main_window.py" line="1680"/>
         <source>Clear</source>
         <translation>Rensa</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="638"/>
-        <location filename="../../gui/main_window.py" line="1663"/>
+        <location filename="../../gui/main_window.py" line="656"/>
+        <location filename="../../gui/main_window.py" line="1681"/>
         <source>Clear the prompt box</source>
         <translation>Rensa prompt-rutan</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="712"/>
-        <location filename="../../gui/main_window.py" line="1682"/>
+        <location filename="../../gui/main_window.py" line="730"/>
+        <location filename="../../gui/main_window.py" line="1700"/>
         <source>Remember checked files for this folder, window size information</source>
         <translation>Kom ihåg valda filer för denna mapp, fönsterstorlek</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="716"/>
+        <location filename="../../gui/main_window.py" line="734"/>
         <source>Add prompt/question to top</source>
         <translation>Lägg till prompt/fråga överst</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="718"/>
+        <location filename="../../gui/main_window.py" line="736"/>
         <source>Add prompt/question to bottom</source>
         <translation>Lägg till prompt/fråga nederst</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="730"/>
-        <location filename="../../gui/main_window.py" line="1679"/>
+        <location filename="../../gui/main_window.py" line="748"/>
+        <location filename="../../gui/main_window.py" line="1697"/>
         <source>Options</source>
         <translation>Alternativ</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="765"/>
-        <location filename="../../gui/main_window.py" line="1684"/>
+        <location filename="../../gui/main_window.py" line="767"/>
+        <source>Saves which files are included in the context for this folder, so you don&apos;t have to keep doing it over and over</source>
+        <translation>Sparar vilka filer som ingår i kontexten för denna mapp, så att du inte behöver göra det om och om igen</translation>
+    </message>
+    <message>
+        <location filename="../../gui/main_window.py" line="783"/>
+        <location filename="../../gui/main_window.py" line="1702"/>
         <source>Font Size:</source>
         <translation>Teckenstorlek:</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="795"/>
-        <location filename="../../gui/main_window.py" line="1688"/>
+        <location filename="../../gui/main_window.py" line="813"/>
+        <location filename="../../gui/main_window.py" line="1706"/>
         <source>Pro Features</source>
         <translation>Pro-funktioner</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="818"/>
-        <location filename="../../gui/main_window.py" line="1690"/>
+        <location filename="../../gui/main_window.py" line="836"/>
+        <location filename="../../gui/main_window.py" line="1708"/>
         <source>Enable file preview window</source>
         <translation>Aktivera filförhandsgranskningsfönster</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="823"/>
+        <location filename="../../gui/main_window.py" line="841"/>
         <source>Shows a docked window on the right that previews file contents when you select them in the tree</source>
         <translation>Visar ett fönster till höger som förhandsgranskar filinnehåll när du väljer dem i trädet</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="836"/>
-        <location filename="../../gui/main_window.py" line="1693"/>
+        <location filename="../../gui/main_window.py" line="854"/>
+        <location filename="../../gui/main_window.py" line="1711"/>
         <source>Enable syntax highlighting in preview</source>
         <translation>Aktivera syntaxmarkering i förhandsgranskning</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="840"/>
+        <location filename="../../gui/main_window.py" line="858"/>
         <source>Apply syntax highlighting to code in the preview window</source>
         <translation>Använd syntaxmarkering på kod i förhandsgranskningsfönstret</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="853"/>
-        <location filename="../../gui/main_window.py" line="1696"/>
+        <location filename="../../gui/main_window.py" line="871"/>
+        <location filename="../../gui/main_window.py" line="1714"/>
         <source>Enable Flow Studio (currently testing alpha version - might be glitchy!)</source>
         <translation>Aktivera Flow Studio (alfa-testversion - kan vara instabil!)</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="857"/>
+        <location filename="../../gui/main_window.py" line="875"/>
         <source>Show the Flow Studio dock. Free mode is read-only; Pro can edit and save flows.</source>
         <translation>Visa Flow Studio-panelen. Gratis läge är skrivskyddat; Pro kan redigera och spara flöden.</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="901"/>
-        <location filename="../../gui/main_window.py" line="1698"/>
+        <location filename="../../gui/main_window.py" line="919"/>
+        <location filename="../../gui/main_window.py" line="1716"/>
         <source>Font Weight:</source>
         <translation>Teckenvikt:</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="911"/>
+        <location filename="../../gui/main_window.py" line="929"/>
         <source>Adjust font weight for preview window</source>
         <translation>Justera teckenvikt för förhandsgranskningsfönster</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="928"/>
-        <location filename="../../gui/main_window.py" line="1701"/>
+        <location filename="../../gui/main_window.py" line="946"/>
+        <location filename="../../gui/main_window.py" line="1719"/>
         <source>Add prompt/question to top - Adding to top AND bottom often gets better responses from AI models</source>
         <translation>Lägg till prompt/fråga överst - Att lägga till BÅDE överst och nederst ger ofta bättre svar från AI-modeller</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="931"/>
-        <location filename="../../gui/main_window.py" line="1704"/>
+        <location filename="../../gui/main_window.py" line="949"/>
+        <location filename="../../gui/main_window.py" line="1722"/>
         <source>Add prompt/question to bottom - Adding to top AND bottom often gets better responses from AI models</source>
         <translation>Lägg till prompt/fråga nederst - Att lägga till BÅDE överst och nederst ger ofta bättre svar från AI-modeller</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="938"/>
-        <location filename="../../gui/main_window.py" line="950"/>
+        <location filename="../../gui/main_window.py" line="956"/>
+        <location filename="../../gui/main_window.py" line="968"/>
         <source>Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these</source>
         <translation>Forskning visar att frågan före OCH efter kodkontexten kan förbättra kvaliteten på AI-svar! Rekommenderas starkt att välja båda</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1026"/>
-        <location filename="../../gui/main_window.py" line="1707"/>
+        <location filename="../../gui/main_window.py" line="1044"/>
+        <location filename="../../gui/main_window.py" line="1725"/>
         <source>Enable Context Compression Modes - does not work yet, still experimenting!</source>
         <translation>Aktivera kontextkomprimeringslägen - fungerar inte än, experimenterar fortfarande!</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1030"/>
-        <location filename="../../gui/main_window.py" line="1040"/>
+        <location filename="../../gui/main_window.py" line="1048"/>
+        <location filename="../../gui/main_window.py" line="1058"/>
         <source>Show a second column that marks skeleton level per item</source>
         <translation>Visa en andra kolumn som markerar skelettnivå per objekt</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1044"/>
+        <location filename="../../gui/main_window.py" line="1062"/>
         <source>Pro Feature</source>
         <translation>Pro-funktion</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1064"/>
-        <location filename="../../gui/main_window.py" line="1667"/>
+        <location filename="../../gui/main_window.py" line="1082"/>
+        <location filename="../../gui/main_window.py" line="1685"/>
         <source>GENERATE CONTEXT!</source>
         <translation>GENERERA KONTEXT!</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1068"/>
-        <location filename="../../gui/main_window.py" line="1669"/>
+        <location filename="../../gui/main_window.py" line="1086"/>
+        <location filename="../../gui/main_window.py" line="1687"/>
         <source>Select All</source>
         <translation>Markera alla</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1073"/>
-        <location filename="../../gui/main_window.py" line="1671"/>
+        <location filename="../../gui/main_window.py" line="1091"/>
+        <location filename="../../gui/main_window.py" line="1689"/>
         <source>Deselect All</source>
         <translation>Avmarkera alla</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1079"/>
-        <location filename="../../gui/main_window.py" line="1673"/>
+        <location filename="../../gui/main_window.py" line="1097"/>
+        <location filename="../../gui/main_window.py" line="1691"/>
         <source>Load preferences</source>
         <translation>Ladda inställningar</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1649"/>
+        <location filename="../../gui/main_window.py" line="1499"/>
+        <location filename="../../gui/main_window.py" line="1667"/>
         <source>Hide Logo Banner</source>
         <translation>Dölj logobanner</translation>
     </message>
