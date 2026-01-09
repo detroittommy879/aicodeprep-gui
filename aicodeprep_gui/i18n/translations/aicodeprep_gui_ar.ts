@@ -6,102 +6,102 @@
     <message>
         <location filename="../../gui/main_window.py" line="110"/>
         <source>Show</source>
-        <translation type="unfinished"></translation>
+        <translation>عرض</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="111"/>
         <source>Quit</source>
-        <translation type="unfinished"></translation>
+        <translation>خروج</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="171"/>
         <source>aicodeprep-gui - File Selection</source>
-        <translation type="unfinished"></translation>
+        <translation>aicodeprep-gui - اختيار الملفات</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="252"/>
         <source>&amp;File</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;ملف</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="311"/>
         <source>&amp;Flow</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;تدفق</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="313"/>
         <source>Import Flow JSON…</source>
-        <translation type="unfinished"></translation>
+        <translation>استيراد تدفق JSON…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="317"/>
         <source>Export Flow JSON…</source>
-        <translation type="unfinished"></translation>
+        <translation>تصدير تدفق JSON…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="321"/>
         <source>Reset to Default Flow</source>
-        <translation type="unfinished"></translation>
+        <translation>إعادة تعيين إلى التدفق الافتراضي</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="401"/>
         <source>&amp;Help</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;مساعدة</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="402"/>
         <source>Help / Links and Guides</source>
-        <translation type="unfinished"></translation>
+        <translation>مساعدة / روابط وأدلة</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="407"/>
         <source>&amp;About</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;حول</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="412"/>
         <source>Send Ideas, bugs, thoughts!</source>
-        <translation type="unfinished"></translation>
+        <translation>إرسال أفكار، أخطاء، أفكار!</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="417"/>
         <source>Activate Pro…</source>
-        <translation type="unfinished"></translation>
+        <translation>تفعيل المحترف…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="422"/>
         <source>&amp;Debug</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;تصحيح</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="423"/>
         <source>Take Screenshot</source>
-        <translation type="unfinished"></translation>
+        <translation>لقطة شاشة</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="447"/>
         <source>&amp;Output format:</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;تنسيق الإخراج:</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="454"/>
         <source>Estimated tokens: 0</source>
-        <translation type="unfinished"></translation>
+        <translation>الرموز المقدرة: 0</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="508"/>
         <source>Show Logo Banner</source>
-        <translation type="unfinished"></translation>
+        <translation>عرض شعار</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="514"/>
         <source>The selected files will be added to the LLM Context Block along with your prompt, written to fullcode.txt and copied to clipboard, ready to paste into your AI assistant.</source>
-        <translation type="unfinished"></translation>
+        <translation>سيتم إضافة الملفات المحددة إلى كتلة سياق LLM مع توجيهك، مكتوبة في fullcode.txt ونسخها إلى الحافظة، جاهزة للصق في مساعد الذكاء الاصطناعي الخاص بك.</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="531"/>
         <source>Prompt Preset Buttons:</source>
-        <translation type="unfinished"></translation>
+        <translation>أزرار التوجيه المحددة مسبقاً:</translation>
     </message>
 </context>
 </TS>

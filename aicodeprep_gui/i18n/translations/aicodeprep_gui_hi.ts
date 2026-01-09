@@ -6,102 +6,102 @@
     <message>
         <location filename="../../gui/main_window.py" line="110"/>
         <source>Show</source>
-        <translation type="unfinished"></translation>
+        <translation>दिखाएं</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="111"/>
         <source>Quit</source>
-        <translation type="unfinished"></translation>
+        <translation>बाहर निकलें</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="171"/>
         <source>aicodeprep-gui - File Selection</source>
-        <translation type="unfinished"></translation>
+        <translation>aicodeprep-gui - फाइल चयन</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="252"/>
         <source>&amp;File</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;फाइल</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="311"/>
         <source>&amp;Flow</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;प्रवाह</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="313"/>
         <source>Import Flow JSON…</source>
-        <translation type="unfinished"></translation>
+        <translation>प्रवाह JSON आयात करें…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="317"/>
         <source>Export Flow JSON…</source>
-        <translation type="unfinished"></translation>
+        <translation>प्रवाह JSON निर्यात करें…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="321"/>
         <source>Reset to Default Flow</source>
-        <translation type="unfinished"></translation>
+        <translation>डिफ़ॉल्ट प्रवाह में रीसेट करें</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="401"/>
         <source>&amp;Help</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;सहायता</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="402"/>
         <source>Help / Links and Guides</source>
-        <translation type="unfinished"></translation>
+        <translation>सहायता / लिंक और गाइड</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="407"/>
         <source>&amp;About</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;के बारे में</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="412"/>
         <source>Send Ideas, bugs, thoughts!</source>
-        <translation type="unfinished"></translation>
+        <translation>विचार, बग, विचार भेजें!</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="417"/>
         <source>Activate Pro…</source>
-        <translation type="unfinished"></translation>
+        <translation>Pro सक्रिय करें…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="422"/>
         <source>&amp;Debug</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;डिबग</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="423"/>
         <source>Take Screenshot</source>
-        <translation type="unfinished"></translation>
+        <translation>स्क्रीनशॉट लें</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="447"/>
         <source>&amp;Output format:</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;आउटपुट प्रारूप:</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="454"/>
         <source>Estimated tokens: 0</source>
-        <translation type="unfinished"></translation>
+        <translation>अनुमानित टोकन: 0</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="508"/>
         <source>Show Logo Banner</source>
-        <translation type="unfinished"></translation>
+        <translation>लोगो बैनर दिखाएं</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="514"/>
         <source>The selected files will be added to the LLM Context Block along with your prompt, written to fullcode.txt and copied to clipboard, ready to paste into your AI assistant.</source>
-        <translation type="unfinished"></translation>
+        <translation>चयनित फाइलें आपके निर्देश के साथ LLM संदर्भ ब्लॉक में जोड़ी जाएंगी, fullcode.txt में लिखी जाएंगी और क्लिपबोर्ड पर कॉपी की जाएंगी, आपके AI सहायक में पेस्ट करने के लिए तैयार।</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="531"/>
         <source>Prompt Preset Buttons:</source>
-        <translation type="unfinished"></translation>
+        <translation>निर्देश प्रीसेट बटन:</translation>
     </message>
 </context>
 </TS>

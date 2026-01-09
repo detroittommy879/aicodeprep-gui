@@ -6,102 +6,102 @@
     <message>
         <location filename="../../gui/main_window.py" line="110"/>
         <source>Show</source>
-        <translation type="unfinished"></translation>
+        <translation>表示</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="111"/>
         <source>Quit</source>
-        <translation type="unfinished"></translation>
+        <translation>終了</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="171"/>
         <source>aicodeprep-gui - File Selection</source>
-        <translation type="unfinished"></translation>
+        <translation>aicodeprep-gui - ファイル選択</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="252"/>
         <source>&amp;File</source>
-        <translation type="unfinished"></translation>
+        <translation>ファイル(&amp;F)</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="311"/>
         <source>&amp;Flow</source>
-        <translation type="unfinished"></translation>
+        <translation>フロー(&amp;F)</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="313"/>
         <source>Import Flow JSON…</source>
-        <translation type="unfinished"></translation>
+        <translation>フローJSONをインポート…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="317"/>
         <source>Export Flow JSON…</source>
-        <translation type="unfinished"></translation>
+        <translation>フローJSONをエクスポート…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="321"/>
         <source>Reset to Default Flow</source>
-        <translation type="unfinished"></translation>
+        <translation>デフォルトフローにリセット</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="401"/>
         <source>&amp;Help</source>
-        <translation type="unfinished"></translation>
+        <translation>ヘルプ(&amp;H)</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="402"/>
         <source>Help / Links and Guides</source>
-        <translation type="unfinished"></translation>
+        <translation>ヘルプ / リンクとガイド</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="407"/>
         <source>&amp;About</source>
-        <translation type="unfinished"></translation>
+        <translation>バージョン情報(&amp;A)</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="412"/>
         <source>Send Ideas, bugs, thoughts!</source>
-        <translation type="unfinished"></translation>
+        <translation>アイデア、バグ、考えを送る！</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="417"/>
         <source>Activate Pro…</source>
-        <translation type="unfinished"></translation>
+        <translation>Proを有効化…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="422"/>
         <source>&amp;Debug</source>
-        <translation type="unfinished"></translation>
+        <translation>デバッグ(&amp;D)</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="423"/>
         <source>Take Screenshot</source>
-        <translation type="unfinished"></translation>
+        <translation>スクリーンショットを撮る</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="447"/>
         <source>&amp;Output format:</source>
-        <translation type="unfinished"></translation>
+        <translation>出力フォーマット(&amp;O):</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="454"/>
         <source>Estimated tokens: 0</source>
-        <translation type="unfinished"></translation>
+        <translation>推定トークン: 0</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="508"/>
         <source>Show Logo Banner</source>
-        <translation type="unfinished"></translation>
+        <translation>ロゴバナーを表示</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="514"/>
         <source>The selected files will be added to the LLM Context Block along with your prompt, written to fullcode.txt and copied to clipboard, ready to paste into your AI assistant.</source>
-        <translation type="unfinished"></translation>
+        <translation>選択したファイルは、プロンプトと共にLLMコンテキストブロックに追加され、fullcode.txtに書き込まれてクリップボードにコピーされ、AIアシスタントに貼り付ける準備が整います。</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="531"/>
         <source>Prompt Preset Buttons:</source>
-        <translation type="unfinished"></translation>
+        <translation>プロンプトプリセットボタン:</translation>
     </message>
 </context>
 </TS>

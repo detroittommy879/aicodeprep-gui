@@ -6,12 +6,12 @@
     <message>
         <location filename="../../gui/main_window.py" line="110"/>
         <source>Show</source>
-        <translation type="unfinished"></translation>
+        <translation>Afficher</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="111"/>
         <source>Quit</source>
-        <translation type="unfinished"></translation>
+        <translation>Quitter</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="171"/>
@@ -71,12 +71,12 @@
     <message>
         <location filename="../../gui/main_window.py" line="422"/>
         <source>&amp;Debug</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Débogage</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="423"/>
         <source>Take Screenshot</source>
-        <translation type="unfinished"></translation>
+        <translation>Prendre une capture d'écran</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="447"/>
@@ -91,7 +91,7 @@
     <message>
         <location filename="../../gui/main_window.py" line="508"/>
         <source>Show Logo Banner</source>
-        <translation type="unfinished"></translation>
+        <translation>Afficher la bannière du logo</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="514"/>
@@ -101,7 +101,7 @@
     <message>
         <location filename="../../gui/main_window.py" line="531"/>
         <source>Prompt Preset Buttons:</source>
-        <translation type="unfinished"></translation>
+        <translation>Boutons de préréglage d'instruction :</translation>
     </message>
 </context>
 </TS>

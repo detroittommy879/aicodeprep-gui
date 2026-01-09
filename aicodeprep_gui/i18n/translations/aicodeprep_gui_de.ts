@@ -6,102 +6,102 @@
     <message>
         <location filename="../../gui/main_window.py" line="110"/>
         <source>Show</source>
-        <translation type="unfinished"></translation>
+        <translation>Zeigen</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="111"/>
         <source>Quit</source>
-        <translation type="unfinished"></translation>
+        <translation>Beenden</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="171"/>
         <source>aicodeprep-gui - File Selection</source>
-        <translation type="unfinished"></translation>
+        <translation>aicodeprep-gui - Dateiauswahl</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="252"/>
         <source>&amp;File</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Datei</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="311"/>
         <source>&amp;Flow</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Flow</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="313"/>
         <source>Import Flow JSON…</source>
-        <translation type="unfinished"></translation>
+        <translation>Flow JSON importieren…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="317"/>
         <source>Export Flow JSON…</source>
-        <translation type="unfinished"></translation>
+        <translation>Flow JSON exportieren…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="321"/>
         <source>Reset to Default Flow</source>
-        <translation type="unfinished"></translation>
+        <translation>Auf Standard-Flow zurücksetzen</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="401"/>
         <source>&amp;Help</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Hilfe</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="402"/>
         <source>Help / Links and Guides</source>
-        <translation type="unfinished"></translation>
+        <translation>Hilfe / Links und Anleitungen</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="407"/>
         <source>&amp;About</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Über</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="412"/>
         <source>Send Ideas, bugs, thoughts!</source>
-        <translation type="unfinished"></translation>
+        <translation>Ideen, Bugs, Gedanken senden!</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="417"/>
         <source>Activate Pro…</source>
-        <translation type="unfinished"></translation>
+        <translation>Pro aktivieren…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="422"/>
         <source>&amp;Debug</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Debug</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="423"/>
         <source>Take Screenshot</source>
-        <translation type="unfinished"></translation>
+        <translation>Screenshot aufnehmen</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="447"/>
         <source>&amp;Output format:</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Ausgabeformat:</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="454"/>
         <source>Estimated tokens: 0</source>
-        <translation type="unfinished"></translation>
+        <translation>Geschätzte Tokens: 0</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="508"/>
         <source>Show Logo Banner</source>
-        <translation type="unfinished"></translation>
+        <translation>Logo-Banner anzeigen</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="514"/>
         <source>The selected files will be added to the LLM Context Block along with your prompt, written to fullcode.txt and copied to clipboard, ready to paste into your AI assistant.</source>
-        <translation type="unfinished"></translation>
+        <translation>Die ausgewählten Dateien werden zusammen mit Ihrer Anweisung zum LLM-Kontextblock hinzugefügt, in fullcode.txt geschrieben und in die Zwischenablage kopiert, bereit zum Einfügen in Ihren KI-Assistenten.</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="531"/>
         <source>Prompt Preset Buttons:</source>
-        <translation type="unfinished"></translation>
+        <translation>Anweisung-Standard-Tasten:</translation>
     </message>
 </context>
 </TS>
