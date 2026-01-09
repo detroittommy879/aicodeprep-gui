@@ -191,6 +191,8 @@ class TranslationManager:
                 self.current_language = 'en'
                 self.settings.setValue("current_language", 'en')
                 logger.info("Set language to English (source)")
+                # Trigger live UI updates for already-open windows
+                self.retranslate_ui()
                 return True
 
             # Load translation file
@@ -231,6 +233,8 @@ class TranslationManager:
                 self.app.setLayoutDirection(QtCore.Qt.LeftToRight)
 
             logger.info(f"Successfully set language to: {lang_code}")
+            # Trigger live UI updates for already-open windows
+            self.retranslate_ui()
             return True
 
         except Exception as e:

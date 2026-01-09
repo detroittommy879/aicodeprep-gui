@@ -16,6 +16,7 @@ wheels/
 .installed.cfg
 *.egg
 __pycache__/
+screenshots/
 
 zzz_gumroad.md
 

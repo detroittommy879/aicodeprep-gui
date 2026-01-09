@@ -23,7 +23,8 @@ class LanguageSelectionDialog(QtWidgets.QDialog):
         if hasattr(app, 'translation_manager'):
             self.translation_manager = app.translation_manager
 
-        self.setWindowTitle("Select Language / Seleccionar idioma / 选择语言")
+        self.setWindowTitle(
+            self.tr("Select Language / Seleccionar idioma / 选择语言"))
         self.setMinimumWidth(500)
         self.setMinimumHeight(400)
 
@@ -35,21 +36,24 @@ class LanguageSelectionDialog(QtWidgets.QDialog):
         layout = QtWidgets.QVBoxLayout(self)
 
         # Header
-        header = QtWidgets.QLabel("Select Application Language:")
+        self.header_label = QtWidgets.QLabel(
+            self.tr("Select Application Language:"))
         header_font = QtGui.QFont()
         header_font.setPointSize(12)
         header_font.setBold(True)
-        header.setFont(header_font)
-        layout.addWidget(header)
+        self.header_label.setFont(header_font)
+        layout.addWidget(self.header_label)
 
         # Description
-        desc = QtWidgets.QLabel(
-            "Choose the language for the user interface. "
-            "Bundled languages are available immediately. "
-            "Other languages can be downloaded on demand."
+        self.desc_label = QtWidgets.QLabel(
+            self.tr(
+                "Choose the language for the user interface. "
+                "Bundled languages are available immediately. "
+                "Other languages can be downloaded on demand."
+            )
         )
-        desc.setWordWrap(True)
-        layout.addWidget(desc)
+        self.desc_label.setWordWrap(True)
+        layout.addWidget(self.desc_label)
 
         layout.addSpacing(10)
 
@@ -63,36 +67,40 @@ class LanguageSelectionDialog(QtWidgets.QDialog):
 
         # Bundled vs Downloadable indicator
         indicator_layout = QtWidgets.QHBoxLayout()
-        bundled_label = QtWidgets.QLabel("✓ = Downloaded / Bundled")
-        bundled_label.setStyleSheet("color: green;")
-        indicator_layout.addWidget(bundled_label)
+        self.bundled_label = QtWidgets.QLabel(
+            self.tr("✓ = Downloaded / Bundled"))
+        self.bundled_label.setStyleSheet("color: green;")
+        indicator_layout.addWidget(self.bundled_label)
 
-        download_label = QtWidgets.QLabel("(download) = Needs download")
-        download_label.setStyleSheet("color: gray;")
-        indicator_layout.addWidget(download_label)
+        self.download_label = QtWidgets.QLabel(
+            self.tr("(download) = Needs download"))
+        self.download_label.setStyleSheet("color: gray;")
+        indicator_layout.addWidget(self.download_label)
 
         indicator_layout.addStretch()
         layout.addLayout(indicator_layout)
 
         # Current language info
+        self.current_label = None
         if self.translation_manager:
             current_lang = self.translation_manager.get_current_language()
-            current_label = QtWidgets.QLabel(
-                f"Current language: {current_lang}")
-            current_label.setStyleSheet("font-style: italic;")
-            layout.addWidget(current_label)
+            self.current_label = QtWidgets.QLabel(
+                self.tr("Current language: {code}").format(code=current_lang)
+            )
+            self.current_label.setStyleSheet("font-style: italic;")
+            layout.addWidget(self.current_label)
 
         # Buttons
         button_layout = QtWidgets.QHBoxLayout()
 
-        self.select_button = QtWidgets.QPushButton("Select")
+        self.select_button = QtWidgets.QPushButton(self.tr("Select"))
         self.select_button.clicked.connect(self.on_select_clicked)
         self.select_button.setEnabled(False)
         button_layout.addWidget(self.select_button)
 
-        cancel_button = QtWidgets.QPushButton("Cancel")
-        cancel_button.clicked.connect(self.reject)
-        button_layout.addWidget(cancel_button)
+        self.cancel_button = QtWidgets.QPushButton(self.tr("Cancel"))
+        self.cancel_button.clicked.connect(self.reject)
+        button_layout.addWidget(self.cancel_button)
 
         button_layout.addStretch()
         layout.addLayout(button_layout)
@@ -146,11 +154,13 @@ class LanguageSelectionDialog(QtWidgets.QDialog):
         if "(download)" in lang_name and self.translation_manager:
             reply = QtWidgets.QMessageBox.question(
                 self,
-                "Download Language",
-                f"The language '{lang_name}' needs to be downloaded.\n\n"
-                "Download functionality is not yet implemented. "
-                "Only bundled languages can be used for now.\n\n"
-                "Would you like to continue anyway?",
+                self.tr("Download Language"),
+                self.tr(
+                    "The language '{name}' needs to be downloaded.\n\n"
+                    "Download functionality is not yet implemented. "
+                    "Only bundled languages can be used for now.\n\n"
+                    "Would you like to continue anyway?"
+                ).format(name=lang_name),
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
             )
 
@@ -165,20 +175,63 @@ class LanguageSelectionDialog(QtWidgets.QDialog):
             if success:
                 QtWidgets.QMessageBox.information(
                     self,
-                    "Language Changed",
-                    f"Language changed to: {lang_name}\n\n"
-                    "Note: Some UI elements may require an application restart to fully update."
+                    self.tr("Language Changed"),
+                    self.tr("Language changed to: {name}").format(
+                        name=lang_name)
                 )
+                if self.current_label:
+                    self.current_label.setText(
+                        self.tr("Current language: {code}").format(
+                            code=lang_code)
+                    )
                 self.accept()
             else:
                 QtWidgets.QMessageBox.warning(
                     self,
-                    "Language Change Failed",
-                    f"Failed to change language to: {lang_name}\n\n"
-                    "The language files may not be available."
+                    self.tr("Language Change Failed"),
+                    self.tr(
+                        "Failed to change language to: {name}\n\n"
+                        "The language files may not be available."
+                    ).format(name=lang_name)
                 )
         else:
             self.accept()
+
+    def changeEvent(self, event):
+        """Handle runtime language changes without requiring restart."""
+        try:
+            if event.type() == QtCore.QEvent.LanguageChange:
+                self._retranslate_ui()
+        except Exception:
+            pass
+        return super(LanguageSelectionDialog, self).changeEvent(event)
+
+    def _retranslate_ui(self):
+        self.setWindowTitle(
+            self.tr("Select Language / Seleccionar idioma / 选择语言"))
+        if hasattr(self, "header_label"):
+            self.header_label.setText(self.tr("Select Application Language:"))
+        if hasattr(self, "desc_label"):
+            self.desc_label.setText(
+                self.tr(
+                    "Choose the language for the user interface. "
+                    "Bundled languages are available immediately. "
+                    "Other languages can be downloaded on demand."
+                )
+            )
+        if hasattr(self, "bundled_label"):
+            self.bundled_label.setText(self.tr("✓ = Downloaded / Bundled"))
+        if hasattr(self, "download_label"):
+            self.download_label.setText(self.tr("(download) = Needs download"))
+        if hasattr(self, "select_button"):
+            self.select_button.setText(self.tr("Select"))
+        if hasattr(self, "cancel_button"):
+            self.cancel_button.setText(self.tr("Cancel"))
+        if self.translation_manager and self.current_label:
+            current_lang = self.translation_manager.get_current_language()
+            self.current_label.setText(
+                self.tr("Current language: {code}").format(code=current_lang)
+            )
 
     def get_selected_language(self):
         """Get the selected language code."""

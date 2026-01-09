@@ -107,13 +107,13 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             from PySide6.QtGui import QAction
             tray = QSystemTrayIcon(app_icon, parent=self)
             menu = QMenu()
-            show_act = QAction(self.tr("Show"), self)
-            quit_act = QAction(self.tr("Quit"), self)
-            show_act.triggered.connect(self.show)
-            quit_act.triggered.connect(self.quit_without_processing)
-            menu.addAction(show_act)
+            self.tray_show_act = QAction(self.tr("Show"), self)
+            self.tray_quit_act = QAction(self.tr("Quit"), self)
+            self.tray_show_act.triggered.connect(self.show)
+            self.tray_quit_act.triggered.connect(self.quit_without_processing)
+            menu.addAction(self.tray_show_act)
             menu.addSeparator()
-            menu.addAction(quit_act)
+            menu.addAction(self.tray_quit_act)
             tray.setContextMenu(menu)
             tray.show()
             self.tray_icon = tray
@@ -249,7 +249,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         main_layout.setContentsMargins(20, 10, 20, 10)
 
         mb = self.menuBar()
-        file_menu = mb.addMenu(self.tr("&File"))
+        self.file_menu = mb.addMenu(self.tr("&File"))
 
         # Add OS-specific installer menu items
         if platform.system() == "Windows":
@@ -259,10 +259,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 dialog = RegistryManagerDialog(self)
                 dialog.exec()
             install_menu_act = QtGui.QAction(
-                "Install Right-Click Menu...", self)
+                self.tr("Install Right-Click Menu..."), self)
             install_menu_act.triggered.connect(open_registry_manager)
-            file_menu.addAction(install_menu_act)
-            file_menu.addSeparator()
+            self.file_menu.addAction(install_menu_act)
+            self.file_menu.addSeparator()
 
         elif platform.system() == "Darwin":
             from .components.installer_dialogs import MacInstallerDialog
@@ -271,10 +271,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 dialog = MacInstallerDialog(self)
                 dialog.exec()
             install_menu_act = QtGui.QAction(
-                "Install Finder Quick Action...", self)
+                self.tr("Install Finder Quick Action..."), self)
             install_menu_act.triggered.connect(open_mac_installer)
-            file_menu.addAction(install_menu_act)
-            file_menu.addSeparator()
+            self.file_menu.addAction(install_menu_act)
+            self.file_menu.addSeparator()
 
         elif platform.system() == "Linux":
             from .components.installer_dialogs import LinuxInstallerDialog
@@ -283,49 +283,55 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 dialog = LinuxInstallerDialog(self)
                 dialog.exec()
             install_menu_act = QtGui.QAction(
-                "Install File Manager Action...", self)
+                self.tr("Install File Manager Action..."), self)
             install_menu_act.triggered.connect(open_linux_installer)
-            file_menu.addAction(install_menu_act)
-            file_menu.addSeparator()
+            self.file_menu.addAction(install_menu_act)
+            self.file_menu.addSeparator()
 
-        quit_act = QtGui.QAction("&Quit", self)
-        quit_act.triggered.connect(self.quit_without_processing)
-        file_menu.addAction(quit_act)
+        self.quit_act = QtGui.QAction(self.tr("&Quit"), self)
+        self.quit_act.triggered.connect(self.quit_without_processing)
+        self.file_menu.addAction(self.quit_act)
 
-        edit_menu = mb.addMenu("&Edit")
-        new_preset_act = QtGui.QAction("&New Preset…", self)
-        new_preset_act.triggered.connect(self.add_new_preset_dialog)
-        edit_menu.addAction(new_preset_act)
+        self.edit_menu = mb.addMenu(self.tr("&Edit"))
+        self.new_preset_act = QtGui.QAction(self.tr("&New Preset…"), self)
+        self.new_preset_act.triggered.connect(self.add_new_preset_dialog)
+        self.edit_menu.addAction(self.new_preset_act)
 
-        open_settings_folder_act = QtGui.QAction("Open Settings Folder…", self)
-        open_settings_folder_act.triggered.connect(self.open_settings_folder)
-        edit_menu.addAction(open_settings_folder_act)
+        self.open_settings_folder_act = QtGui.QAction(
+            self.tr("Open Settings Folder…"), self)
+        self.open_settings_folder_act.triggered.connect(
+            self.open_settings_folder)
+        self.edit_menu.addAction(self.open_settings_folder_act)
 
-        edit_menu.addSeparator()
+        self.edit_menu.addSeparator()
 
-        language_act = QtGui.QAction("&Language / Idioma / 语言…", self)
-        language_act.triggered.connect(self.open_language_dialog)
-        edit_menu.addAction(language_act)
+        self.language_act = QtGui.QAction(
+            self.tr("&Language / Idioma / 语言…"), self)
+        self.language_act.triggered.connect(self.open_language_dialog)
+        self.edit_menu.addAction(self.language_act)
 
         # Flow menu (Phase 2)
-        flow_menu = mb.addMenu(self.tr("&Flow"))
+        self.flow_menu = mb.addMenu(self.tr("&Flow"))
 
-        flow_import_act = QtGui.QAction(self.tr("Import Flow JSON…"), self)
-        flow_import_act.triggered.connect(self._flow_import_action)
-        flow_menu.addAction(flow_import_act)
+        self.flow_import_act = QtGui.QAction(
+            self.tr("Import Flow JSON…"), self)
+        self.flow_import_act.triggered.connect(self._flow_import_action)
+        self.flow_menu.addAction(self.flow_import_act)
 
-        flow_export_act = QtGui.QAction(self.tr("Export Flow JSON…"), self)
-        flow_export_act.triggered.connect(self._flow_export_action)
-        flow_menu.addAction(flow_export_act)
+        self.flow_export_act = QtGui.QAction(
+            self.tr("Export Flow JSON…"), self)
+        self.flow_export_act.triggered.connect(self._flow_export_action)
+        self.flow_menu.addAction(self.flow_export_act)
 
-        flow_reset_act = QtGui.QAction(self.tr("Reset to Default Flow"), self)
-        flow_reset_act.triggered.connect(self._flow_reset_action)
-        flow_menu.addAction(flow_reset_act)
+        self.flow_reset_act = QtGui.QAction(
+            self.tr("Reset to Default Flow"), self)
+        self.flow_reset_act.triggered.connect(self._flow_reset_action)
+        self.flow_menu.addAction(self.flow_reset_act)
 
-        flow_menu.addSeparator()
+        self.flow_menu.addSeparator()
 
         flow_bestof5_act = QtGui.QAction(
-            "Load Built-in: Best-of-5 (Blank)", self)
+            self.tr("Load Built-in: Best-of-5 (Blank)"), self)
 
         def _load_bestof5():
             if not self._ensure_flow_dock():
@@ -340,11 +346,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     self, "Flow Studio", "Dock missing 'load_template_best_of_5_openrouter'.")
 
         flow_bestof5_act.triggered.connect(_load_bestof5)
-        flow_menu.addAction(flow_bestof5_act)
+        self.flow_menu.addAction(flow_bestof5_act)
 
         # Add configured Best-of-5 template
         flow_bestof5_config_act = QtGui.QAction(
-            "Load Built-in: Best-of-5 (Configured)", self)
+            self.tr("Load Built-in: Best-of-5 (Configured)"), self)
 
         def _load_bestof5_configured():
             if not self._ensure_flow_dock():
@@ -359,11 +365,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     self, "Flow Studio", "Dock missing 'load_template_best_of_5_configured'.")
 
         flow_bestof5_config_act.triggered.connect(_load_bestof5_configured)
-        flow_menu.addAction(flow_bestof5_config_act)
+        self.flow_menu.addAction(flow_bestof5_config_act)
 
         # Add configured Best-of-3 template
         flow_bestof3_config_act = QtGui.QAction(
-            "Load Built-in: Best-of-3 (Configured)", self)
+            self.tr("Load Built-in: Best-of-3 (Configured)"), self)
 
         def _load_bestof3_configured():
             if not self._ensure_flow_dock():
@@ -378,11 +384,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     self, "Flow Studio", "Dock missing 'load_template_best_of_3_configured'.")
 
         flow_bestof3_config_act.triggered.connect(_load_bestof3_configured)
-        flow_menu.addAction(flow_bestof3_config_act)
+        self.flow_menu.addAction(flow_bestof3_config_act)
 
-        flow_menu.addSeparator()
+        self.flow_menu.addSeparator()
 
-        flow_run_act = QtGui.QAction("Run Current Flow", self)
+        flow_run_act = QtGui.QAction(self.tr("Run Current Flow"), self)
 
         def _run_current_flow():
             if not self._ensure_flow_dock():
@@ -396,41 +402,46 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 QtWidgets.QMessageBox.warning(
                     self, "Flow Studio", "Dock missing '_on_run_clicked'.")
         flow_run_act.triggered.connect(_run_current_flow)
-        flow_menu.addAction(flow_run_act)
+        self.flow_menu.addAction(flow_run_act)
 
-        help_menu = mb.addMenu(self.tr("&Help"))
-        links_act = QtGui.QAction(self.tr("Help / Links and Guides"), self)
-        links_act.triggered.connect(self.open_links_dialog)
-        help_menu.addAction(links_act)
-        help_menu.addSeparator()
+        self.help_menu = mb.addMenu(self.tr("&Help"))
+        self.links_act = QtGui.QAction(
+            self.tr("Help / Links and Guides"), self)
+        self.links_act.triggered.connect(self.open_links_dialog)
+        self.help_menu.addAction(self.links_act)
+        self.help_menu.addSeparator()
 
-        about_act = QtGui.QAction(self.tr("&About"), self)
-        about_act.triggered.connect(self.open_about_dialog)
-        help_menu.addAction(about_act)
+        self.about_act = QtGui.QAction(self.tr("&About"), self)
+        self.about_act.triggered.connect(self.open_about_dialog)
+        self.help_menu.addAction(self.about_act)
 
-        complain_act = QtGui.QAction(
+        self.complain_act = QtGui.QAction(
             self.tr("Send Ideas, bugs, thoughts!"), self)
-        complain_act.triggered.connect(self.open_complain_dialog)
-        help_menu.addAction(complain_act)
+        self.complain_act.triggered.connect(self.open_complain_dialog)
+        self.help_menu.addAction(self.complain_act)
 
         if not self._is_pro_enabled():
-            act = QtGui.QAction(self.tr("Activate Pro…"), self)
-            act.triggered.connect(self.dialog_manager.open_activate_pro_dialog)
-            help_menu.addAction(act)
+            self.activate_pro_act = QtGui.QAction(
+                self.tr("Activate Pro…"), self)
+            self.activate_pro_act.triggered.connect(
+                self.dialog_manager.open_activate_pro_dialog)
+            self.help_menu.addAction(self.activate_pro_act)
 
         # Debug menu (always available for testing i18n/a11y)
-        debug_menu = mb.addMenu(self.tr("&Debug"))
-        screenshot_act = QtGui.QAction(self.tr("Take Screenshot"), self)
-        screenshot_act.triggered.connect(self._take_debug_screenshot)
-        debug_menu.addAction(screenshot_act)
+        self.debug_menu = mb.addMenu(self.tr("&Debug"))
+        self.screenshot_act = QtGui.QAction(self.tr("Take Screenshot"), self)
+        self.screenshot_act.triggered.connect(self._take_debug_screenshot)
+        self.debug_menu.addAction(self.screenshot_act)
 
-        lang_info_act = QtGui.QAction("Current Language Info", self)
-        lang_info_act.triggered.connect(self._show_language_info)
-        debug_menu.addAction(lang_info_act)
+        self.lang_info_act = QtGui.QAction(
+            self.tr("Current Language Info"), self)
+        self.lang_info_act.triggered.connect(self._show_language_info)
+        self.debug_menu.addAction(self.lang_info_act)
 
-        a11y_check_act = QtGui.QAction("Accessibility Check", self)
-        a11y_check_act.triggered.connect(self._run_accessibility_check)
-        debug_menu.addAction(a11y_check_act)
+        self.a11y_check_act = QtGui.QAction(
+            self.tr("Accessibility Check"), self)
+        self.a11y_check_act.triggered.connect(self._run_accessibility_check)
+        self.debug_menu.addAction(self.a11y_check_act)
 
         self.format_combo = QtWidgets.QComboBox()
         self.format_combo.addItems(["XML <code>", "Markdown ###"])
@@ -444,10 +455,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.format_combo.setCurrentIndex(idx)
         self.format_combo.currentIndexChanged.connect(self._save_format_choice)
 
-        output_label = QtWidgets.QLabel(self.tr("&Output format:"))
-        output_label.setBuddy(self.format_combo)
+        self.output_label = QtWidgets.QLabel(self.tr("&Output format:"))
+        self.output_label.setBuddy(self.format_combo)
 
-        self.dark_mode_box = QtWidgets.QCheckBox("Dark mode")
+        self.dark_mode_box = QtWidgets.QCheckBox(self.tr("Dark mode"))
         self.dark_mode_box.setChecked(self.is_dark_mode)
         self.dark_mode_box.stateChanged.connect(self.toggle_dark_mode)
 
@@ -488,7 +499,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         # Create toggle button for logo visibility
         self.logo_toggle_btn = QtWidgets.QPushButton("⏶")  # Up arrow
         self.logo_toggle_btn.setFixedSize(30, 30)
-        self.logo_toggle_btn.setToolTip("Hide/Show Logo")
+        self.logo_toggle_btn.setToolTip(self.tr("Hide/Show Logo"))
         self.logo_toggle_btn.clicked.connect(self.toggle_logo_visibility)
         self.logo_visible = True
 
@@ -546,13 +557,13 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         add_preset_btn = QtWidgets.QPushButton("✚")
         add_preset_btn.setFixedSize(24, 24)
-        add_preset_btn.setToolTip("New Preset…")
+        add_preset_btn.setToolTip(self.tr("New Preset…"))
         add_preset_btn.clicked.connect(self.add_new_preset_dialog)
         self.preset_strip.addWidget(add_preset_btn)
 
         delete_preset_btn = QtWidgets.QPushButton("🗑️")
         delete_preset_btn.setFixedSize(24, 24)
-        delete_preset_btn.setToolTip("Delete a preset…")
+        delete_preset_btn.setToolTip(self.tr("Delete a preset…"))
         delete_preset_btn.clicked.connect(self.delete_preset_dialog)
         self.preset_strip.addWidget(delete_preset_btn)
 
@@ -563,13 +574,13 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         main_layout.addLayout(presets_wrapper)
 
         # Add explanation text below presets
-        preset_explanation = QtWidgets.QLabel(
-            "Presets help you save more time and will be saved for later use")
-        preset_explanation.setObjectName("preset_explanation")
-        preset_explanation.setStyleSheet(
+        self.preset_explanation = QtWidgets.QLabel(
+            self.tr("Presets help you save more time and will be saved for later use"))
+        self.preset_explanation.setObjectName("preset_explanation")
+        self.preset_explanation.setStyleSheet(
             f"font-size: {10 + self.font_size_multiplier}px; color: {'#fb9b0b' if self.is_dark_mode else '#44444'};"
         )
-        main_layout.addWidget(preset_explanation)
+        main_layout.addWidget(self.preset_explanation)
 
         main_layout.addSpacing(8)
 
@@ -613,17 +624,18 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         prompt_widget = QtWidgets.QWidget()
         prompt_layout = QtWidgets.QVBoxLayout(prompt_widget)
         prompt_layout.setContentsMargins(0, 0, 0, 0)
-        prompt_layout.addWidget(QtWidgets.QLabel(
-            "Optional prompt/question for LLM (will be appended to the end):"))
+        self.prompt_label = QtWidgets.QLabel(
+            self.tr("Optional prompt/question for LLM (will be appended to the end):"))
+        prompt_layout.addWidget(self.prompt_label)
         prompt_layout.addSpacing(8)
 
         self.prompt_textbox = QtWidgets.QPlainTextEdit()
         self.prompt_textbox.setPlaceholderText(
-            "Type your question or prompt here (optional)…")
+            self.tr("Type your question or prompt here (optional)…"))
         prompt_layout.addWidget(self.prompt_textbox)
 
-        self.clear_prompt_btn = QtWidgets.QPushButton("Clear")
-        self.clear_prompt_btn.setToolTip("Clear the prompt box")
+        self.clear_prompt_btn = QtWidgets.QPushButton(self.tr("Clear"))
+        self.clear_prompt_btn.setToolTip(self.tr("Clear the prompt box"))
         self.clear_prompt_btn.clicked.connect(self.prompt_textbox.clear)
         prompt_layout.addWidget(self.clear_prompt_btn)
 
@@ -697,13 +709,13 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         # Checkboxes for options
         self.remember_checkbox = QtWidgets.QCheckBox(
-            "Remember checked files for this folder, window size information")
+            self.tr("Remember checked files for this folder, window size information"))
         self.remember_checkbox.setChecked(True)
 
         self.prompt_top_checkbox = QtWidgets.QCheckBox(
-            "Add prompt/question to top")
+            self.tr("Add prompt/question to top"))
         self.prompt_bottom_checkbox = QtWidgets.QCheckBox(
-            "Add prompt/question to bottom")
+            self.tr("Add prompt/question to bottom"))
 
         # Load global prompt option settings
         self._load_prompt_options()
@@ -715,7 +727,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self._save_prompt_options)
 
         # Options group
-        options_group_box = QtWidgets.QGroupBox("Options")
+        options_group_box = QtWidgets.QGroupBox(self.tr("Options"))
         options_group_box.setCheckable(True)
         self.options_group_box = options_group_box
 
@@ -724,7 +736,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         options_content_layout.setContentsMargins(0, 5, 0, 5)
 
         options_top_row = QtWidgets.QHBoxLayout()
-        options_top_row.addWidget(output_label)
+        options_top_row.addWidget(self.output_label)
         options_top_row.addWidget(self.format_combo)
         options_top_row.addStretch()
         options_top_row.addWidget(self.dark_mode_box)
@@ -750,7 +762,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         # Font size adjustment
         font_size_layout = QtWidgets.QHBoxLayout()
         font_size_layout.setContentsMargins(0, 0, 0, 0)
-        font_size_label = QtWidgets.QLabel("Font Size:")
+        self.font_size_label = QtWidgets.QLabel(self.tr("Font Size:"))
         self.font_size_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         # Allow adjustment from -5 to +10
         self.font_size_slider.setRange(-5, 10)
@@ -760,7 +772,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.font_size_value_label = QtWidgets.QLabel(
             str(self.font_size_multiplier))
 
-        font_size_layout.addWidget(font_size_label)
+        font_size_layout.addWidget(self.font_size_label)
         font_size_layout.addWidget(self.font_size_slider)
         font_size_layout.addWidget(self.font_size_value_label)
         options_content_layout.addLayout(font_size_layout)
@@ -780,10 +792,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         # --- New Pro Features Group ---
         # Create horizontal layout for "Pro Features" and "Buy Pro Lifetime License"
         pro_features_row = QtWidgets.QHBoxLayout()
-        pro_features_label = QtWidgets.QLabel("Pro Features")
-        pro_features_label.setFont(QtGui.QFont(self.default_font.family(),
-                                   self.default_font.pointSize() + 2, QtGui.QFont.Bold))
-        pro_features_row.addWidget(pro_features_label)
+        self.pro_features_label = QtWidgets.QLabel(self.tr("Pro Features"))
+        self.pro_features_label.setFont(QtGui.QFont(self.default_font.family(),
+                                                    self.default_font.pointSize() + 2, QtGui.QFont.Bold))
+        pro_features_row.addWidget(self.pro_features_label)
         pro_features_row.addStretch()
         if not pro.enabled:
             buy_pro_label = QtWidgets.QLabel(
@@ -803,12 +815,12 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         # Add Preview Window toggle to premium features (always visible)
         self.preview_toggle = QtWidgets.QCheckBox(
-            "Enable file preview window")
+            self.tr("Enable file preview window"))
         # Tooltip will be set conditionally below
         preview_help = QtWidgets.QLabel(
             "<b style='color:#0098D4; font-size:14px; cursor:help;'>?</b>")
         preview_help.setToolTip(
-            "Shows a docked window on the right that previews file contents when you select them in the tree")
+            self.tr("Shows a docked window on the right that previews file contents when you select them in the tree"))
         preview_help.setAlignment(QtCore.Qt.AlignVCenter)
 
         preview_layout = QtWidgets.QHBoxLayout()
@@ -821,11 +833,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         # Add Syntax Highlighting toggle to premium features
         self.syntax_highlight_toggle = QtWidgets.QCheckBox(
-            "Enable syntax highlighting in preview")
+            self.tr("Enable syntax highlighting in preview"))
         syntax_highlight_help = QtWidgets.QLabel(
             "<b style='color:#0098D4; font-size:14px; cursor:help;'>?</b>")
         syntax_highlight_help.setToolTip(
-            "Apply syntax highlighting to code in the preview window")
+            self.tr("Apply syntax highlighting to code in the preview window"))
         syntax_highlight_help.setAlignment(QtCore.Qt.AlignVCenter)
 
         syntax_highlight_layout = QtWidgets.QHBoxLayout()
@@ -838,11 +850,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         # Flow Studio toggle (Phase 1: visible for Free as read-only; editable for Pro)
         self.flow_studio_toggle = QtWidgets.QCheckBox(
-            "Enable Flow Studio (currently testing alpha version - might be glitchy!)")
+            self.tr("Enable Flow Studio (currently testing alpha version - might be glitchy!)"))
         flow_help = QtWidgets.QLabel(
             "<b style='color:#0098D4; font-size:14px; cursor:help;'>?</b>")
         flow_help.setToolTip(
-            "Show the Flow Studio dock. Free mode is read-only; Pro can edit and save flows.")
+            self.tr("Show the Flow Studio dock. Free mode is read-only; Pro can edit and save flows."))
         flow_help.setAlignment(QtCore.Qt.AlignVCenter)
 
         flow_layout = QtWidgets.QHBoxLayout()
@@ -886,7 +898,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         # Add Font weight slider to premium features
         font_weight_layout = QtWidgets.QHBoxLayout()
         font_weight_layout.setContentsMargins(0, 0, 0, 0)
-        font_weight_label = QtWidgets.QLabel("Font Weight:")
+        self.font_weight_label = QtWidgets.QLabel(self.tr("Font Weight:"))
         self.font_weight_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self.font_weight_slider.setRange(100, 900)  # QFont weight range
         self.font_weight_slider.setValue(200)  # Default to 200 as requested
@@ -896,14 +908,14 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         font_weight_help = QtWidgets.QLabel(
             "<b style='color:#0098D4; font-size:14px; cursor:help;'>?</b>")
         font_weight_help.setToolTip(
-            "Adjust font weight for preview window")
+            self.tr("Adjust font weight for preview window"))
         font_weight_help.setAlignment(QtCore.Qt.AlignVCenter)
 
-        font_weight_label.hide()
+        self.font_weight_label.hide()
         self.font_weight_slider.hide()
         self.font_weight_value_label.hide()
         font_weight_help.hide()
-        font_weight_layout.addWidget(font_weight_label)
+        font_weight_layout.addWidget(self.font_weight_label)
         font_weight_layout.addWidget(self.font_weight_slider)
         font_weight_layout.addWidget(self.font_weight_value_label)
         font_weight_layout.addWidget(font_weight_help)
@@ -911,8 +923,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         premium_content_layout.addLayout(font_weight_layout)
 
         # Add prompt/question checkboxes to Pro Features section
-        prompt_top_text = "Add prompt/question to top - Adding to top AND bottom often gets better responses from AI models"
-        prompt_bottom_text = "Add prompt/question to bottom - Adding to top AND bottom often gets better responses from AI models"
+        prompt_top_text = self.tr(
+            "Add prompt/question to top - Adding to top AND bottom often gets better responses from AI models")
+        prompt_bottom_text = self.tr(
+            "Add prompt/question to bottom - Adding to top AND bottom often gets better responses from AI models")
 
         self.prompt_top_checkbox.setText(prompt_top_text)
         self.prompt_bottom_checkbox.setText(prompt_bottom_text)
@@ -921,7 +935,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         prompt_top_help = QtWidgets.QLabel(
             "<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
         prompt_top_help.setToolTip(
-            "Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these")
+            self.tr("Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these"))
         prompt_top_help.setAlignment(QtCore.Qt.AlignVCenter)
         prompt_top_layout = QtWidgets.QHBoxLayout()
         prompt_top_layout.setContentsMargins(0, 0, 0, 0)
@@ -933,7 +947,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         prompt_bottom_help = QtWidgets.QLabel(
             "<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
         prompt_bottom_help.setToolTip(
-            "Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these")
+            self.tr("Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these"))
         prompt_bottom_help.setAlignment(QtCore.Qt.AlignVCenter)
         prompt_bottom_layout = QtWidgets.QHBoxLayout()
         prompt_bottom_layout.setContentsMargins(0, 0, 0, 0)
@@ -1009,11 +1023,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         level_layout.setContentsMargins(0, 0, 0, 0)
 
         self.pro_level_toggle = QtWidgets.QCheckBox(
-            "Enable Context Compression Modes - does not work yet, still experimenting!")
+            self.tr("Enable Context Compression Modes - does not work yet, still experimenting!"))
         level_help = QtWidgets.QLabel(
             "<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
         level_help.setToolTip(
-            "Show a second column that marks skeleton level per item")
+            self.tr("Show a second column that marks skeleton level per item"))
         level_help.setAlignment(QtCore.Qt.AlignVCenter)
         level_layout.addWidget(self.pro_level_toggle)
         level_layout.addWidget(level_help)
@@ -1023,11 +1037,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         if pro.enabled:
             self.pro_level_toggle.setEnabled(True)
             self.pro_level_toggle.setToolTip(
-                "Show a second column that marks skeleton level per item")
+                self.tr("Show a second column that marks skeleton level per item"))
             self.pro_level_toggle.toggled.connect(self.toggle_pro_level_column)
         else:
             self.pro_level_toggle.setEnabled(False)
-            self.pro_level_toggle.setToolTip("Pro Feature")
+            self.pro_level_toggle.setToolTip(self.tr("Pro Feature"))
 
         # Add the new green clickable link
         # buy_pro_label is now placed in the pro_features_row above the group box
@@ -1046,26 +1060,30 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         button_layout2 = QtWidgets.QHBoxLayout()
 
         button_layout1.addStretch()
-        process_button = QtWidgets.QPushButton("GENERATE CONTEXT!")
-        process_button.clicked.connect(self.process_selected)
-        button_layout1.addWidget(process_button)
+        self.process_button = QtWidgets.QPushButton(
+            self.tr("GENERATE CONTEXT!"))
+        self.process_button.clicked.connect(self.process_selected)
+        button_layout1.addWidget(self.process_button)
 
-        select_all_button = QtWidgets.QPushButton("Select All")
-        select_all_button.clicked.connect(self.select_all)
-        button_layout1.addWidget(select_all_button)
+        self.select_all_button = QtWidgets.QPushButton(self.tr("Select All"))
+        self.select_all_button.clicked.connect(self.select_all)
+        button_layout1.addWidget(self.select_all_button)
 
-        deselect_all_button = QtWidgets.QPushButton("Deselect All")
-        deselect_all_button.clicked.connect(self.deselect_all)
-        button_layout1.addWidget(deselect_all_button)
+        self.deselect_all_button = QtWidgets.QPushButton(
+            self.tr("Deselect All"))
+        self.deselect_all_button.clicked.connect(self.deselect_all)
+        button_layout1.addWidget(self.deselect_all_button)
 
         button_layout2.addStretch()
-        load_prefs_button = QtWidgets.QPushButton("Load preferences")
-        load_prefs_button.clicked.connect(self.load_from_prefs_button_clicked)
-        button_layout2.addWidget(load_prefs_button)
+        self.load_prefs_button = QtWidgets.QPushButton(
+            self.tr("Load preferences"))
+        self.load_prefs_button.clicked.connect(
+            self.load_from_prefs_button_clicked)
+        button_layout2.addWidget(self.load_prefs_button)
 
-        quit_button = QtWidgets.QPushButton("Quit")
-        quit_button.clicked.connect(self.quit_without_processing)
-        button_layout2.addWidget(quit_button)
+        self.scan_button = QtWidgets.QPushButton(self.tr("Scan"))
+        self.scan_button.clicked.connect(self.quit_without_processing)
+        button_layout2.addWidget(self.scan_button)
 
         main_layout.addLayout(button_layout1)
         main_layout.addLayout(button_layout2)
@@ -1543,6 +1561,150 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
     def dropEvent(self, event):
         return self.window_helpers.dropEvent(event)
+
+    def changeEvent(self, event):
+        """Handle runtime language changes without requiring restart."""
+        try:
+            if event.type() == QtCore.QEvent.LanguageChange:
+                self._retranslate_ui()
+        except Exception:
+            pass
+        return super(FileSelectionGUI, self).changeEvent(event)
+
+    def _retranslate_ui(self):
+        """Re-apply translatable UI strings for live language switching."""
+        self.setWindowTitle(self.tr("aicodeprep-gui - File Selection"))
+
+        # Tray menu
+        if hasattr(self, "tray_show_act"):
+            self.tray_show_act.setText(self.tr("Show"))
+        if hasattr(self, "tray_quit_act"):
+            self.tray_quit_act.setText(self.tr("Quit"))
+
+        # Menus + actions
+        if hasattr(self, "file_menu"):
+            self.file_menu.setTitle(self.tr("&File"))
+        if hasattr(self, "quit_act"):
+            self.quit_act.setText(self.tr("&Quit"))
+
+        if hasattr(self, "edit_menu"):
+            self.edit_menu.setTitle(self.tr("&Edit"))
+        if hasattr(self, "new_preset_act"):
+            self.new_preset_act.setText(self.tr("&New Preset…"))
+        if hasattr(self, "open_settings_folder_act"):
+            self.open_settings_folder_act.setText(
+                self.tr("Open Settings Folder…"))
+        if hasattr(self, "language_act"):
+            self.language_act.setText(self.tr("&Language / Idioma / 语言…"))
+
+        if hasattr(self, "flow_menu"):
+            self.flow_menu.setTitle(self.tr("&Flow"))
+        if hasattr(self, "flow_import_act"):
+            self.flow_import_act.setText(self.tr("Import Flow JSON…"))
+        if hasattr(self, "flow_export_act"):
+            self.flow_export_act.setText(self.tr("Export Flow JSON…"))
+        if hasattr(self, "flow_reset_act"):
+            self.flow_reset_act.setText(self.tr("Reset to Default Flow"))
+
+        if hasattr(self, "help_menu"):
+            self.help_menu.setTitle(self.tr("&Help"))
+        if hasattr(self, "links_act"):
+            self.links_act.setText(self.tr("Help / Links and Guides"))
+        if hasattr(self, "about_act"):
+            self.about_act.setText(self.tr("&About"))
+        if hasattr(self, "complain_act"):
+            self.complain_act.setText(self.tr("Send Ideas, bugs, thoughts!"))
+        if hasattr(self, "activate_pro_act"):
+            self.activate_pro_act.setText(self.tr("Activate Pro…"))
+
+        if hasattr(self, "debug_menu"):
+            self.debug_menu.setTitle(self.tr("&Debug"))
+        if hasattr(self, "screenshot_act"):
+            self.screenshot_act.setText(self.tr("Take Screenshot"))
+        if hasattr(self, "lang_info_act"):
+            self.lang_info_act.setText(self.tr("Current Language Info"))
+        if hasattr(self, "a11y_check_act"):
+            self.a11y_check_act.setText(self.tr("Accessibility Check"))
+
+        # Key labels/buttons
+        if hasattr(self, "output_label"):
+            self.output_label.setText(self.tr("&Output format:"))
+        if hasattr(self, "dark_mode_box"):
+            self.dark_mode_box.setText(self.tr("Dark mode"))
+        if hasattr(self, "token_label"):
+            # Preserve the current numeric value if present
+            current = self.token_label.text()
+            if ":" in current:
+                suffix = current.split(":", 1)[1].strip()
+                self.token_label.setText(
+                    self.tr("Estimated tokens: 0").replace("0", suffix))
+            else:
+                self.token_label.setText(self.tr("Estimated tokens: 0"))
+        if hasattr(self, "info_label"):
+            self.info_label.setText(self.tr(
+                "The selected files will be added to the LLM Context Block along with your prompt, written to fullcode.txt and copied to clipboard, ready to paste into your AI assistant."))
+        if hasattr(self, "logo_toggle_btn"):
+            # Tooltip depends on current state
+            if getattr(self, "logo_visible", False):
+                self.logo_toggle_btn.setToolTip(self.tr("Hide Logo Banner"))
+            else:
+                self.logo_toggle_btn.setToolTip(self.tr("Show Logo Banner"))
+        if hasattr(self, "preset_explanation"):
+            self.preset_explanation.setText(self.tr(
+                "Presets help you save more time and will be saved for later use"))
+        if hasattr(self, "prompt_label"):
+            self.prompt_label.setText(self.tr(
+                "Optional prompt/question for LLM (will be appended to the end):"))
+        if hasattr(self, "prompt_textbox"):
+            self.prompt_textbox.setPlaceholderText(
+                self.tr("Type your question or prompt here (optional)…"))
+        if hasattr(self, "clear_prompt_btn"):
+            self.clear_prompt_btn.setText(self.tr("Clear"))
+            self.clear_prompt_btn.setToolTip(self.tr("Clear the prompt box"))
+
+        # Buttons
+        if hasattr(self, "process_button"):
+            self.process_button.setText(self.tr("GENERATE CONTEXT!"))
+        if hasattr(self, "select_all_button"):
+            self.select_all_button.setText(self.tr("Select All"))
+        if hasattr(self, "deselect_all_button"):
+            self.deselect_all_button.setText(self.tr("Deselect All"))
+        if hasattr(self, "load_prefs_button"):
+            self.load_prefs_button.setText(self.tr("Load preferences"))
+        if hasattr(self, "scan_button"):
+            self.scan_button.setText(self.tr("Scan"))
+
+        # Options group
+        if hasattr(self, "options_group_box"):
+            self.options_group_box.setTitle(self.tr("Options"))
+        if hasattr(self, "remember_checkbox"):
+            self.remember_checkbox.setText(
+                self.tr("Remember checked files for this folder, window size information"))
+        if hasattr(self, "font_size_label"):
+            self.font_size_label.setText(self.tr("Font Size:"))
+
+        # Pro Features
+        if hasattr(self, "pro_features_label"):
+            self.pro_features_label.setText(self.tr("Pro Features"))
+        if hasattr(self, "preview_toggle"):
+            self.preview_toggle.setText(self.tr("Enable file preview window"))
+        if hasattr(self, "syntax_highlight_toggle"):
+            self.syntax_highlight_toggle.setText(
+                self.tr("Enable syntax highlighting in preview"))
+        if hasattr(self, "flow_studio_toggle"):
+            self.flow_studio_toggle.setText(self.tr(
+                "Enable Flow Studio (currently testing alpha version - might be glitchy!)"))
+        if hasattr(self, "font_weight_label"):
+            self.font_weight_label.setText(self.tr("Font Weight:"))
+        if hasattr(self, "prompt_top_checkbox"):
+            self.prompt_top_checkbox.setText(self.tr(
+                "Add prompt/question to top - Adding to top AND bottom often gets better responses from AI models"))
+        if hasattr(self, "prompt_bottom_checkbox"):
+            self.prompt_bottom_checkbox.setText(self.tr(
+                "Add prompt/question to bottom - Adding to top AND bottom often gets better responses from AI models"))
+        if hasattr(self, "pro_level_toggle"):
+            self.pro_level_toggle.setText(self.tr(
+                "Enable Context Compression Modes - does not work yet, still experimenting!"))
 
     def showEvent(self, event):
         return self.window_helpers.showEvent(event)

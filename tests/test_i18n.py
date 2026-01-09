@@ -88,8 +88,45 @@ class TestTranslationManager:
         assert success, "Should successfully switch to Spanish"
         assert manager.get_current_language() == 'es', "Current language should be Spanish"
 
+    def test_language_change_event_sent(self):
+        """Changing language should send a LanguageChange event to open windows."""
+        from aicodeprep_gui.i18n.translator import TranslationManager
+        from PySide6.QtWidgets import QApplication
+
+        class LanguageChangeCatcher(QtWidgets.QWidget):
+            def __init__(self):
+                super().__init__()
+                self.language_change_count = 0
+
+            def changeEvent(self, event):
+                if event.type() == QtCore.QEvent.LanguageChange:
+                    self.language_change_count += 1
+                return super().changeEvent(event)
+
+        app = QApplication.instance() or QApplication([])
+        manager = TranslationManager(app)
+
+        catcher = LanguageChangeCatcher()
+        # Don't show the widget in tests: showing can trigger flaky Windows
+        # message-pump/COM interactions in headless/CI environments.
+        QtWidgets.QApplication.processEvents()
+
+        assert manager.set_language('es')
+        QtWidgets.QApplication.processEvents()
+        assert catcher.language_change_count > 0
+
+        # Switching back to English should also trigger LanguageChange
+        previous = catcher.language_change_count
+        assert manager.set_language('en')
+        QtWidgets.QApplication.processEvents()
+        assert catcher.language_change_count > previous
+
+        catcher.close()
+        catcher.deleteLater()
+        QtWidgets.QApplication.processEvents()
+
     def test_is_language_bundled(self):
-        """Should correctly identify bundled vs on-demand languages."""
+        """Should correctly identify bundled vs non-bundled languages."""
         from aicodeprep_gui.i18n.translator import TranslationManager
         from PySide6.QtWidgets import QApplication
 
@@ -103,11 +140,13 @@ class TestTranslationManager:
             'zh_CN'), "Chinese Simplified should be bundled"
         assert manager.is_language_bundled('fr'), "French should be bundled"
 
-        # On-demand languages
+        # Other bundled languages (top 20)
+        assert manager.is_language_bundled('de'), "German should be bundled"
+        assert manager.is_language_bundled('ja'), "Japanese should be bundled"
+
+        # Not bundled / unsupported language codes
         assert not manager.is_language_bundled(
-            'de'), "German should not be bundled"
-        assert not manager.is_language_bundled(
-            'ja'), "Japanese should not be bundled"
+            'he'), "Hebrew should not be bundled"
 
 
 class TestTranslationFiles:
