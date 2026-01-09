@@ -5,25 +5,27 @@
     <name>FileSelectionGUI</name>
     <message>
         <location filename="../../gui/main_window.py" line="110"/>
-        <location filename="../../gui/main_window.py" line="1574"/>
+        <location filename="../../gui/main_window.py" line="1580"/>
         <source>Show</source>
         <translation>عرض</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="111"/>
-        <location filename="../../gui/main_window.py" line="1576"/>
+        <location filename="../../gui/main_window.py" line="1084"/>
+        <location filename="../../gui/main_window.py" line="1582"/>
+        <location filename="../../gui/main_window.py" line="1675"/>
         <source>Quit</source>
         <translation>خروج</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="171"/>
-        <location filename="../../gui/main_window.py" line="1570"/>
+        <location filename="../../gui/main_window.py" line="1576"/>
         <source>aicodeprep-gui - File Selection</source>
         <translation>aicodeprep-gui - اختيار الملفات</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="252"/>
-        <location filename="../../gui/main_window.py" line="1580"/>
+        <location filename="../../gui/main_window.py" line="1586"/>
         <source>&amp;File</source>
         <translation>&amp;ملف</translation>
     </message>
@@ -44,55 +46,55 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="291"/>
-        <location filename="../../gui/main_window.py" line="1582"/>
+        <location filename="../../gui/main_window.py" line="1588"/>
         <source>&amp;Quit</source>
         <translation>&amp;خروج</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="295"/>
-        <location filename="../../gui/main_window.py" line="1585"/>
+        <location filename="../../gui/main_window.py" line="1591"/>
         <source>&amp;Edit</source>
         <translation>&amp;تحرير</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="296"/>
-        <location filename="../../gui/main_window.py" line="1587"/>
+        <location filename="../../gui/main_window.py" line="1593"/>
         <source>&amp;New Preset…</source>
         <translation>&amp;إعداد مسبق جديد…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="301"/>
-        <location filename="../../gui/main_window.py" line="1590"/>
+        <location filename="../../gui/main_window.py" line="1596"/>
         <source>Open Settings Folder…</source>
         <translation>فتح مجلد الإعدادات…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="309"/>
-        <location filename="../../gui/main_window.py" line="1592"/>
+        <location filename="../../gui/main_window.py" line="1598"/>
         <source>&amp;Language / Idioma / 语言…</source>
         <translation>&amp;اللغة / Language…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="314"/>
-        <location filename="../../gui/main_window.py" line="1595"/>
+        <location filename="../../gui/main_window.py" line="1601"/>
         <source>&amp;Flow</source>
         <translation>&amp;تدفق</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="317"/>
-        <location filename="../../gui/main_window.py" line="1597"/>
+        <location filename="../../gui/main_window.py" line="1603"/>
         <source>Import Flow JSON…</source>
         <translation>استيراد تدفق JSON…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="322"/>
-        <location filename="../../gui/main_window.py" line="1599"/>
+        <location filename="../../gui/main_window.py" line="1605"/>
         <source>Export Flow JSON…</source>
         <translation>تصدير تدفق JSON…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="327"/>
-        <location filename="../../gui/main_window.py" line="1601"/>
+        <location filename="../../gui/main_window.py" line="1607"/>
         <source>Reset to Default Flow</source>
         <translation>إعادة تعيين إلى التدفق الافتراضي</translation>
     </message>
@@ -118,74 +120,74 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="407"/>
-        <location filename="../../gui/main_window.py" line="1604"/>
+        <location filename="../../gui/main_window.py" line="1610"/>
         <source>&amp;Help</source>
         <translation>&amp;مساعدة</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="409"/>
-        <location filename="../../gui/main_window.py" line="1606"/>
+        <location filename="../../gui/main_window.py" line="1612"/>
         <source>Help / Links and Guides</source>
         <translation>مساعدة / روابط وأدلة</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="414"/>
-        <location filename="../../gui/main_window.py" line="1608"/>
+        <location filename="../../gui/main_window.py" line="1614"/>
         <source>&amp;About</source>
         <translation>&amp;حول</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="419"/>
-        <location filename="../../gui/main_window.py" line="1610"/>
+        <location filename="../../gui/main_window.py" line="1616"/>
         <source>Send Ideas, bugs, thoughts!</source>
         <translation>إرسال أفكار، أخطاء، أفكار!</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="425"/>
-        <location filename="../../gui/main_window.py" line="1612"/>
+        <location filename="../../gui/main_window.py" line="1618"/>
         <source>Activate Pro…</source>
         <translation>تفعيل المحترف…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="431"/>
-        <location filename="../../gui/main_window.py" line="1615"/>
+        <location filename="../../gui/main_window.py" line="1621"/>
         <source>&amp;Debug</source>
         <translation>&amp;تصحيح</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="432"/>
-        <location filename="../../gui/main_window.py" line="1617"/>
+        <location filename="../../gui/main_window.py" line="1623"/>
         <source>Take Screenshot</source>
         <translation>لقطة شاشة</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="437"/>
-        <location filename="../../gui/main_window.py" line="1619"/>
+        <location filename="../../gui/main_window.py" line="1625"/>
         <source>Current Language Info</source>
         <translation>معلومات اللغة الحالية</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="442"/>
-        <location filename="../../gui/main_window.py" line="1621"/>
+        <location filename="../../gui/main_window.py" line="1627"/>
         <source>Accessibility Check</source>
         <translation>التحقق من إمكانية الوصول</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="458"/>
-        <location filename="../../gui/main_window.py" line="1625"/>
+        <location filename="../../gui/main_window.py" line="1631"/>
         <source>&amp;Output format:</source>
         <translation>&amp;تنسيق الإخراج:</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="461"/>
-        <location filename="../../gui/main_window.py" line="1627"/>
+        <location filename="../../gui/main_window.py" line="1633"/>
         <source>Dark mode</source>
         <translation>الوضع الداكن</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="465"/>
-        <location filename="../../gui/main_window.py" line="1634"/>
-        <location filename="../../gui/main_window.py" line="1636"/>
+        <location filename="../../gui/main_window.py" line="1640"/>
+        <location filename="../../gui/main_window.py" line="1642"/>
         <source>Estimated tokens: 0</source>
         <translation>الرموز المقدرة: 0</translation>
     </message>
@@ -196,13 +198,13 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="519"/>
-        <location filename="../../gui/main_window.py" line="1645"/>
+        <location filename="../../gui/main_window.py" line="1651"/>
         <source>Show Logo Banner</source>
         <translation>عرض شعار</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="525"/>
-        <location filename="../../gui/main_window.py" line="1639"/>
+        <location filename="../../gui/main_window.py" line="1645"/>
         <source>The selected files will be added to the LLM Context Block along with your prompt, written to fullcode.txt and copied to clipboard, ready to paste into your AI assistant.</source>
         <translation>سيتم إضافة الملفات المحددة إلى كتلة سياق LLM مع توجيهك، مكتوبة في fullcode.txt ونسخها إلى الحافظة، جاهزة للصق في مساعد الذكاء الاصطناعي الخاص بك.</translation>
     </message>
@@ -223,37 +225,37 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="578"/>
-        <location filename="../../gui/main_window.py" line="1648"/>
+        <location filename="../../gui/main_window.py" line="1654"/>
         <source>Presets help you save more time and will be saved for later use</source>
         <translation>تساعدك الإعدادات المسبقة على توفير المزيد من الوقت وسيتم حفظها للاستخدام لاحقاً</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="628"/>
-        <location filename="../../gui/main_window.py" line="1651"/>
+        <location filename="../../gui/main_window.py" line="1657"/>
         <source>Optional prompt/question for LLM (will be appended to the end):</source>
         <translation>موجه/سؤال اختياري لـ LLM (سيتم إلحاقه بالنهاية):</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="634"/>
-        <location filename="../../gui/main_window.py" line="1654"/>
+        <location filename="../../gui/main_window.py" line="1660"/>
         <source>Type your question or prompt here (optional)…</source>
         <translation>اكتب سؤالك أو الموجه هنا (اختياري)…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="637"/>
-        <location filename="../../gui/main_window.py" line="1656"/>
+        <location filename="../../gui/main_window.py" line="1662"/>
         <source>Clear</source>
         <translation>مسح</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="638"/>
-        <location filename="../../gui/main_window.py" line="1657"/>
+        <location filename="../../gui/main_window.py" line="1663"/>
         <source>Clear the prompt box</source>
         <translation>مسح مربع الموجه</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="712"/>
-        <location filename="../../gui/main_window.py" line="1675"/>
+        <location filename="../../gui/main_window.py" line="1682"/>
         <source>Remember checked files for this folder, window size information</source>
         <translation>تذكر الملفات المحددة لهذا المجلد، ومعلومات حجم النافذة</translation>
     </message>
@@ -269,25 +271,25 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="730"/>
-        <location filename="../../gui/main_window.py" line="1673"/>
+        <location filename="../../gui/main_window.py" line="1679"/>
         <source>Options</source>
         <translation>خيارات</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="765"/>
-        <location filename="../../gui/main_window.py" line="1677"/>
+        <location filename="../../gui/main_window.py" line="1684"/>
         <source>Font Size:</source>
         <translation>حجم الخط:</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="795"/>
-        <location filename="../../gui/main_window.py" line="1681"/>
+        <location filename="../../gui/main_window.py" line="1688"/>
         <source>Pro Features</source>
         <translation>ميزات Pro</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="818"/>
-        <location filename="../../gui/main_window.py" line="1683"/>
+        <location filename="../../gui/main_window.py" line="1690"/>
         <source>Enable file preview window</source>
         <translation>تمكين نافذة معاينة الملف</translation>
     </message>
@@ -298,7 +300,7 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="836"/>
-        <location filename="../../gui/main_window.py" line="1685"/>
+        <location filename="../../gui/main_window.py" line="1693"/>
         <source>Enable syntax highlighting in preview</source>
         <translation>تمكين تمييز بناء الجملة في المعاينة</translation>
     </message>
@@ -309,7 +311,7 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="853"/>
-        <location filename="../../gui/main_window.py" line="1687"/>
+        <location filename="../../gui/main_window.py" line="1696"/>
         <source>Enable Flow Studio (currently testing alpha version - might be glitchy!)</source>
         <translation>تمكين استوديو التدفق (يتم اختبار إصدار ألفا حالياً - قد يكون به خلل!)</translation>
     </message>
@@ -320,7 +322,7 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="901"/>
-        <location filename="../../gui/main_window.py" line="1689"/>
+        <location filename="../../gui/main_window.py" line="1698"/>
         <source>Font Weight:</source>
         <translation>وزن الخط:</translation>
     </message>
@@ -330,72 +332,66 @@
         <translation>ضبط وزن الخط لنافذة المعاينة</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="927"/>
-        <location filename="../../gui/main_window.py" line="1691"/>
+        <location filename="../../gui/main_window.py" line="928"/>
+        <location filename="../../gui/main_window.py" line="1701"/>
         <source>Add prompt/question to top - Adding to top AND bottom often gets better responses from AI models</source>
         <translation>إضافة موجه/سؤال إلى الأعلى - الإضافة إلى الأعلى والأسفل غالباً ما تحصل على استجابات أفضل من نماذج الذكاء الاصطناعي</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="929"/>
-        <location filename="../../gui/main_window.py" line="1693"/>
+        <location filename="../../gui/main_window.py" line="931"/>
+        <location filename="../../gui/main_window.py" line="1704"/>
         <source>Add prompt/question to bottom - Adding to top AND bottom often gets better responses from AI models</source>
         <translation>إضافة موجه/سؤال إلى الأسفل - الإضافة إلى الأعلى والأسفل غالباً ما تحصل على استجابات أفضل من نماذج الذكاء الاصطناعي</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="936"/>
-        <location filename="../../gui/main_window.py" line="948"/>
+        <location filename="../../gui/main_window.py" line="938"/>
+        <location filename="../../gui/main_window.py" line="950"/>
         <source>Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these</source>
         <translation>تظهر الأبحاث أن طرح سؤالك قبل وبعد سياق الكود يمكن أن يحسن جودة وقدرة استجابات الذكاء الاصطناعي! يوصى بشدة بالتحقق من كليهما</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1024"/>
-        <location filename="../../gui/main_window.py" line="1695"/>
+        <location filename="../../gui/main_window.py" line="1026"/>
+        <location filename="../../gui/main_window.py" line="1707"/>
         <source>Enable Context Compression Modes - does not work yet, still experimenting!</source>
         <translation>تمكين أوضاع ضغط السياق - لا يعمل بعد، لا يزال قيد التجربة!</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1028"/>
-        <location filename="../../gui/main_window.py" line="1038"/>
+        <location filename="../../gui/main_window.py" line="1030"/>
+        <location filename="../../gui/main_window.py" line="1040"/>
         <source>Show a second column that marks skeleton level per item</source>
         <translation>إظهار عمود ثانٍ يحدد مستوى الهيكل لكل عنصر</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1042"/>
+        <location filename="../../gui/main_window.py" line="1044"/>
         <source>Pro Feature</source>
         <translation>ميزة Pro</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1061"/>
-        <location filename="../../gui/main_window.py" line="1661"/>
+        <location filename="../../gui/main_window.py" line="1064"/>
+        <location filename="../../gui/main_window.py" line="1667"/>
         <source>GENERATE CONTEXT!</source>
         <translation>توليد السياق!</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1065"/>
-        <location filename="../../gui/main_window.py" line="1663"/>
+        <location filename="../../gui/main_window.py" line="1068"/>
+        <location filename="../../gui/main_window.py" line="1669"/>
         <source>Select All</source>
         <translation>تحديد الكل</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1069"/>
-        <location filename="../../gui/main_window.py" line="1665"/>
+        <location filename="../../gui/main_window.py" line="1073"/>
+        <location filename="../../gui/main_window.py" line="1671"/>
         <source>Deselect All</source>
         <translation>إلغاء تحديد الكل</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1074"/>
-        <location filename="../../gui/main_window.py" line="1667"/>
+        <location filename="../../gui/main_window.py" line="1079"/>
+        <location filename="../../gui/main_window.py" line="1673"/>
         <source>Load preferences</source>
         <translation>تحميل التفضيلات</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1078"/>
-        <location filename="../../gui/main_window.py" line="1669"/>
-        <source>Scan</source>
-        <translation>مسح</translation>
-    </message>
-    <message>
-        <location filename="../../gui/main_window.py" line="1643"/>
+        <location filename="../../gui/main_window.py" line="1649"/>
         <source>Hide Logo Banner</source>
         <translation>إخفاء شعار البانر</translation>
     </message>
@@ -463,7 +459,7 @@
 Download functionality is not yet implemented. Only bundled languages can be used for now.
 
 Would you like to continue anyway?</source>
-        <translation>اللغة '{name}' تحتاج إلى تنزيل.
+        <translation>اللغة &apos;{name}&apos; تحتاج إلى تنزيل.
 
 وظيفة التنزيل لم يتم تنفيذها بعد. يمكن استخدام اللغات المجمعة فقط في الوقت الحالي.
 

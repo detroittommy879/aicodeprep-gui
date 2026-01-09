@@ -1081,7 +1081,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.load_from_prefs_button_clicked)
         button_layout2.addWidget(self.load_prefs_button)
 
-        self.scan_button = QtWidgets.QPushButton(self.tr("Scan"))
+        self.scan_button = QtWidgets.QPushButton(self.tr("Quit"))
         self.scan_button.clicked.connect(self.quit_without_processing)
         button_layout2.addWidget(self.scan_button)
 
@@ -1672,7 +1672,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         if hasattr(self, "load_prefs_button"):
             self.load_prefs_button.setText(self.tr("Load preferences"))
         if hasattr(self, "scan_button"):
-            self.scan_button.setText(self.tr("Scan"))
+            self.scan_button.setText(self.tr("Quit"))
 
         # Options group
         if hasattr(self, "options_group_box"):

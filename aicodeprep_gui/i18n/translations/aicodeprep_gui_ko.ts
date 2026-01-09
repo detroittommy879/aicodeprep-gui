@@ -5,25 +5,27 @@
     <name>FileSelectionGUI</name>
     <message>
         <location filename="../../gui/main_window.py" line="110"/>
-        <location filename="../../gui/main_window.py" line="1574"/>
+        <location filename="../../gui/main_window.py" line="1580"/>
         <source>Show</source>
         <translation>표시</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="111"/>
-        <location filename="../../gui/main_window.py" line="1576"/>
+        <location filename="../../gui/main_window.py" line="1084"/>
+        <location filename="../../gui/main_window.py" line="1582"/>
+        <location filename="../../gui/main_window.py" line="1675"/>
         <source>Quit</source>
         <translation>종료</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="171"/>
-        <location filename="../../gui/main_window.py" line="1570"/>
+        <location filename="../../gui/main_window.py" line="1576"/>
         <source>aicodeprep-gui - File Selection</source>
         <translation>aicodeprep-gui - 파일 선택</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="252"/>
-        <location filename="../../gui/main_window.py" line="1580"/>
+        <location filename="../../gui/main_window.py" line="1586"/>
         <source>&amp;File</source>
         <translation>&amp;파일</translation>
     </message>
@@ -44,55 +46,55 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="291"/>
-        <location filename="../../gui/main_window.py" line="1582"/>
+        <location filename="../../gui/main_window.py" line="1588"/>
         <source>&amp;Quit</source>
         <translation>&amp;종료</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="295"/>
-        <location filename="../../gui/main_window.py" line="1585"/>
+        <location filename="../../gui/main_window.py" line="1591"/>
         <source>&amp;Edit</source>
         <translation>&amp;편집</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="296"/>
-        <location filename="../../gui/main_window.py" line="1587"/>
+        <location filename="../../gui/main_window.py" line="1593"/>
         <source>&amp;New Preset…</source>
         <translation>&amp;새 프리셋…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="301"/>
-        <location filename="../../gui/main_window.py" line="1590"/>
+        <location filename="../../gui/main_window.py" line="1596"/>
         <source>Open Settings Folder…</source>
         <translation>설정 폴더 열기…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="309"/>
-        <location filename="../../gui/main_window.py" line="1592"/>
+        <location filename="../../gui/main_window.py" line="1598"/>
         <source>&amp;Language / Idioma / 语言…</source>
         <translation>&amp;언어 / Language…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="314"/>
-        <location filename="../../gui/main_window.py" line="1595"/>
+        <location filename="../../gui/main_window.py" line="1601"/>
         <source>&amp;Flow</source>
         <translation>&amp;플로우</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="317"/>
-        <location filename="../../gui/main_window.py" line="1597"/>
+        <location filename="../../gui/main_window.py" line="1603"/>
         <source>Import Flow JSON…</source>
         <translation>플로우 JSON 가져오기…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="322"/>
-        <location filename="../../gui/main_window.py" line="1599"/>
+        <location filename="../../gui/main_window.py" line="1605"/>
         <source>Export Flow JSON…</source>
         <translation>플로우 JSON 내보내기…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="327"/>
-        <location filename="../../gui/main_window.py" line="1601"/>
+        <location filename="../../gui/main_window.py" line="1607"/>
         <source>Reset to Default Flow</source>
         <translation>기본 플로우로 재설정</translation>
     </message>
@@ -118,74 +120,74 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="407"/>
-        <location filename="../../gui/main_window.py" line="1604"/>
+        <location filename="../../gui/main_window.py" line="1610"/>
         <source>&amp;Help</source>
         <translation>&amp;도움말</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="409"/>
-        <location filename="../../gui/main_window.py" line="1606"/>
+        <location filename="../../gui/main_window.py" line="1612"/>
         <source>Help / Links and Guides</source>
         <translation>도움말 / 링크 및 가이드</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="414"/>
-        <location filename="../../gui/main_window.py" line="1608"/>
+        <location filename="../../gui/main_window.py" line="1614"/>
         <source>&amp;About</source>
         <translation>&amp;정보</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="419"/>
-        <location filename="../../gui/main_window.py" line="1610"/>
+        <location filename="../../gui/main_window.py" line="1616"/>
         <source>Send Ideas, bugs, thoughts!</source>
         <translation>아이디어, 버그, 생각 보내기!</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="425"/>
-        <location filename="../../gui/main_window.py" line="1612"/>
+        <location filename="../../gui/main_window.py" line="1618"/>
         <source>Activate Pro…</source>
         <translation>프로 활성화…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="431"/>
-        <location filename="../../gui/main_window.py" line="1615"/>
+        <location filename="../../gui/main_window.py" line="1621"/>
         <source>&amp;Debug</source>
         <translation>&amp;디버그</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="432"/>
-        <location filename="../../gui/main_window.py" line="1617"/>
+        <location filename="../../gui/main_window.py" line="1623"/>
         <source>Take Screenshot</source>
         <translation>스크린샷 찍기</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="437"/>
-        <location filename="../../gui/main_window.py" line="1619"/>
+        <location filename="../../gui/main_window.py" line="1625"/>
         <source>Current Language Info</source>
         <translation>현재 언어 정보</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="442"/>
-        <location filename="../../gui/main_window.py" line="1621"/>
+        <location filename="../../gui/main_window.py" line="1627"/>
         <source>Accessibility Check</source>
         <translation>접근성 확인</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="458"/>
-        <location filename="../../gui/main_window.py" line="1625"/>
+        <location filename="../../gui/main_window.py" line="1631"/>
         <source>&amp;Output format:</source>
         <translation>&amp;출력 형식:</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="461"/>
-        <location filename="../../gui/main_window.py" line="1627"/>
+        <location filename="../../gui/main_window.py" line="1633"/>
         <source>Dark mode</source>
         <translation>다크 모드</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="465"/>
-        <location filename="../../gui/main_window.py" line="1634"/>
-        <location filename="../../gui/main_window.py" line="1636"/>
+        <location filename="../../gui/main_window.py" line="1640"/>
+        <location filename="../../gui/main_window.py" line="1642"/>
         <source>Estimated tokens: 0</source>
         <translation>예상 토큰: 0</translation>
     </message>
@@ -196,13 +198,13 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="519"/>
-        <location filename="../../gui/main_window.py" line="1645"/>
+        <location filename="../../gui/main_window.py" line="1651"/>
         <source>Show Logo Banner</source>
         <translation>로고 배너 표시</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="525"/>
-        <location filename="../../gui/main_window.py" line="1639"/>
+        <location filename="../../gui/main_window.py" line="1645"/>
         <source>The selected files will be added to the LLM Context Block along with your prompt, written to fullcode.txt and copied to clipboard, ready to paste into your AI assistant.</source>
         <translation>선택한 파일은 프롬프트와 함께 LLM 컨텍스트 블록에 추가되고, fullcode.txt에 기록되어 클립보드에 복사되어 AI 어시스턴트에 붙여넣을 준비가 됩니다.</translation>
     </message>
@@ -223,37 +225,37 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="578"/>
-        <location filename="../../gui/main_window.py" line="1648"/>
+        <location filename="../../gui/main_window.py" line="1654"/>
         <source>Presets help you save more time and will be saved for later use</source>
         <translation>프리셋은 시간을 절약하고 나중에 사용할 수 있도록 저장됩니다</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="628"/>
-        <location filename="../../gui/main_window.py" line="1651"/>
+        <location filename="../../gui/main_window.py" line="1657"/>
         <source>Optional prompt/question for LLM (will be appended to the end):</source>
         <translation>LLM에 대한 선택적 프롬프트/질문 (끝에 추가됨):</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="634"/>
-        <location filename="../../gui/main_window.py" line="1654"/>
+        <location filename="../../gui/main_window.py" line="1660"/>
         <source>Type your question or prompt here (optional)…</source>
         <translation>질문이나 프롬프트를 여기에 입력하세요 (선택 사항)…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="637"/>
-        <location filename="../../gui/main_window.py" line="1656"/>
+        <location filename="../../gui/main_window.py" line="1662"/>
         <source>Clear</source>
         <translation>지우기</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="638"/>
-        <location filename="../../gui/main_window.py" line="1657"/>
+        <location filename="../../gui/main_window.py" line="1663"/>
         <source>Clear the prompt box</source>
         <translation>프롬프트 상자 지우기</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="712"/>
-        <location filename="../../gui/main_window.py" line="1675"/>
+        <location filename="../../gui/main_window.py" line="1682"/>
         <source>Remember checked files for this folder, window size information</source>
         <translation>이 폴더의 체크된 파일, 창 크기 정보 기억</translation>
     </message>
@@ -269,25 +271,25 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="730"/>
-        <location filename="../../gui/main_window.py" line="1673"/>
+        <location filename="../../gui/main_window.py" line="1679"/>
         <source>Options</source>
         <translation>옵션</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="765"/>
-        <location filename="../../gui/main_window.py" line="1677"/>
+        <location filename="../../gui/main_window.py" line="1684"/>
         <source>Font Size:</source>
         <translation>글꼴 크기:</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="795"/>
-        <location filename="../../gui/main_window.py" line="1681"/>
+        <location filename="../../gui/main_window.py" line="1688"/>
         <source>Pro Features</source>
         <translation>프로 기능</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="818"/>
-        <location filename="../../gui/main_window.py" line="1683"/>
+        <location filename="../../gui/main_window.py" line="1690"/>
         <source>Enable file preview window</source>
         <translation>파일 미리보기 창 활성화</translation>
     </message>
@@ -298,7 +300,7 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="836"/>
-        <location filename="../../gui/main_window.py" line="1685"/>
+        <location filename="../../gui/main_window.py" line="1693"/>
         <source>Enable syntax highlighting in preview</source>
         <translation>미리보기에서 구문 강조 활성화</translation>
     </message>
@@ -309,7 +311,7 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="853"/>
-        <location filename="../../gui/main_window.py" line="1687"/>
+        <location filename="../../gui/main_window.py" line="1696"/>
         <source>Enable Flow Studio (currently testing alpha version - might be glitchy!)</source>
         <translation>Flow Studio 활성화 (현재 알파 버전 테스트 중 - 불안정할 수 있음!)</translation>
     </message>
@@ -320,7 +322,7 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="901"/>
-        <location filename="../../gui/main_window.py" line="1689"/>
+        <location filename="../../gui/main_window.py" line="1698"/>
         <source>Font Weight:</source>
         <translation>글꼴 두께:</translation>
     </message>
@@ -330,72 +332,66 @@
         <translation>미리보기 창의 글꼴 두께 조절</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="927"/>
-        <location filename="../../gui/main_window.py" line="1691"/>
+        <location filename="../../gui/main_window.py" line="928"/>
+        <location filename="../../gui/main_window.py" line="1701"/>
         <source>Add prompt/question to top - Adding to top AND bottom often gets better responses from AI models</source>
         <translation>맨 위에 프롬프트/질문 추가 - 위와 아래 모두에 추가하면 AI 모델에서 더 나은 응답을 얻는 경우가 많습니다</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="929"/>
-        <location filename="../../gui/main_window.py" line="1693"/>
+        <location filename="../../gui/main_window.py" line="931"/>
+        <location filename="../../gui/main_window.py" line="1704"/>
         <source>Add prompt/question to bottom - Adding to top AND bottom often gets better responses from AI models</source>
         <translation>맨 아래에 프롬프트/질문 추가 - 위와 아래 모두에 추가하면 AI 모델에서 더 나은 응답을 얻는 경우가 많습니다</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="936"/>
-        <location filename="../../gui/main_window.py" line="948"/>
+        <location filename="../../gui/main_window.py" line="938"/>
+        <location filename="../../gui/main_window.py" line="950"/>
         <source>Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these</source>
         <translation>연구에 따르면 코드 컨텍스트 전과 후에 질문을 하면 AI 응답의 품질과 능력을 향상시킬 수 있습니다! 이 두 가지를 모두 확인하는 것이 좋습니다</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1024"/>
-        <location filename="../../gui/main_window.py" line="1695"/>
+        <location filename="../../gui/main_window.py" line="1026"/>
+        <location filename="../../gui/main_window.py" line="1707"/>
         <source>Enable Context Compression Modes - does not work yet, still experimenting!</source>
         <translation>컨텍스트 압축 모드 활성화 - 아직 작동하지 않음, 실험 중!</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1028"/>
-        <location filename="../../gui/main_window.py" line="1038"/>
+        <location filename="../../gui/main_window.py" line="1030"/>
+        <location filename="../../gui/main_window.py" line="1040"/>
         <source>Show a second column that marks skeleton level per item</source>
         <translation>항목별 스켈레톤 레벨을 표시하는 두 번째 열 표시</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1042"/>
+        <location filename="../../gui/main_window.py" line="1044"/>
         <source>Pro Feature</source>
         <translation>프로 기능</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1061"/>
-        <location filename="../../gui/main_window.py" line="1661"/>
+        <location filename="../../gui/main_window.py" line="1064"/>
+        <location filename="../../gui/main_window.py" line="1667"/>
         <source>GENERATE CONTEXT!</source>
         <translation>컨텍스트 생성!</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1065"/>
-        <location filename="../../gui/main_window.py" line="1663"/>
+        <location filename="../../gui/main_window.py" line="1068"/>
+        <location filename="../../gui/main_window.py" line="1669"/>
         <source>Select All</source>
         <translation>전체 선택</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1069"/>
-        <location filename="../../gui/main_window.py" line="1665"/>
+        <location filename="../../gui/main_window.py" line="1073"/>
+        <location filename="../../gui/main_window.py" line="1671"/>
         <source>Deselect All</source>
         <translation>전체 선택 해제</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1074"/>
-        <location filename="../../gui/main_window.py" line="1667"/>
+        <location filename="../../gui/main_window.py" line="1079"/>
+        <location filename="../../gui/main_window.py" line="1673"/>
         <source>Load preferences</source>
         <translation>환경 설정 로드</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1078"/>
-        <location filename="../../gui/main_window.py" line="1669"/>
-        <source>Scan</source>
-        <translation>스캔</translation>
-    </message>
-    <message>
-        <location filename="../../gui/main_window.py" line="1643"/>
+        <location filename="../../gui/main_window.py" line="1649"/>
         <source>Hide Logo Banner</source>
         <translation>로고 배너 숨기기</translation>
     </message>
@@ -463,7 +459,7 @@
 Download functionality is not yet implemented. Only bundled languages can be used for now.
 
 Would you like to continue anyway?</source>
-        <translation>언어 '{name}'을(를) 다운로드해야 합니다.
+        <translation>언어 &apos;{name}&apos;을(를) 다운로드해야 합니다.
 
 다운로드 기능은 아직 구현되지 않았습니다. 현재는 번들 언어만 사용할 수 있습니다.
 

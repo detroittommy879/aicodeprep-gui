@@ -5,25 +5,27 @@
     <name>FileSelectionGUI</name>
     <message>
         <location filename="../../gui/main_window.py" line="110"/>
-        <location filename="../../gui/main_window.py" line="1574"/>
+        <location filename="../../gui/main_window.py" line="1580"/>
         <source>Show</source>
         <translation>顯示</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="111"/>
-        <location filename="../../gui/main_window.py" line="1576"/>
+        <location filename="../../gui/main_window.py" line="1084"/>
+        <location filename="../../gui/main_window.py" line="1582"/>
+        <location filename="../../gui/main_window.py" line="1675"/>
         <source>Quit</source>
         <translation>退出</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="171"/>
-        <location filename="../../gui/main_window.py" line="1570"/>
+        <location filename="../../gui/main_window.py" line="1576"/>
         <source>aicodeprep-gui - File Selection</source>
         <translation>aicodeprep-gui - 檔案選擇</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="252"/>
-        <location filename="../../gui/main_window.py" line="1580"/>
+        <location filename="../../gui/main_window.py" line="1586"/>
         <source>&amp;File</source>
         <translation>檔案(&amp;F)</translation>
     </message>
@@ -44,55 +46,55 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="291"/>
-        <location filename="../../gui/main_window.py" line="1582"/>
+        <location filename="../../gui/main_window.py" line="1588"/>
         <source>&amp;Quit</source>
         <translation>退出(&amp;Q)</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="295"/>
-        <location filename="../../gui/main_window.py" line="1585"/>
+        <location filename="../../gui/main_window.py" line="1591"/>
         <source>&amp;Edit</source>
         <translation>編輯(&amp;E)</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="296"/>
-        <location filename="../../gui/main_window.py" line="1587"/>
+        <location filename="../../gui/main_window.py" line="1593"/>
         <source>&amp;New Preset…</source>
         <translation>新增預設(&amp;N)…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="301"/>
-        <location filename="../../gui/main_window.py" line="1590"/>
+        <location filename="../../gui/main_window.py" line="1596"/>
         <source>Open Settings Folder…</source>
         <translation>開啟設定資料夾…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="309"/>
-        <location filename="../../gui/main_window.py" line="1592"/>
+        <location filename="../../gui/main_window.py" line="1598"/>
         <source>&amp;Language / Idioma / 语言…</source>
         <translation>語言 / Language(&amp;L)…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="314"/>
-        <location filename="../../gui/main_window.py" line="1595"/>
+        <location filename="../../gui/main_window.py" line="1601"/>
         <source>&amp;Flow</source>
         <translation>流程(&amp;F)</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="317"/>
-        <location filename="../../gui/main_window.py" line="1597"/>
+        <location filename="../../gui/main_window.py" line="1603"/>
         <source>Import Flow JSON…</source>
         <translation>匯入流程 JSON…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="322"/>
-        <location filename="../../gui/main_window.py" line="1599"/>
+        <location filename="../../gui/main_window.py" line="1605"/>
         <source>Export Flow JSON…</source>
         <translation>匯出流程 JSON…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="327"/>
-        <location filename="../../gui/main_window.py" line="1601"/>
+        <location filename="../../gui/main_window.py" line="1607"/>
         <source>Reset to Default Flow</source>
         <translation>重設為預設流程</translation>
     </message>
@@ -118,74 +120,74 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="407"/>
-        <location filename="../../gui/main_window.py" line="1604"/>
+        <location filename="../../gui/main_window.py" line="1610"/>
         <source>&amp;Help</source>
         <translation>說明(&amp;H)</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="409"/>
-        <location filename="../../gui/main_window.py" line="1606"/>
+        <location filename="../../gui/main_window.py" line="1612"/>
         <source>Help / Links and Guides</source>
         <translation>說明 / 連結和指南</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="414"/>
-        <location filename="../../gui/main_window.py" line="1608"/>
+        <location filename="../../gui/main_window.py" line="1614"/>
         <source>&amp;About</source>
         <translation>關於(&amp;A)</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="419"/>
-        <location filename="../../gui/main_window.py" line="1610"/>
+        <location filename="../../gui/main_window.py" line="1616"/>
         <source>Send Ideas, bugs, thoughts!</source>
         <translation>傳送想法、錯誤、想法！</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="425"/>
-        <location filename="../../gui/main_window.py" line="1612"/>
+        <location filename="../../gui/main_window.py" line="1618"/>
         <source>Activate Pro…</source>
         <translation>啟動 Pro…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="431"/>
-        <location filename="../../gui/main_window.py" line="1615"/>
+        <location filename="../../gui/main_window.py" line="1621"/>
         <source>&amp;Debug</source>
         <translation>除錯(&amp;D)</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="432"/>
-        <location filename="../../gui/main_window.py" line="1617"/>
+        <location filename="../../gui/main_window.py" line="1623"/>
         <source>Take Screenshot</source>
         <translation>擷取畫面</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="437"/>
-        <location filename="../../gui/main_window.py" line="1619"/>
+        <location filename="../../gui/main_window.py" line="1625"/>
         <source>Current Language Info</source>
         <translation>目前語言資訊</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="442"/>
-        <location filename="../../gui/main_window.py" line="1621"/>
+        <location filename="../../gui/main_window.py" line="1627"/>
         <source>Accessibility Check</source>
         <translation>存取性檢查</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="458"/>
-        <location filename="../../gui/main_window.py" line="1625"/>
+        <location filename="../../gui/main_window.py" line="1631"/>
         <source>&amp;Output format:</source>
         <translation>輸出格式(&amp;O):</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="461"/>
-        <location filename="../../gui/main_window.py" line="1627"/>
+        <location filename="../../gui/main_window.py" line="1633"/>
         <source>Dark mode</source>
         <translation>深色模式</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="465"/>
-        <location filename="../../gui/main_window.py" line="1634"/>
-        <location filename="../../gui/main_window.py" line="1636"/>
+        <location filename="../../gui/main_window.py" line="1640"/>
+        <location filename="../../gui/main_window.py" line="1642"/>
         <source>Estimated tokens: 0</source>
         <translation>預估權杖: 0</translation>
     </message>
@@ -196,13 +198,13 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="519"/>
-        <location filename="../../gui/main_window.py" line="1645"/>
+        <location filename="../../gui/main_window.py" line="1651"/>
         <source>Show Logo Banner</source>
         <translation>顯示 Logo 橫幅</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="525"/>
-        <location filename="../../gui/main_window.py" line="1639"/>
+        <location filename="../../gui/main_window.py" line="1645"/>
         <source>The selected files will be added to the LLM Context Block along with your prompt, written to fullcode.txt and copied to clipboard, ready to paste into your AI assistant.</source>
         <translation>選定的檔案將與您的提示一起加入 LLM 上下文區塊，寫入 fullcode.txt 並複製到剪貼簿，準備貼上到您的 AI 助理。</translation>
     </message>
@@ -223,37 +225,37 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="578"/>
-        <location filename="../../gui/main_window.py" line="1648"/>
+        <location filename="../../gui/main_window.py" line="1654"/>
         <source>Presets help you save more time and will be saved for later use</source>
         <translation>預設可協助您節省更多時間，並儲存供日後使用</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="628"/>
-        <location filename="../../gui/main_window.py" line="1651"/>
+        <location filename="../../gui/main_window.py" line="1657"/>
         <source>Optional prompt/question for LLM (will be appended to the end):</source>
         <translation>LLM 的選用提示/問題 (將附加在最後)：</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="634"/>
-        <location filename="../../gui/main_window.py" line="1654"/>
+        <location filename="../../gui/main_window.py" line="1660"/>
         <source>Type your question or prompt here (optional)…</source>
         <translation>在此輸入您的問題或提示 (選用)…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="637"/>
-        <location filename="../../gui/main_window.py" line="1656"/>
+        <location filename="../../gui/main_window.py" line="1662"/>
         <source>Clear</source>
         <translation>清除</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="638"/>
-        <location filename="../../gui/main_window.py" line="1657"/>
+        <location filename="../../gui/main_window.py" line="1663"/>
         <source>Clear the prompt box</source>
         <translation>清除提示方塊</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="712"/>
-        <location filename="../../gui/main_window.py" line="1675"/>
+        <location filename="../../gui/main_window.py" line="1682"/>
         <source>Remember checked files for this folder, window size information</source>
         <translation>記住此資料夾的已勾選檔案、視窗大小資訊</translation>
     </message>
@@ -269,25 +271,25 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="730"/>
-        <location filename="../../gui/main_window.py" line="1673"/>
+        <location filename="../../gui/main_window.py" line="1679"/>
         <source>Options</source>
         <translation>選項</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="765"/>
-        <location filename="../../gui/main_window.py" line="1677"/>
+        <location filename="../../gui/main_window.py" line="1684"/>
         <source>Font Size:</source>
         <translation>字型大小：</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="795"/>
-        <location filename="../../gui/main_window.py" line="1681"/>
+        <location filename="../../gui/main_window.py" line="1688"/>
         <source>Pro Features</source>
         <translation>Pro 功能</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="818"/>
-        <location filename="../../gui/main_window.py" line="1683"/>
+        <location filename="../../gui/main_window.py" line="1690"/>
         <source>Enable file preview window</source>
         <translation>啟用檔案預覽視窗</translation>
     </message>
@@ -298,7 +300,7 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="836"/>
-        <location filename="../../gui/main_window.py" line="1685"/>
+        <location filename="../../gui/main_window.py" line="1693"/>
         <source>Enable syntax highlighting in preview</source>
         <translation>啟用預覽中的語法突顯</translation>
     </message>
@@ -309,7 +311,7 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="853"/>
-        <location filename="../../gui/main_window.py" line="1687"/>
+        <location filename="../../gui/main_window.py" line="1696"/>
         <source>Enable Flow Studio (currently testing alpha version - might be glitchy!)</source>
         <translation>啟用 Flow Studio (目前正在測試 alpha 版本 - 可能不穩定！)</translation>
     </message>
@@ -320,7 +322,7 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="901"/>
-        <location filename="../../gui/main_window.py" line="1689"/>
+        <location filename="../../gui/main_window.py" line="1698"/>
         <source>Font Weight:</source>
         <translation>字型粗細：</translation>
     </message>
@@ -330,72 +332,66 @@
         <translation>調整預覽視窗的字型粗細</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="927"/>
-        <location filename="../../gui/main_window.py" line="1691"/>
+        <location filename="../../gui/main_window.py" line="928"/>
+        <location filename="../../gui/main_window.py" line="1701"/>
         <source>Add prompt/question to top - Adding to top AND bottom often gets better responses from AI models</source>
         <translation>新增提示/問題至頂部 - 新增至頂部和底部通常可從 AI 模型獲得更好的回應</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="929"/>
-        <location filename="../../gui/main_window.py" line="1693"/>
+        <location filename="../../gui/main_window.py" line="931"/>
+        <location filename="../../gui/main_window.py" line="1704"/>
         <source>Add prompt/question to bottom - Adding to top AND bottom often gets better responses from AI models</source>
         <translation>新增提示/問題至底部 - 新增至頂部和底部通常可從 AI 模型獲得更好的回應</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="936"/>
-        <location filename="../../gui/main_window.py" line="948"/>
+        <location filename="../../gui/main_window.py" line="938"/>
+        <location filename="../../gui/main_window.py" line="950"/>
         <source>Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these</source>
         <translation>研究顯示，在程式碼上下文之前和之後詢問您的問題，可以改善 AI 回應的品質和能力！強烈建議勾選這兩項</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1024"/>
-        <location filename="../../gui/main_window.py" line="1695"/>
+        <location filename="../../gui/main_window.py" line="1026"/>
+        <location filename="../../gui/main_window.py" line="1707"/>
         <source>Enable Context Compression Modes - does not work yet, still experimenting!</source>
         <translation>啟用上下文壓縮模式 - 尚未運作，仍在實驗中！</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1028"/>
-        <location filename="../../gui/main_window.py" line="1038"/>
+        <location filename="../../gui/main_window.py" line="1030"/>
+        <location filename="../../gui/main_window.py" line="1040"/>
         <source>Show a second column that marks skeleton level per item</source>
         <translation>顯示第二欄，標記每個項目的骨架層級</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1042"/>
+        <location filename="../../gui/main_window.py" line="1044"/>
         <source>Pro Feature</source>
         <translation>Pro 功能</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1061"/>
-        <location filename="../../gui/main_window.py" line="1661"/>
+        <location filename="../../gui/main_window.py" line="1064"/>
+        <location filename="../../gui/main_window.py" line="1667"/>
         <source>GENERATE CONTEXT!</source>
         <translation>產生上下文！</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1065"/>
-        <location filename="../../gui/main_window.py" line="1663"/>
+        <location filename="../../gui/main_window.py" line="1068"/>
+        <location filename="../../gui/main_window.py" line="1669"/>
         <source>Select All</source>
         <translation>全選</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1069"/>
-        <location filename="../../gui/main_window.py" line="1665"/>
+        <location filename="../../gui/main_window.py" line="1073"/>
+        <location filename="../../gui/main_window.py" line="1671"/>
         <source>Deselect All</source>
         <translation>取消全選</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1074"/>
-        <location filename="../../gui/main_window.py" line="1667"/>
+        <location filename="../../gui/main_window.py" line="1079"/>
+        <location filename="../../gui/main_window.py" line="1673"/>
         <source>Load preferences</source>
         <translation>載入偏好設定</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1078"/>
-        <location filename="../../gui/main_window.py" line="1669"/>
-        <source>Scan</source>
-        <translation>掃描</translation>
-    </message>
-    <message>
-        <location filename="../../gui/main_window.py" line="1643"/>
+        <location filename="../../gui/main_window.py" line="1649"/>
         <source>Hide Logo Banner</source>
         <translation>隱藏 Logo 橫幅</translation>
     </message>
@@ -463,7 +459,7 @@
 Download functionality is not yet implemented. Only bundled languages can be used for now.
 
 Would you like to continue anyway?</source>
-        <translation>需要下載語言 '{name}'。
+        <translation>需要下載語言 &apos;{name}&apos;。
 
 尚未實作下載功能。目前只能使用內建語言。
 

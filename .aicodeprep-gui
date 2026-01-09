@@ -10,7 +10,7 @@ version=1.0
 [window]
 width=1056
 height=1384
-splitter_state=AAAA/wAAAAEAAAACAAADAAAAAPwB/////wEAAAACAA==
+splitter_state=AAAA/wAAAAEAAAACAAADAAAAAQAB/////wEAAAACAA==
 
 [format]
 output_format=xml
@@ -20,6 +20,4 @@ preview_window_enabled=true
 syntax_highlight_enabled=true
 
 [files]
-aicodeprep_gui\data\flow.json
-aicodeprep_gui\data\flow_best_of_3.json
-aicodeprep_gui\data\flow_studio_help.html
+AUTH_SOLUTIONS_ANALYSIS.md

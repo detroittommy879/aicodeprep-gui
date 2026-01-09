@@ -5,25 +5,27 @@
     <name>FileSelectionGUI</name>
     <message>
         <location filename="../../gui/main_window.py" line="110"/>
-        <location filename="../../gui/main_window.py" line="1574"/>
+        <location filename="../../gui/main_window.py" line="1580"/>
         <source>Show</source>
         <translation>Показать</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="111"/>
-        <location filename="../../gui/main_window.py" line="1576"/>
+        <location filename="../../gui/main_window.py" line="1084"/>
+        <location filename="../../gui/main_window.py" line="1582"/>
+        <location filename="../../gui/main_window.py" line="1675"/>
         <source>Quit</source>
         <translation>Выйти</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="171"/>
-        <location filename="../../gui/main_window.py" line="1570"/>
+        <location filename="../../gui/main_window.py" line="1576"/>
         <source>aicodeprep-gui - File Selection</source>
         <translation>aicodeprep-gui - Выбор файлов</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="252"/>
-        <location filename="../../gui/main_window.py" line="1580"/>
+        <location filename="../../gui/main_window.py" line="1586"/>
         <source>&amp;File</source>
         <translation>&amp;Файл</translation>
     </message>
@@ -44,55 +46,55 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="291"/>
-        <location filename="../../gui/main_window.py" line="1582"/>
+        <location filename="../../gui/main_window.py" line="1588"/>
         <source>&amp;Quit</source>
         <translation>&amp;Выйти</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="295"/>
-        <location filename="../../gui/main_window.py" line="1585"/>
+        <location filename="../../gui/main_window.py" line="1591"/>
         <source>&amp;Edit</source>
         <translation>&amp;Правка</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="296"/>
-        <location filename="../../gui/main_window.py" line="1587"/>
+        <location filename="../../gui/main_window.py" line="1593"/>
         <source>&amp;New Preset…</source>
         <translation>&amp;Новый пресет…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="301"/>
-        <location filename="../../gui/main_window.py" line="1590"/>
+        <location filename="../../gui/main_window.py" line="1596"/>
         <source>Open Settings Folder…</source>
         <translation>Открыть папку настроек…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="309"/>
-        <location filename="../../gui/main_window.py" line="1592"/>
+        <location filename="../../gui/main_window.py" line="1598"/>
         <source>&amp;Language / Idioma / 语言…</source>
         <translation>&amp;Язык / Language…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="314"/>
-        <location filename="../../gui/main_window.py" line="1595"/>
+        <location filename="../../gui/main_window.py" line="1601"/>
         <source>&amp;Flow</source>
         <translation>&amp;Поток</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="317"/>
-        <location filename="../../gui/main_window.py" line="1597"/>
+        <location filename="../../gui/main_window.py" line="1603"/>
         <source>Import Flow JSON…</source>
         <translation>Импортировать Поток JSON…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="322"/>
-        <location filename="../../gui/main_window.py" line="1599"/>
+        <location filename="../../gui/main_window.py" line="1605"/>
         <source>Export Flow JSON…</source>
         <translation>Экспортировать Поток JSON…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="327"/>
-        <location filename="../../gui/main_window.py" line="1601"/>
+        <location filename="../../gui/main_window.py" line="1607"/>
         <source>Reset to Default Flow</source>
         <translation>Сбросить к потоку по умолчанию</translation>
     </message>
@@ -118,74 +120,74 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="407"/>
-        <location filename="../../gui/main_window.py" line="1604"/>
+        <location filename="../../gui/main_window.py" line="1610"/>
         <source>&amp;Help</source>
         <translation>&amp;Справка</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="409"/>
-        <location filename="../../gui/main_window.py" line="1606"/>
+        <location filename="../../gui/main_window.py" line="1612"/>
         <source>Help / Links and Guides</source>
         <translation>Справка / Ссылки и руководства</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="414"/>
-        <location filename="../../gui/main_window.py" line="1608"/>
+        <location filename="../../gui/main_window.py" line="1614"/>
         <source>&amp;About</source>
         <translation>&amp;О программе</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="419"/>
-        <location filename="../../gui/main_window.py" line="1610"/>
+        <location filename="../../gui/main_window.py" line="1616"/>
         <source>Send Ideas, bugs, thoughts!</source>
         <translation>Отправить идеи, баги, мысли!</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="425"/>
-        <location filename="../../gui/main_window.py" line="1612"/>
+        <location filename="../../gui/main_window.py" line="1618"/>
         <source>Activate Pro…</source>
         <translation>Активировать Pro…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="431"/>
-        <location filename="../../gui/main_window.py" line="1615"/>
+        <location filename="../../gui/main_window.py" line="1621"/>
         <source>&amp;Debug</source>
         <translation>&amp;Отладка</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="432"/>
-        <location filename="../../gui/main_window.py" line="1617"/>
+        <location filename="../../gui/main_window.py" line="1623"/>
         <source>Take Screenshot</source>
         <translation>Сделать скриншот</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="437"/>
-        <location filename="../../gui/main_window.py" line="1619"/>
+        <location filename="../../gui/main_window.py" line="1625"/>
         <source>Current Language Info</source>
         <translation>Информация о текущем языке</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="442"/>
-        <location filename="../../gui/main_window.py" line="1621"/>
+        <location filename="../../gui/main_window.py" line="1627"/>
         <source>Accessibility Check</source>
         <translation>Проверка доступности</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="458"/>
-        <location filename="../../gui/main_window.py" line="1625"/>
+        <location filename="../../gui/main_window.py" line="1631"/>
         <source>&amp;Output format:</source>
         <translation>&amp;Формат вывода:</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="461"/>
-        <location filename="../../gui/main_window.py" line="1627"/>
+        <location filename="../../gui/main_window.py" line="1633"/>
         <source>Dark mode</source>
         <translation>Темный режим</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="465"/>
-        <location filename="../../gui/main_window.py" line="1634"/>
-        <location filename="../../gui/main_window.py" line="1636"/>
+        <location filename="../../gui/main_window.py" line="1640"/>
+        <location filename="../../gui/main_window.py" line="1642"/>
         <source>Estimated tokens: 0</source>
         <translation>Примерное количество токенов: 0</translation>
     </message>
@@ -196,13 +198,13 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="519"/>
-        <location filename="../../gui/main_window.py" line="1645"/>
+        <location filename="../../gui/main_window.py" line="1651"/>
         <source>Show Logo Banner</source>
         <translation>Показать баннер логотипа</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="525"/>
-        <location filename="../../gui/main_window.py" line="1639"/>
+        <location filename="../../gui/main_window.py" line="1645"/>
         <source>The selected files will be added to the LLM Context Block along with your prompt, written to fullcode.txt and copied to clipboard, ready to paste into your AI assistant.</source>
         <translation>Выбранные файлы будут добавлены в блок контекста LLM вместе с вашей инструкцией, записаны в fullcode.txt и скопированы в буфер обмена, готовы к вставке в ваш ИИ-помощник.</translation>
     </message>
@@ -223,37 +225,37 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="578"/>
-        <location filename="../../gui/main_window.py" line="1648"/>
+        <location filename="../../gui/main_window.py" line="1654"/>
         <source>Presets help you save more time and will be saved for later use</source>
         <translation>Пресеты помогают сэкономить время и будут сохранены для использования в будущем</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="628"/>
-        <location filename="../../gui/main_window.py" line="1651"/>
+        <location filename="../../gui/main_window.py" line="1657"/>
         <source>Optional prompt/question for LLM (will be appended to the end):</source>
         <translation>Необязательный промпт/вопрос для LLM (будет добавлен в конец):</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="634"/>
-        <location filename="../../gui/main_window.py" line="1654"/>
+        <location filename="../../gui/main_window.py" line="1660"/>
         <source>Type your question or prompt here (optional)…</source>
         <translation>Введите ваш вопрос или промпт здесь (необязательно)…</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="637"/>
-        <location filename="../../gui/main_window.py" line="1656"/>
+        <location filename="../../gui/main_window.py" line="1662"/>
         <source>Clear</source>
         <translation>Очистить</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="638"/>
-        <location filename="../../gui/main_window.py" line="1657"/>
+        <location filename="../../gui/main_window.py" line="1663"/>
         <source>Clear the prompt box</source>
         <translation>Очистить поле промпта</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="712"/>
-        <location filename="../../gui/main_window.py" line="1675"/>
+        <location filename="../../gui/main_window.py" line="1682"/>
         <source>Remember checked files for this folder, window size information</source>
         <translation>Запомнить отмеченные файлы для этой папки, информацию о размере окна</translation>
     </message>
@@ -269,25 +271,25 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="730"/>
-        <location filename="../../gui/main_window.py" line="1673"/>
+        <location filename="../../gui/main_window.py" line="1679"/>
         <source>Options</source>
         <translation>Опции</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="765"/>
-        <location filename="../../gui/main_window.py" line="1677"/>
+        <location filename="../../gui/main_window.py" line="1684"/>
         <source>Font Size:</source>
         <translation>Размер шрифта:</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="795"/>
-        <location filename="../../gui/main_window.py" line="1681"/>
+        <location filename="../../gui/main_window.py" line="1688"/>
         <source>Pro Features</source>
         <translation>Pro функции</translation>
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="818"/>
-        <location filename="../../gui/main_window.py" line="1683"/>
+        <location filename="../../gui/main_window.py" line="1690"/>
         <source>Enable file preview window</source>
         <translation>Включить окно предпросмотра файла</translation>
     </message>
@@ -298,7 +300,7 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="836"/>
-        <location filename="../../gui/main_window.py" line="1685"/>
+        <location filename="../../gui/main_window.py" line="1693"/>
         <source>Enable syntax highlighting in preview</source>
         <translation>Включить подсветку синтаксиса в предпросмотре</translation>
     </message>
@@ -309,7 +311,7 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="853"/>
-        <location filename="../../gui/main_window.py" line="1687"/>
+        <location filename="../../gui/main_window.py" line="1696"/>
         <source>Enable Flow Studio (currently testing alpha version - might be glitchy!)</source>
         <translation>Включить Flow Studio (сейчас тестируется альфа-версия - может работать нестабильно!)</translation>
     </message>
@@ -320,7 +322,7 @@
     </message>
     <message>
         <location filename="../../gui/main_window.py" line="901"/>
-        <location filename="../../gui/main_window.py" line="1689"/>
+        <location filename="../../gui/main_window.py" line="1698"/>
         <source>Font Weight:</source>
         <translation>Начертание шрифта:</translation>
     </message>
@@ -330,72 +332,66 @@
         <translation>Настроить начертание шрифта для окна предпросмотра</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="927"/>
-        <location filename="../../gui/main_window.py" line="1691"/>
+        <location filename="../../gui/main_window.py" line="928"/>
+        <location filename="../../gui/main_window.py" line="1701"/>
         <source>Add prompt/question to top - Adding to top AND bottom often gets better responses from AI models</source>
         <translation>Добавить промпт/вопрос сверху - Добавление И сверху, И снизу часто дает лучшие ответы от AI моделей</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="929"/>
-        <location filename="../../gui/main_window.py" line="1693"/>
+        <location filename="../../gui/main_window.py" line="931"/>
+        <location filename="../../gui/main_window.py" line="1704"/>
         <source>Add prompt/question to bottom - Adding to top AND bottom often gets better responses from AI models</source>
         <translation>Добавить промпт/вопрос снизу - Добавление И сверху, И снизу часто дает лучшие ответы от AI моделей</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="936"/>
-        <location filename="../../gui/main_window.py" line="948"/>
+        <location filename="../../gui/main_window.py" line="938"/>
+        <location filename="../../gui/main_window.py" line="950"/>
         <source>Research shows that asking your question before AND after the code context, can improve quality and ability of the AI responses! Highly recommended to check both of these</source>
         <translation>Исследования показывают, что вопрос до И после контекста кода может улучшить качество и способность ответов ИИ! Настоятельно рекомендуется отметить оба варианта</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1024"/>
-        <location filename="../../gui/main_window.py" line="1695"/>
+        <location filename="../../gui/main_window.py" line="1026"/>
+        <location filename="../../gui/main_window.py" line="1707"/>
         <source>Enable Context Compression Modes - does not work yet, still experimenting!</source>
         <translation>Включить режимы сжатия контекста - пока не работает, экспериментируем!</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1028"/>
-        <location filename="../../gui/main_window.py" line="1038"/>
+        <location filename="../../gui/main_window.py" line="1030"/>
+        <location filename="../../gui/main_window.py" line="1040"/>
         <source>Show a second column that marks skeleton level per item</source>
         <translation>Показать второй столбец, отмечающий уровень скелета для каждого элемента</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1042"/>
+        <location filename="../../gui/main_window.py" line="1044"/>
         <source>Pro Feature</source>
         <translation>Pro функция</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1061"/>
-        <location filename="../../gui/main_window.py" line="1661"/>
+        <location filename="../../gui/main_window.py" line="1064"/>
+        <location filename="../../gui/main_window.py" line="1667"/>
         <source>GENERATE CONTEXT!</source>
         <translation>СОЗДАТЬ КОНТЕКСТ!</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1065"/>
-        <location filename="../../gui/main_window.py" line="1663"/>
+        <location filename="../../gui/main_window.py" line="1068"/>
+        <location filename="../../gui/main_window.py" line="1669"/>
         <source>Select All</source>
         <translation>Выбрать все</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1069"/>
-        <location filename="../../gui/main_window.py" line="1665"/>
+        <location filename="../../gui/main_window.py" line="1073"/>
+        <location filename="../../gui/main_window.py" line="1671"/>
         <source>Deselect All</source>
         <translation>Снять выделение</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1074"/>
-        <location filename="../../gui/main_window.py" line="1667"/>
+        <location filename="../../gui/main_window.py" line="1079"/>
+        <location filename="../../gui/main_window.py" line="1673"/>
         <source>Load preferences</source>
         <translation>Загрузить настройки</translation>
     </message>
     <message>
-        <location filename="../../gui/main_window.py" line="1078"/>
-        <location filename="../../gui/main_window.py" line="1669"/>
-        <source>Scan</source>
-        <translation>Сканировать</translation>
-    </message>
-    <message>
-        <location filename="../../gui/main_window.py" line="1643"/>
+        <location filename="../../gui/main_window.py" line="1649"/>
         <source>Hide Logo Banner</source>
         <translation>Скрыть баннер логотипа</translation>
     </message>
@@ -463,7 +459,7 @@
 Download functionality is not yet implemented. Only bundled languages can be used for now.
 
 Would you like to continue anyway?</source>
-        <translation>Язык '{name}' необходимо загрузить.
+        <translation>Язык &apos;{name}&apos; необходимо загрузить.
 
 Функциональность загрузки еще не реализована. Пока можно использовать только встроенные языки.
 
