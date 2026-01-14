@@ -482,7 +482,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         self.token_label = QtWidgets.QLabel(self.tr("Estimated tokens: 0"))
         main_layout.addWidget(self.token_label)
-        main_layout.addSpacing(8)
+        main_layout.addSpacing(2)
 
         # Use PNG logo with transparent background
         import os
@@ -537,7 +537,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.logo_toggle_btn.setToolTip(self.tr("Show Logo Banner"))
 
         main_layout.addWidget(banner_wrap)
-        main_layout.addSpacing(8)
+        main_layout.addSpacing(1)
 
         self.info_label = QtWidgets.QLabel(self.tr(
             "The selected files will be added to the LLM Context Block along with your prompt, written to fullcode.txt and copied to clipboard, ready to paste into your AI assistant."))
@@ -546,8 +546,13 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.info_label.setAlignment(QtCore.Qt.AlignHCenter)
         main_layout.addWidget(self.info_label)
 
-        self.text_label = QtWidgets.QLabel("")
+        self.text_label = QtWidgets.QLabel(self.tr(
+            "Works great with: Claude (Sonnet, Opus), GPT-5.2, Gemini, DeepSeek, Qwen, GLM 4.7, Kimi K2, Minimax M2.1 and any other models"))
         self.text_label.setWordWrap(True)
+        self.text_label.setAlignment(QtCore.Qt.AlignHCenter)
+        self.text_label.setStyleSheet(
+            f"font-size: {11 + self.font_size_multiplier}px; color: {'#888888' if self.is_dark_mode else '#666666'}; font-style: italic;"
+        )
         main_layout.addWidget(self.text_label)
 
         # Initialize some required attributes
@@ -781,22 +786,24 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         font_size_layout = QtWidgets.QHBoxLayout()
         font_size_layout.setContentsMargins(0, 0, 0, 0)
         self.font_size_label = QtWidgets.QLabel(self.tr("Font Size:"))
-        self.font_size_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
+        self.font_size_combo = QtWidgets.QComboBox()
         # Allow adjustment from -5 to +10
-        self.font_size_slider.setRange(-5, 10)
-        self.font_size_slider.setValue(self.font_size_multiplier)
-        self.font_size_slider.setTickPosition(QtWidgets.QSlider.TicksBelow)
-        self.font_size_slider.setTickInterval(1)
-        self.font_size_value_label = QtWidgets.QLabel(
-            str(self.font_size_multiplier))
+        for i in range(-5, 11):
+            self.font_size_combo.addItem(str(i), i)
+        # Set current value
+        current_index = self.font_size_combo.findData(
+            self.font_size_multiplier)
+        if current_index >= 0:
+            self.font_size_combo.setCurrentIndex(current_index)
+        self.font_size_combo.setMaximumWidth(80)
 
         font_size_layout.addWidget(self.font_size_label)
-        font_size_layout.addWidget(self.font_size_slider)
-        font_size_layout.addWidget(self.font_size_value_label)
+        font_size_layout.addWidget(self.font_size_combo)
+        font_size_layout.addStretch()
         options_content_layout.addLayout(font_size_layout)
 
-        # Connect slider to update function
-        self.font_size_slider.valueChanged.connect(self.update_font_size)
+        # Connect combo box to update function
+        self.font_size_combo.currentIndexChanged.connect(self.update_font_size)
 
         group_box_main_layout = QtWidgets.QVBoxLayout(options_group_box)
         group_box_main_layout.setContentsMargins(10, 5, 10, 10)
@@ -1151,10 +1158,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         except Exception as e:
             logging.error(f"Failed to show v1.2.0 update notice: {e}")
 
-    def update_font_size(self, value):
+    def update_font_size(self, index):
         """Update all fonts in the application based on the font size multiplier."""
+        value = self.font_size_combo.itemData(index)
         self.font_size_multiplier = value
-        self.font_size_value_label.setText(str(value))
 
         # Update the default font
         default_font_size = 9
@@ -1264,18 +1271,25 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     f"font-size: {10 + self.font_size_multiplier}px; color: {'#fb9b0b' if self.is_dark_mode else '#444444'};"
                 )
 
-        # Update text label if it has text
+        # Update text label (check if it contains status message or default AI models text)
         if self.text_label.text():
-            # Get current color from existing style
-            current_color = "#00c3ff" if self.is_dark_mode else "#0078d4"
-            if "ff9900" in self.text_label.styleSheet():
-                current_color = "#ff9900" if self.is_dark_mode else "#cc7a00"
-            elif "ff666" in self.text_label.styleSheet():
-                current_color = "#ff6666" if self.is_dark_mode else "#cc0000"
+            # Check if it's a status message (contains "Copied" or "error") or the default AI models text
+            if "Copied" in self.text_label.text() or "error" in self.text_label.text() or "Warning" in self.text_label.text():
+                # Get current color from existing style for status messages
+                current_color = "#00c3ff" if self.is_dark_mode else "#0078d4"
+                if "ff9900" in self.text_label.styleSheet():
+                    current_color = "#ff9900" if self.is_dark_mode else "#cc7a00"
+                elif "ff666" in self.text_label.styleSheet():
+                    current_color = "#ff6666" if self.is_dark_mode else "#cc0000"
 
-            self.text_label.setStyleSheet(
-                f"font-size: {20 + self.font_size_multiplier}px; color: {current_color}; font-weight: bold;"
-            )
+                self.text_label.setStyleSheet(
+                    f"font-size: {20 + self.font_size_multiplier}px; color: {current_color}; font-weight: bold;"
+                )
+            else:
+                # It's the default AI models text - keep the subtle styling
+                self.text_label.setStyleSheet(
+                    f"font-size: {11 + self.font_size_multiplier}px; color: {'#888888' if self.is_dark_mode else '#666666'}; font-style: italic;"
+                )
 
         # Update info label
         if hasattr(self, 'info_label') and self.info_label:
@@ -1359,9 +1373,12 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             if settings.contains("font_size_multiplier"):
                 saved_value = settings.value("font_size_multiplier", type=int)
                 self.font_size_multiplier = saved_value
-                self.font_size_slider.setValue(saved_value)
+                # Set the combo box to the saved value
+                current_index = self.font_size_combo.findData(saved_value)
+                if current_index >= 0:
+                    self.font_size_combo.setCurrentIndex(current_index)
                 # Update fonts with the loaded value
-                self.update_font_size(saved_value)
+                self.update_font_size(current_index)
         except Exception as e:
             logging.error(f"Failed to load font size setting: {e}")
 
