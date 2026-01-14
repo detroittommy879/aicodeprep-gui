@@ -75,7 +75,7 @@ Use this when you want the _actual GUI_ to run, switch language, capture screens
   - `.ts` and `.qm` live in `aicodeprep_gui/i18n/translations/`
   - 20 bundled languages, all have .ts/.qm files
   - **COMPLETE translations:** Japanese (ja), Hindi (hi) - use these as templates
-  - **PARTIAL translations:** es, fr, de, zh_CN, pt, it, ru, ko, ar, tr, pl, nl, sv, da, fi, no, zh_TW
+  - **PARTIAL translations:** es, fr, de, zh_CN, pt, it, ru, ko, ar, tr, pl, nl, sv, da, fi, no, zh_TW --i think we finished these
 
 - When you edit `.ts` files manually, you must recompile `.qm`:
 
