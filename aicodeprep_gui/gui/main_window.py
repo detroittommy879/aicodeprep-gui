@@ -38,10 +38,52 @@ from .utils.helpers import WindowHelpers
 
 
 class LogoTreeWidget(QtWidgets.QTreeWidget):
-    """Custom QTreeWidget (logo now drawn on main window central widget instead)."""
+    """Custom QTreeWidget with keyboard navigation support."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
+
+    def keyPressEvent(self, event):
+        """Handle keyboard navigation for tree widget."""
+        key = event.key()
+        
+        # Space key: toggle checkbox of current item(s)
+        if key == QtCore.Qt.Key.Key_Space:
+            selected_items = self.selectedItems()
+            if selected_items:
+                # Toggle all selected items
+                for item in selected_items:
+                    if item.flags() & QtCore.Qt.ItemIsUserCheckable and item.flags() & QtCore.Qt.ItemIsEnabled:
+                        current_state = item.checkState(0)
+                        new_state = QtCore.Qt.Unchecked if current_state == QtCore.Qt.Checked else QtCore.Qt.Checked
+                        item.setCheckState(0, new_state)
+                event.accept()
+                return
+        
+        # Arrow keys: handled by default QTreeWidget behavior for Up/Down
+        # Right arrow: expand folders, Left arrow: collapse folders
+        elif key == QtCore.Qt.Key.Key_Right:
+            current_item = self.currentItem()
+            if current_item:
+                abs_path = current_item.data(0, QtCore.Qt.UserRole)
+                if abs_path and os.path.isdir(abs_path):
+                    if not current_item.isExpanded():
+                        self.expandItem(current_item)
+                        event.accept()
+                        return
+        
+        elif key == QtCore.Qt.Key.Key_Left:
+            current_item = self.currentItem()
+            if current_item:
+                abs_path = current_item.data(0, QtCore.Qt.UserRole)
+                if abs_path and os.path.isdir(abs_path):
+                    if current_item.isExpanded():
+                        self.collapseItem(current_item)
+                        event.accept()
+                        return
+        
+        # Let parent handle all other keys (Up/Down navigation, etc.)
+        super().keyPressEvent(event)
 
 
 class LogoCentralWidget(QtWidgets.QWidget):
@@ -1148,6 +1190,16 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         # Ensure initial Level column state (off by default)
         # Column remains hidden until the Pro toggle is enabled.
+
+        # --- Setup keyboard navigation: focus management and tab order ---
+        # Set initial focus to file tree for keyboard navigation
+        self.tree_widget.setFocus()
+        
+        # Configure logical tab order: tree → prompt → generate button → other buttons
+        self.setTabOrder(self.tree_widget, self.prompt_textbox)
+        self.setTabOrder(self.prompt_textbox, self.process_button)
+        self.setTabOrder(self.process_button, self.select_all_button)
+        self.setTabOrder(self.select_all_button, self.deselect_all_button)
 
         # --- Show v1.2.0 update notice on first run of this version ---
         try:
