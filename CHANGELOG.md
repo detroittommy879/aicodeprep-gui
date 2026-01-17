@@ -2,6 +2,8 @@
 
 ---
 
+## [1.3.0] - Added intl languages (including Chinese, Arabic, Hindi) added accessibility & keyboard shortcuts
+
 ## [1.2.3] - 2025-10-15
 
 Added Flow Studio
@@ -74,7 +76,6 @@ Added Flow Studio
 #### ✨ New Features
 
 - **Enhanced Global Preset System:**
-
   - Global preset management using QSettings for cross-project persistence
   - Default presets: "Debug", "Security check", "Best Practices", "Please review for"
   - New ✚ and 🗑️ buttons for easy preset creation and deletion
@@ -82,7 +83,6 @@ Added Flow Studio
   - Improved preset UI with scrollable horizontal layout
 
 - **Improved File Tree Experience:**
-
   - Enhanced tree building logic with better performance
   - Smart auto-expansion of folders containing checked files
   - Better visual feedback with hover effects on checkboxes
@@ -90,7 +90,6 @@ Added Flow Studio
   - Improved checkbox styling using permanent image files
 
 - **Enhanced Output Options:**
-
   - Choose between XML `<code>` tags or Markdown `###` formatting via dropdown
   - Optional prompt/question text appended to output
   - Intelligent file processing with better error handling
@@ -105,14 +104,12 @@ Added Flow Studio
 #### 🔄 Changed
 
 - **Performance Improvements:**
-
   - Optimized file tree population with lazy loading
   - Faster initial startup times
   - Reduced memory usage during file scanning
   - More responsive UI interactions
 
 - **User Experience Enhancements:**
-
   - Improved menu bar with File and Edit menus
   - Better error messages and descriptive logging
   - Enhanced drag-and-drop folder support
@@ -127,7 +124,6 @@ Added Flow Studio
 #### 🛠️ Technical Improvements
 
 - **Code Architecture:**
-
   - Comprehensive refactoring for maintainability
   - Better separation of concerns between modules
   - Improved error handling throughout the application
@@ -147,14 +143,12 @@ Added Flow Studio
 #### ✨ New Features
 
 - **TOML Configuration System:**
-
   - Replaced custom Markdown configuration with industry-standard TOML format
   - New `default_config.toml` file with comprehensive configuration options
   - Support for user-specific configuration via `aicodeprep-gui.toml` in working directory
   - `.gitignore`-style pattern matching using `pathspec` library for robust file exclusion
 
 - **Lazy Loading File Tree:**
-
   - Implemented lazy loading for excluded directories (like `node_modules`, `venv`, etc.)
   - Extremely fast initial startup by avoiding scanning large excluded directories
   - On-demand expansion of any directory for fine-grained file selection
@@ -168,13 +162,11 @@ Added Flow Studio
 #### 🔄 Changed
 
 - **Dependencies:**
-
   - Added `toml` for configuration parsing
   - Added `pathspec` for `.gitignore`-style pattern matching
   - Removed `tiktoken` dependency (no longer used)
 
 - **Configuration Format:**
-
   - Migrated from `config.md` to `default_config.toml`
   - More structured and maintainable configuration system
   - Better support for complex exclusion patterns
@@ -187,7 +179,6 @@ Added Flow Studio
 #### 🛠️ Technical Improvements
 
 - **Code Architecture:**
-
   - Complete rewrite of `smart_logic.py` for better performance and maintainability
   - Improved GUI tree building logic with lazy loading support
   - Enhanced checkbox styling using Unicode characters instead of temporary files
@@ -205,23 +196,19 @@ Added Flow Studio
 ### ✨ New Features
 
 - **Output Format Selection:**
-
   - Added dropdown menu to select output format for `fullcode.txt`
   - Options: "XML <code>" (uses `<code>...</code>` tags) or "Markdown ###" (uses `### File Path` ... `### END File Path`)
 
 - **Prompt Presets:**
-
   - Users can create, save, and quickly apply preset text snippets to the LLM prompt box
   - Added "Edit" → "New Preset..." menu option and "✚" button for easy creation
   - Presets saved per-folder in `.aicodeprep` preferences file
 
 - **Enhanced Configuration System:**
-
   - Default configuration loaded from `aicodeprep_gui_c/data/config.md`
   - User-specific overrides via `aicodeprep_config.md` file in working directory
 
 - **UI & UX Improvements:**
-
   - Native QMainWindow menu bar ("File" → "Quit", "Edit" → "New Preset...")
   - Binary files automatically detected, greyed out, and made unselectable
   - Improved checkbox styling with programmatically generated checkmark images
@@ -236,7 +223,6 @@ Added Flow Studio
 ### 🔄 Changed
 
 - **Token Counting:**
-
   - Simplified character-based approximation (`total_chars / 4`)
   - Removed direct runtime dependency on `tiktoken` for GUI token counting
 
