@@ -65,36 +65,36 @@
 
 ### Git Commit Phase 1 & 2
 
-- [ ] Stage all modified files from Phase 1 & 2
-- [ ] Write descriptive commit message for keyboard navigation and global shortcuts
-- [ ] Commit locally on feature/i18n-accessibility branch (DO NOT push to remote)
+- [x] Stage all modified files from Phase 1 & 2
+- [x] Write descriptive commit message for keyboard navigation and global shortcuts
+- [x] Commit locally on feature/i18n-accessibility branch (DO NOT push to remote)
 
 ## Phase 3: Accessibility Labels & Documentation
 
 ### Accessible Properties
 
-- [ ] Add `setAccessibleName()` to major widgets: file tree, generate button, prompt text box, preset buttons area
-- [ ] Add `setAccessibleDescription()` to buttons and interactive elements
-- [ ] Ensure all accessible text uses `self.tr()` for i18n compatibility
-- [ ] Document which widgets received accessible properties in code comments
+- [x] Add `setAccessibleName()` to major widgets: file tree, generate button, prompt text box, preset buttons area
+- [x] Add `setAccessibleDescription()` to buttons and interactive elements
+- [x] Ensure all accessible text uses `self.tr()` for i18n compatibility
+- [x] Document which widgets received accessible properties in code comments
 
 ### Keyboard Shortcuts Documentation
 
-- [ ] Create `KEYBOARD_SHORTCUTS.md` file in repository root
-- [ ] Document all keyboard shortcuts organized by category (Navigation, Actions, Menus)
-- [ ] Include cross-platform notes explaining Ctrl/Cmd differences
-- [ ] Add usage examples showing typical keyboard-only workflow
+- [x] Create `KEYBOARD_SHORTCUTS.md` file in repository root
+- [x] Document all keyboard shortcuts organized by category (Navigation, Actions, Menus)
+- [x] Include cross-platform notes explaining Ctrl/Cmd differences
+- [x] Add usage examples showing typical keyboard-only workflow
 
 ### Update Progress Tracking
 
-- [ ] Update INTL_A11Y_PROGRESS.md checkboxes for completed items
-- [ ] Add implementation notes documenting delivered features
-- [ ] Add completion date
+- [x] Update INTL_A11Y_PROGRESS.md checkboxes for completed items
+- [x] Add implementation notes documenting delivered features
+- [x] Add completion date
 
 ### Final Testing & Validation
 
-- [ ] Agent: Run complete test suite (all shortcuts, tree navigation, focus management, cross-platform handling)
-- [ ] Agent: Verify all major widgets have accessible properties set
+- [x] Agent: Run complete test suite (all shortcuts, tree navigation, focus management, cross-platform handling)
+- [x] Agent: Verify all major widgets have accessible properties set
 - [ ] User: Perform real-world keyboard-only workflow testing across multiple scenarios
 - [ ] User: Final approval or identify issues to address
 

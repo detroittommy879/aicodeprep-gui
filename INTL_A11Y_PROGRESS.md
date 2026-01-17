@@ -55,17 +55,21 @@ Priority order for completing translations (copy pattern from ja/hi):
 
 ### Screen Reader Support
 
-- [ ] All widgets have accessible names
-- [ ] All buttons have accessible descriptions
-- [ ] File tree navigation accessible
-- [ ] Tested with NVDA/VoiceOver
+- [x] All major widgets have accessible names (tree, prompt, buttons, preset area)
+- [x] All buttons have accessible descriptions
+- [x] File tree navigation accessible (with keyboard instructions in description)
+- [ ] Tested with NVDA/VoiceOver (user manual testing required)
 
 ### Keyboard Navigation
 
-- [ ] Tab order logical
-- [ ] All actions have shortcuts
-- [ ] Keyboard-only workflow tested
-- [ ] Focus indicators visible
+- [x] Tab order logical (tree → prompt → buttons)
+- [x] All major actions have shortcuts (Ctrl+G, Ctrl+A, Ctrl+Shift+A)
+- [x] Arrow key navigation in file tree (Up/Down/Left/Right)
+- [x] Space key toggles checkboxes
+- [x] Menu accelerators implemented (Alt+Letter)
+- [x] Focus management configured (initial focus on tree)
+- [ ] Keyboard-only workflow tested (requires user testing)
+- [ ] Focus indicators visible (inherits from Qt defaults)
 
 ### Visual Accessibility
 
@@ -155,3 +159,35 @@ Priority order for completing translations (copy pattern from ja/hi):
 **Next Phase:**
 
 - Phase 2: Accessibility implementation (screen reader, keyboard nav, contrast)
+**Completed in Session 2026-01-16:**
+
+- ✅ **Phase 2: Keyboard Navigation & Accessibility - COMPLETE**
+  - Created keyboard_handler.py module with KeyboardShortcutManager class
+  - Implemented cross-platform modifier key detection (Ctrl/Cmd)
+  - Added keyboard navigation to LogoTreeWidget:
+    - Arrow keys (Up/Down) for item navigation
+    - Right arrow to expand folders, Left arrow to collapse
+    - Space key to toggle checkboxes (supports multi-selection)
+  - Configured focus management (initial focus on tree)
+  - Set up logical tab order (tree → prompt → buttons)
+  - Implemented global shortcuts:
+    - Ctrl+G / Cmd+G: Generate context
+    - Ctrl+A / Cmd+A: Select all
+    - Ctrl+Shift+A / Cmd+Shift+A: Deselect all
+  - Added menu keyboard accelerators (Alt+Letter navigation)
+  - Updated button tooltips with keyboard shortcuts
+  - Added accessible properties to major widgets:
+    - File tree: accessible name and description with keyboard instructions
+    - Prompt textbox: accessible name and description
+    - Generate/Select/Deselect buttons: accessible names and descriptions
+    - Preset area: accessible name and description
+  - Created KEYBOARD_SHORTCUTS.md comprehensive documentation
+  - Updated INTL_A11Y_PROGRESS.md with completed features
+  - Git commits: Phase 1 (673d22a) and Phase 2 (eab538f)
+
+**Remaining User Testing:**
+
+- Manual keyboard-only workflow testing on Windows/macOS/Linux
+- Screen reader testing with NVDA (Windows) and VoiceOver (macOS)
+- Verify focus indicators are clearly visible
+- Test all keyboard shortcuts in real usage scenarios

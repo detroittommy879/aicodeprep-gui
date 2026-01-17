@@ -617,6 +617,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         scroll_area.setVerticalScrollBarPolicy(
             QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         scroll_area.setFixedHeight(52)
+        scroll_area.setAccessibleName(self.tr("Prompt Presets"))
+        scroll_area.setAccessibleDescription(self.tr("Saved prompt templates that can be quickly applied"))
 
         scroll_widget = QtWidgets.QWidget()
         self.preset_strip = QtWidgets.QHBoxLayout(scroll_widget)
@@ -660,6 +662,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         # Hide level column by default
         self.tree_widget.setColumnHidden(1, True)
         self.tree_widget.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        
+        # Set accessible properties for screen readers
+        self.tree_widget.setAccessibleName(self.tr("File Browser"))
+        self.tree_widget.setAccessibleDescription(self.tr("Navigate and select files and folders to include in context. Use arrow keys to navigate, Space to toggle selection."))
 
         # Pro level column state tracking
         self.pro_level_column_enabled = False
@@ -699,6 +705,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.prompt_textbox = QtWidgets.QPlainTextEdit()
         self.prompt_textbox.setPlaceholderText(
             self.tr("Type your question or prompt here (optional)…"))
+        self.prompt_textbox.setAccessibleName(self.tr("Prompt Input"))
+        self.prompt_textbox.setAccessibleDescription(self.tr("Enter an optional prompt or question that will be appended to the generated context"))
         prompt_layout.addWidget(self.prompt_textbox)
 
         self.clear_prompt_btn = QtWidgets.QPushButton(self.tr("Clear"))
@@ -1131,15 +1139,21 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         button_layout1.addStretch()
         self.process_button = QtWidgets.QPushButton(
             self.tr("GENERATE CONTEXT!"))
+        self.process_button.setAccessibleName(self.tr("Generate Context Button"))
+        self.process_button.setAccessibleDescription(self.tr("Generate context from selected files and copy to clipboard"))
         self.process_button.clicked.connect(self.process_selected)
         button_layout1.addWidget(self.process_button)
 
         self.select_all_button = QtWidgets.QPushButton(self.tr("Select All"))
+        self.select_all_button.setAccessibleName(self.tr("Select All Button"))
+        self.select_all_button.setAccessibleDescription(self.tr("Select all non-excluded files in the tree"))
         self.select_all_button.clicked.connect(self.select_all)
         button_layout1.addWidget(self.select_all_button)
 
         self.deselect_all_button = QtWidgets.QPushButton(
             self.tr("Deselect All"))
+        self.deselect_all_button.setAccessibleName(self.tr("Deselect All Button"))
+        self.deselect_all_button.setAccessibleDescription(self.tr("Deselect all files in the tree"))
         self.deselect_all_button.clicked.connect(self.deselect_all)
         button_layout1.addWidget(self.deselect_all_button)
 
