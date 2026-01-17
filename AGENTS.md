@@ -358,24 +358,6 @@ The Flow Studio enables "Send to 5 LLMs" functionality using a visual node-based
 - **Dynamic Slots**: Configurable 1-10 candidate slots (see `BESTOFN_COMPLETE_SOLUTION.md`)
 - **Execution Engine**: Async parallel LLM orchestration
 
-### Parallel MCP Server (`parallel-MCP/parallel-llm-mcp/`)
-
-**Purpose**: Headless MCP server for multi-LLM workflows
-
-**Technology Stack:**
-
-- Python 3.8+
-- FastMCP for MCP protocol
-- Pydantic for validation
-- Pytest for testing
-
-**Key Files:**
-
-- `src/parallel_llm_mcp/server.py` - MCP server implementation
-- `src/parallel_llm_mcp/parallel.py` - Parallel LLM orchestration
-- `src/parallel_llm_mcp/client.py` - Client for MCP interactions
-- `tests/` - Test suite
-
 ## Common Commands
 
 ### Main Application
@@ -420,22 +402,6 @@ python -m build
 
 # Install with Pro features enabled
 aicp --pro
-```
-
-### Parallel MCP Server
-
-```bash
-# Install dependencies
-pip install fastmcp httpx pydantic
-
-# Run tests
-pytest
-
-# Run with linting
-pytest && black src/ tests/ && ruff check src/ tests/ && mypy src/
-
-# Run MCP server
-python -m parallel_llm_mcp
 ```
 
 ## Configuration
@@ -539,13 +505,6 @@ aicodeprep_gui/
     ├── flow.json            # Default flow template
     ├── flow_best_of_3.json  # Best-of-3 template
     └── AICodePrep.workflow  # macOS Quick Action
-
-parallel-MCP/parallel-llm-mcp/
-├── src/parallel_llm_mcp/
-│   ├── server.py            # MCP server
-│   ├── parallel.py          # LLM orchestration
-│   └── client.py            # Client
-└── tests/                   # Test suite
 ```
 
 ## Build & Distribution
@@ -569,7 +528,6 @@ Pre-built executables available via Pro package:
 ### Test Files Found
 
 - `test_*.py` files in root directory
-- `parallel-MCP/parallel-llm-mcp/tests/` for MCP server tests
 - Use `pytest` for Python tests
 
 ### Manual Testing
@@ -600,7 +558,6 @@ aicp --pro
 - `BESTOFN_COMPLETE_SOLUTION.md` - Dynamic slots implementation
 - `BESTOFN_QUICK_REFERENCE.md` - Quick reference guide
 - `BESTOFN_VISUAL_GUIDE.md` - Visual walkthrough
-- `MCP_FLOW_SERVER_PLAN.md` - Architecture for headless MCP server
 
 ### Development Notes
 
@@ -631,7 +588,6 @@ aicp --pro
 2. Use `aicp --debug` for debugging
 3. Check `.aicodeprep-gui` for user settings
 4. Modify templates in `data/flow_*.json`
-5. Run MCP server tests with `pytest`
 
 ## Dependencies
 
