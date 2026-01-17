@@ -47,7 +47,7 @@ class LogoTreeWidget(QtWidgets.QTreeWidget):
     def keyPressEvent(self, event):
         """Handle keyboard navigation for tree widget."""
         key = event.key()
-        
+
         # Space key: toggle checkbox of current item(s)
         if key == QtCore.Qt.Key.Key_Space:
             selected_items = self.selectedItems()
@@ -60,7 +60,7 @@ class LogoTreeWidget(QtWidgets.QTreeWidget):
                         item.setCheckState(0, new_state)
                 event.accept()
                 return
-        
+
         # Arrow keys: handled by default QTreeWidget behavior for Up/Down
         # Right arrow: expand folders, Left arrow: collapse folders
         elif key == QtCore.Qt.Key.Key_Right:
@@ -72,7 +72,7 @@ class LogoTreeWidget(QtWidgets.QTreeWidget):
                         self.expandItem(current_item)
                         event.accept()
                         return
-        
+
         elif key == QtCore.Qt.Key.Key_Left:
             current_item = self.currentItem()
             if current_item:
@@ -82,7 +82,7 @@ class LogoTreeWidget(QtWidgets.QTreeWidget):
                         self.collapseItem(current_item)
                         event.accept()
                         return
-        
+
         # Let parent handle all other keys (Up/Down navigation, etc.)
         super().keyPressEvent(event)
 
@@ -618,7 +618,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         scroll_area.setFixedHeight(52)
         scroll_area.setAccessibleName(self.tr("Prompt Presets"))
-        scroll_area.setAccessibleDescription(self.tr("Saved prompt templates that can be quickly applied"))
+        scroll_area.setAccessibleDescription(
+            self.tr("Saved prompt templates that can be quickly applied"))
 
         scroll_widget = QtWidgets.QWidget()
         self.preset_strip = QtWidgets.QHBoxLayout(scroll_widget)
@@ -662,10 +663,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         # Hide level column by default
         self.tree_widget.setColumnHidden(1, True)
         self.tree_widget.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        
+
         # Set accessible properties for screen readers
         self.tree_widget.setAccessibleName(self.tr("File Browser"))
-        self.tree_widget.setAccessibleDescription(self.tr("Navigate and select files and folders to include in context. Use arrow keys to navigate, Space to toggle selection."))
+        self.tree_widget.setAccessibleDescription(self.tr(
+            "Navigate and select files and folders to include in context. Use arrow keys to navigate, Space to toggle selection."))
 
         # Pro level column state tracking
         self.pro_level_column_enabled = False
@@ -706,7 +708,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.prompt_textbox.setPlaceholderText(
             self.tr("Type your question or prompt here (optional)…"))
         self.prompt_textbox.setAccessibleName(self.tr("Prompt Input"))
-        self.prompt_textbox.setAccessibleDescription(self.tr("Enter an optional prompt or question that will be appended to the generated context"))
+        self.prompt_textbox.setAccessibleDescription(self.tr(
+            "Enter an optional prompt or question that will be appended to the generated context"))
         prompt_layout.addWidget(self.prompt_textbox)
 
         self.clear_prompt_btn = QtWidgets.QPushButton(self.tr("Clear"))
@@ -1139,21 +1142,26 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         button_layout1.addStretch()
         self.process_button = QtWidgets.QPushButton(
             self.tr("GENERATE CONTEXT!"))
-        self.process_button.setAccessibleName(self.tr("Generate Context Button"))
-        self.process_button.setAccessibleDescription(self.tr("Generate context from selected files and copy to clipboard"))
+        self.process_button.setAccessibleName(
+            self.tr("Generate Context Button"))
+        self.process_button.setAccessibleDescription(
+            self.tr("Generate context from selected files and copy to clipboard"))
         self.process_button.clicked.connect(self.process_selected)
         button_layout1.addWidget(self.process_button)
 
         self.select_all_button = QtWidgets.QPushButton(self.tr("Select All"))
         self.select_all_button.setAccessibleName(self.tr("Select All Button"))
-        self.select_all_button.setAccessibleDescription(self.tr("Select all non-excluded files in the tree"))
+        self.select_all_button.setAccessibleDescription(
+            self.tr("Select all non-excluded files in the tree"))
         self.select_all_button.clicked.connect(self.select_all)
         button_layout1.addWidget(self.select_all_button)
 
         self.deselect_all_button = QtWidgets.QPushButton(
             self.tr("Deselect All"))
-        self.deselect_all_button.setAccessibleName(self.tr("Deselect All Button"))
-        self.deselect_all_button.setAccessibleDescription(self.tr("Deselect all files in the tree"))
+        self.deselect_all_button.setAccessibleName(
+            self.tr("Deselect All Button"))
+        self.deselect_all_button.setAccessibleDescription(
+            self.tr("Deselect all files in the tree"))
         self.deselect_all_button.clicked.connect(self.deselect_all)
         button_layout1.addWidget(self.deselect_all_button)
 
@@ -1210,7 +1218,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         # --- Setup keyboard navigation: focus management and tab order ---
         # Set initial focus to file tree for keyboard navigation
         self.tree_widget.setFocus()
-        
+
         # Configure logical tab order: tree → prompt → generate button → other buttons
         self.setTabOrder(self.tree_widget, self.prompt_textbox)
         self.setTabOrder(self.prompt_textbox, self.process_button)
@@ -1219,19 +1227,26 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         # --- Setup global keyboard shortcuts ---
         # Create application-wide shortcuts that work regardless of focus
-        self.keyboard_manager.create_shortcut('generate', self.process_selected)
+        self.keyboard_manager.create_shortcut(
+            'generate', self.process_selected)
         self.keyboard_manager.create_shortcut('select_all', self.select_all)
-        self.keyboard_manager.create_shortcut('deselect_all', self.deselect_all)
-        
+        self.keyboard_manager.create_shortcut(
+            'deselect_all', self.deselect_all)
+
         # Update button tooltips to show keyboard shortcuts
         generate_shortcut = self.keyboard_manager.get_shortcut_text('generate')
-        self.process_button.setToolTip(self.tr(f"Generate context and copy to clipboard ({generate_shortcut})"))
-        
-        select_all_shortcut = self.keyboard_manager.get_shortcut_text('select_all')
-        self.select_all_button.setToolTip(self.tr(f"Select all files ({select_all_shortcut})"))
-        
-        deselect_all_shortcut = self.keyboard_manager.get_shortcut_text('deselect_all')
-        self.deselect_all_button.setToolTip(self.tr(f"Deselect all files ({deselect_all_shortcut})"))
+        self.process_button.setToolTip(
+            self.tr(f"Generate context and copy to clipboard ({generate_shortcut})"))
+
+        select_all_shortcut = self.keyboard_manager.get_shortcut_text(
+            'select_all')
+        self.select_all_button.setToolTip(
+            self.tr(f"Select all files ({select_all_shortcut})"))
+
+        deselect_all_shortcut = self.keyboard_manager.get_shortcut_text(
+            'deselect_all')
+        self.deselect_all_button.setToolTip(
+            self.tr(f"Deselect all files ({deselect_all_shortcut})"))
 
         # --- Show v1.2.0 update notice on first run of this version ---
         try:

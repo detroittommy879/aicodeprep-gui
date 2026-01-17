@@ -6,25 +6,25 @@ This document provides a comprehensive guide to all keyboard shortcuts and navig
 
 These shortcuts work throughout the application, regardless of which element has focus:
 
-| Action | Windows/Linux | macOS | Description |
-|--------|---------------|-------|-------------|
-| **Generate Context** | `Ctrl+G` | `Cmd+G` | Generate context from selected files and copy to clipboard |
-| **Select All** | `Ctrl+A` | `Cmd+A` | Select all non-excluded files in the tree |
-| **Deselect All** | `Ctrl+Shift+A` | `Cmd+Shift+A` | Deselect all files in the tree |
-| **Quit** | `Ctrl+Q` | `Cmd+Q` | Quit the application |
+| Action               | Windows/Linux  | macOS         | Description                                                |
+| -------------------- | -------------- | ------------- | ---------------------------------------------------------- |
+| **Generate Context** | `Ctrl+G`       | `Cmd+G`       | Generate context from selected files and copy to clipboard |
+| **Select All**       | `Ctrl+A`       | `Cmd+A`       | Select all non-excluded files in the tree                  |
+| **Deselect All**     | `Ctrl+Shift+A` | `Cmd+Shift+A` | Deselect all files in the tree                             |
+| **Quit**             | `Ctrl+Q`       | `Cmd+Q`       | Quit the application                                       |
 
 ## File Tree Navigation
 
 Navigate and interact with the file/folder tree using these keys:
 
-| Key | Action |
-|-----|--------|
-| **↑ Up Arrow** | Move selection to previous item |
-| **↓ Down Arrow** | Move selection to next item |
-| **→ Right Arrow** | Expand selected folder (if collapsed) |
-| **← Left Arrow** | Collapse selected folder (if expanded) |
-| **Space** | Toggle checkbox for selected item(s) |
-| **Tab** | Move focus to next UI section (tree → prompt → buttons) |
+| Key               | Action                                                  |
+| ----------------- | ------------------------------------------------------- |
+| **↑ Up Arrow**    | Move selection to previous item                         |
+| **↓ Down Arrow**  | Move selection to next item                             |
+| **→ Right Arrow** | Expand selected folder (if collapsed)                   |
+| **← Left Arrow**  | Collapse selected folder (if expanded)                  |
+| **Space**         | Toggle checkbox for selected item(s)                    |
+| **Tab**           | Move focus to next UI section (tree → prompt → buttons) |
 
 ### Multi-Selection
 
@@ -37,12 +37,12 @@ The tree widget supports selecting multiple items:
 
 Access menus using keyboard accelerators with **Alt** (or equivalent on your platform):
 
-| Menu | Shortcut | Common Items |
-|------|----------|--------------|
-| **File** | `Alt+F` | Quit (`Q`) |
-| **Edit** | `Alt+E` | New Preset (`N`), Open Settings Folder (`O`), Language (`L`) |
-| **Flow** | `Alt+F` | Import (`I`), Export (`E`), Reset (`R`) |
-| **Help** | `Alt+H` | Help/Links (`H`), About (`A`), Send Ideas (`S`) |
+| Menu     | Shortcut | Common Items                                                 |
+| -------- | -------- | ------------------------------------------------------------ |
+| **File** | `Alt+F`  | Quit (`Q`)                                                   |
+| **Edit** | `Alt+E`  | New Preset (`N`), Open Settings Folder (`O`), Language (`L`) |
+| **Flow** | `Alt+F`  | Import (`I`), Export (`E`), Reset (`R`)                      |
+| **Help** | `Alt+H`  | Help/Links (`H`), About (`A`), Send Ideas (`S`)              |
 
 ### Menu Item Accelerators
 

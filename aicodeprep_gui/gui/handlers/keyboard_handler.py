@@ -22,7 +22,7 @@ class KeyboardShortcutManager:
     def __init__(self, parent=None):
         """
         Initialize the shortcut manager.
-        
+
         Args:
             parent: Parent QWidget (typically main window)
         """
@@ -33,8 +33,9 @@ class KeyboardShortcutManager:
     def _init_default_shortcuts(self):
         """Initialize hardcoded default keyboard shortcuts."""
         # Determine modifier key based on platform
-        mod = QtCore.Qt.KeyboardModifier.MetaModifier if is_macos() else QtCore.Qt.KeyboardModifier.ControlModifier
-        
+        mod = QtCore.Qt.KeyboardModifier.MetaModifier if is_macos(
+        ) else QtCore.Qt.KeyboardModifier.ControlModifier
+
         # Core action shortcuts
         self.shortcuts = {
             'generate': {
@@ -78,20 +79,20 @@ class KeyboardShortcutManager:
     def get_shortcut_text(self, action_name):
         """
         Get human-readable shortcut text for display in UI.
-        
+
         Args:
             action_name: Name of the action (e.g., 'generate', 'select_all')
-            
+
         Returns:
             String representation of the shortcut (e.g., "Ctrl+G" or "Cmd+G")
         """
         if action_name not in self.shortcuts:
             return ""
-        
+
         shortcut_data = self.shortcuts[action_name]
         key = shortcut_data['key']
         modifiers = shortcut_data['modifiers']
-        
+
         # Build modifier string
         mod_parts = []
         if modifiers & QtCore.Qt.KeyboardModifier.ControlModifier:
@@ -102,10 +103,10 @@ class KeyboardShortcutManager:
             mod_parts.append("Shift")
         if modifiers & QtCore.Qt.KeyboardModifier.AltModifier:
             mod_parts.append("Alt")
-        
+
         # Get key name
         key_name = QtGui.QKeySequence(key).toString()
-        
+
         # Combine
         if mod_parts:
             return "+".join(mod_parts) + "+" + key_name
@@ -114,64 +115,64 @@ class KeyboardShortcutManager:
     def create_shortcut(self, action_name, callback, context=QtCore.Qt.ShortcutContext.ApplicationShortcut):
         """
         Create a QShortcut for the specified action.
-        
+
         Args:
             action_name: Name of the action (must exist in shortcuts dict)
             callback: Function to call when shortcut is triggered
             context: Shortcut context (default: ApplicationShortcut)
-            
+
         Returns:
             QShortcut object or None if action_name not found
         """
         if action_name not in self.shortcuts:
             return None
-        
+
         shortcut_data = self.shortcuts[action_name]
         key_sequence = QtGui.QKeySequence(
             shortcut_data['modifiers'] | shortcut_data['key']
         )
-        
+
         shortcut = QtGui.QShortcut(key_sequence, self.parent)
         shortcut.setContext(context)
         shortcut.activated.connect(callback)
-        
+
         return shortcut
 
     def create_action(self, action_name, callback, parent=None):
         """
         Create a QAction with keyboard shortcut for menu/toolbar use.
-        
+
         Args:
             action_name: Name of the action (must exist in shortcuts dict)
             callback: Function to call when action is triggered
             parent: Parent widget for the action
-            
+
         Returns:
             QAction object or None if action_name not found
         """
         if action_name not in self.shortcuts:
             return None
-        
+
         shortcut_data = self.shortcuts[action_name]
         description = shortcut_data['description']
-        
+
         if parent is None:
             parent = self.parent
-        
+
         action = QtGui.QAction(description, parent)
-        
+
         key_sequence = QtGui.QKeySequence(
             shortcut_data['modifiers'] | shortcut_data['key']
         )
         action.setShortcut(key_sequence)
         action.triggered.connect(callback)
-        
+
         return action
 
     def get_modifier_key(self):
         """
         Get the primary modifier key for the current platform.
-        
+
         Returns:
             QtCore.Qt.KeyboardModifier (Cmd on macOS, Ctrl elsewhere)
         """

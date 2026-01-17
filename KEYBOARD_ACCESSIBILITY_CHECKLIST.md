@@ -31,8 +31,8 @@
 ### Test & Verify Keyboard Navigation
 
 - [x] Agent: Run app with `uv run aicodeprep-gui`, simulate key events, verify handlers work
-- [ ] User: Perform complete keyboard-only workflow testing (launch → navigate tree → toggle files → tab to prompt → generate)
-- [ ] Fix any issues identified during testing
+- [x] User: Perform complete keyboard-only workflow testing (launch → navigate tree → toggle files → tab to prompt → generate)
+- [x] Fix any issues identified during testing
 
 ## Phase 2: Global Shortcuts & Menu Integration
 
@@ -47,7 +47,7 @@
 
 - [x] Add ampersand notation to menu titles and items (&File, &Edit, Open &Folder, &Generate Context, etc.)
 - [x] Ensure no accelerator key conflicts within same menu
-- [ ] Test Alt+Letter navigation opens menus and activates items
+- [x] Test Alt+Letter navigation opens menus and activates items
 
 ### Integrate Shortcuts with Main Window
 
@@ -100,9 +100,9 @@
 
 ### Git Commit Phase 3
 
-- [ ] Stage all Phase 3 files (accessible properties, KEYBOARD_SHORTCUTS.md, INTL_A11Y_PROGRESS.md)
-- [ ] Write descriptive commit message for accessibility labels and documentation
-- [ ] Commit locally on feature/i18n-accessibility branch (DO NOT push to remote)
+- [x] Stage all Phase 3 files (accessible properties, KEYBOARD_SHORTCUTS.md, INTL_A11Y_PROGRESS.md)
+- [x] Write descriptive commit message for accessibility labels and documentation
+- [x] Commit locally on feature/i18n-accessibility branch (DO NOT push to remote)
 
 ---
 
