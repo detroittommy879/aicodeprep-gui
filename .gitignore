@@ -16,8 +16,13 @@ wheels/
 .installed.cfg
 *.egg
 __pycache__/
+screenshots/
 
 zzz_gumroad.md
+
+.aicodeprep-gui
+
+uv.lock
 
 loca/
 
