@@ -38,27 +38,27 @@
 
 ### Global Application Shortcuts
 
-- [ ] Create QAction or QShortcut objects in main_window for each global shortcut
-- [ ] Use KeyboardShortcutManager for platform-appropriate key combinations (Ctrl vs Cmd)
-- [ ] Connect shortcuts to existing methods (generate button, select all, deselect all)
-- [ ] Verify shortcuts work regardless of focus location in UI
+- [x] Create QAction or QShortcut objects in main_window for each global shortcut
+- [x] Use KeyboardShortcutManager for platform-appropriate key combinations (Ctrl vs Cmd)
+- [x] Connect shortcuts to existing methods (generate button, select all, deselect all)
+- [x] Verify shortcuts work regardless of focus location in UI
 
 ### Menu Keyboard Accelerators
 
-- [ ] Add ampersand notation to menu titles and items (&File, &Edit, Open &Folder, &Generate Context, etc.)
-- [ ] Ensure no accelerator key conflicts within same menu
+- [x] Add ampersand notation to menu titles and items (&File, &Edit, Open &Folder, &Generate Context, etc.)
+- [x] Ensure no accelerator key conflicts within same menu
 - [ ] Test Alt+Letter navigation opens menus and activates items
 
 ### Integrate Shortcuts with Main Window
 
-- [ ] Initialize KeyboardShortcutManager in main window startup
-- [ ] Update button tooltips to show keyboard shortcuts using `self.tr()` (e.g., `self.tr("Generate Context (Ctrl+G)")`)
-- [ ] Add shortcut hints to relevant UI elements (status bar, help menu)
-- [ ] Verify all shortcuts display correctly and work after integration
+- [x] Initialize KeyboardShortcutManager in main window startup
+- [x] Update button tooltips to show keyboard shortcuts using `self.tr()` (e.g., `self.tr("Generate Context (Ctrl+G)")`)
+- [x] Add shortcut hints to relevant UI elements (status bar, help menu)
+- [x] Verify all shortcuts display correctly and work after integration
 
 ### Test Cross-Platform Shortcut Behavior
 
-- [ ] Agent: Verify KeyboardShortcutManager correctly detects platform and returns appropriate key combinations
+- [x] Agent: Verify KeyboardShortcutManager correctly detects platform and returns appropriate key combinations
 - [ ] User: Test all shortcuts on Windows (Ctrl+G, Ctrl+A, Ctrl+Shift+A, Alt+Letter menus)
 - [ ] User: Test all shortcuts on macOS (Cmd+G, Cmd+A, Cmd+Shift+A)
 - [ ] User: Test on Linux if available (or document assumption that Ctrl behaves like Windows)

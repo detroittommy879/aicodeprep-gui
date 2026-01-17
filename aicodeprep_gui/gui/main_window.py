@@ -33,6 +33,7 @@ from .settings.presets import global_preset_manager
 from .settings.preferences import PreferencesManager
 from .settings.ui_settings import UISettingsManager
 from .handlers.update_events import UpdateCheckWorker
+from .handlers.keyboard_handler import KeyboardShortcutManager
 from .utils.metrics import MetricsManager
 from .utils.helpers import WindowHelpers
 
@@ -147,6 +148,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.preset_manager = PresetButtonManager(self)
         self.metrics_manager = MetricsManager(self)
         self.window_helpers = WindowHelpers(self)
+        self.keyboard_manager = KeyboardShortcutManager(self)
         self.flow_dock = None
 
         self.initial_show_event = True
@@ -358,7 +360,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.edit_menu.addAction(self.new_preset_act)
 
         self.open_settings_folder_act = QtGui.QAction(
-            self.tr("Open Settings Folder…"), self)
+            self.tr("&Open Settings Folder…"), self)
         self.open_settings_folder_act.triggered.connect(
             self.open_settings_folder)
         self.edit_menu.addAction(self.open_settings_folder_act)
@@ -374,17 +376,17 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.flow_menu = mb.addMenu(self.tr("&Flow"))
 
         self.flow_import_act = QtGui.QAction(
-            self.tr("Import Flow JSON…"), self)
+            self.tr("&Import Flow JSON…"), self)
         self.flow_import_act.triggered.connect(self._flow_import_action)
         self.flow_menu.addAction(self.flow_import_act)
 
         self.flow_export_act = QtGui.QAction(
-            self.tr("Export Flow JSON…"), self)
+            self.tr("&Export Flow JSON…"), self)
         self.flow_export_act.triggered.connect(self._flow_export_action)
         self.flow_menu.addAction(self.flow_export_act)
 
         self.flow_reset_act = QtGui.QAction(
-            self.tr("Reset to Default Flow"), self)
+            self.tr("&Reset to Default Flow"), self)
         self.flow_reset_act.triggered.connect(self._flow_reset_action)
         self.flow_menu.addAction(self.flow_reset_act)
 
@@ -466,7 +468,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         self.help_menu = mb.addMenu(self.tr("&Help"))
         self.links_act = QtGui.QAction(
-            self.tr("Help / Links and Guides"), self)
+            self.tr("&Help / Links and Guides"), self)
         self.links_act.triggered.connect(self.open_links_dialog)
         self.help_menu.addAction(self.links_act)
         self.help_menu.addSeparator()
@@ -476,13 +478,13 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.help_menu.addAction(self.about_act)
 
         self.complain_act = QtGui.QAction(
-            self.tr("Send Ideas, bugs, thoughts!"), self)
+            self.tr("&Send Ideas, bugs, thoughts!"), self)
         self.complain_act.triggered.connect(self.open_complain_dialog)
         self.help_menu.addAction(self.complain_act)
 
         if not self._is_pro_enabled():
             self.activate_pro_act = QtGui.QAction(
-                self.tr("Activate Pro…"), self)
+                self.tr("Activate &Pro…"), self)
             self.activate_pro_act.triggered.connect(
                 self.dialog_manager.open_activate_pro_dialog)
             self.help_menu.addAction(self.activate_pro_act)
@@ -1200,6 +1202,22 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.setTabOrder(self.prompt_textbox, self.process_button)
         self.setTabOrder(self.process_button, self.select_all_button)
         self.setTabOrder(self.select_all_button, self.deselect_all_button)
+
+        # --- Setup global keyboard shortcuts ---
+        # Create application-wide shortcuts that work regardless of focus
+        self.keyboard_manager.create_shortcut('generate', self.process_selected)
+        self.keyboard_manager.create_shortcut('select_all', self.select_all)
+        self.keyboard_manager.create_shortcut('deselect_all', self.deselect_all)
+        
+        # Update button tooltips to show keyboard shortcuts
+        generate_shortcut = self.keyboard_manager.get_shortcut_text('generate')
+        self.process_button.setToolTip(self.tr(f"Generate context and copy to clipboard ({generate_shortcut})"))
+        
+        select_all_shortcut = self.keyboard_manager.get_shortcut_text('select_all')
+        self.select_all_button.setToolTip(self.tr(f"Select all files ({select_all_shortcut})"))
+        
+        deselect_all_shortcut = self.keyboard_manager.get_shortcut_text('deselect_all')
+        self.deselect_all_button.setToolTip(self.tr(f"Deselect all files ({deselect_all_shortcut})"))
 
         # --- Show v1.2.0 update notice on first run of this version ---
         try:

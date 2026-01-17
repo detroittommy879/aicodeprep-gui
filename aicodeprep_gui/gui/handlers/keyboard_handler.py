@@ -5,7 +5,7 @@ Provides centralized keyboard shortcut handling with cross-platform support.
 
 import sys
 import platform
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui
 
 
 def is_macos():
@@ -131,7 +131,7 @@ class KeyboardShortcutManager:
             shortcut_data['modifiers'] | shortcut_data['key']
         )
         
-        shortcut = QtWidgets.QShortcut(key_sequence, self.parent)
+        shortcut = QtGui.QShortcut(key_sequence, self.parent)
         shortcut.setContext(context)
         shortcut.activated.connect(callback)
         
