@@ -1,4 +1,4 @@
-[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/detroittommy879-aicodeprep-gui-badge.png)](https://mseep.ai/app/detroittommy879-aicodeprep-gui)
+![logo](aicodeprep_gui/images/aicp-transparent-min.png)
 
 # aicodeprep-gui: The fast context maker
 
@@ -22,13 +22,12 @@ This tool allows you to go from project ---> web chat very fast. It is designed 
 The core philosophy is simple: **You know your code best.** Instead of letting a "dumber" IDE agent guess which files are relevant, `aicodeprep-gui` puts you in control with a smart, intuitive UI.
 
 1.  **Launch Instantly**:
-
     - **Right-click** any folder in your File Explorer, Finder, or Nautilus and select "Open with aicodeprep-gui".
     - _or_ Pop open a terminal and type `aicp` and press Enter.
 
 2.  **Review Smart Selection**: The app opens instantly, having already pre-selected the most relevant files based on a `.gitignore`-style configuration.
 
-3.  **Fine-tune & Prompt**: Quickly check/uncheck files, use powerful **prompt presets** (like one for [Cline](https://github.com/stitionai/cline)), or write a custom question.
+3.  **Fine-tune & Prompt**: Quickly check/uncheck files, use powerful **prompt presets** (like one for [Cline](https://github.com/cline/cline)), or write a custom question.
 
 4.  **Generate & Iterate**: Click "GENERATE CONTEXT!". The entire code bundle and your prompt are instantly copied to your clipboard, ready to be pasted into ChatGPT, Gemini, Claude, Openrouter, or any other AI model. The app remains open, allowing you to make adjustments and regenerate as needed.
 
@@ -38,7 +37,9 @@ The core philosophy is simple: **You know your code best.** Instead of letting a
 
 ## ✨ Key Features
 
-- 🚀 **Seamless OS Integration**: The only tool of its kind with optional, native right-click context menu integration for **Windows File Explorer**, **macOS Finder**, and **Linux Nautilus**.
+- 🌍 **Internationalization (i18n)**: Full multi-language support including Chinese (Simplified), Arabic, Hindi, and more. Built-in language selector for easy switching.
+- ⌨️ **Full Keyboard Navigation**: Complete keyboard control with arrow keys (↑/↓), Space to check/uncheck, Tab to cycle elements, Enter to activate, and Escape to close dialogs.
+- 🚀 **Seamless OS Integration**: Optional, native right-click context menu integration for **Windows File Explorer**, **macOS Finder**, and **Linux Nautilus**.
 - 💻 **Truly Cross-Platform**: A single, consistent experience on Windows, macOS (Intel & Apple Silicon), and major Linux distributions.
 - ⌨️ **Simple & Fast Commands**: Launch from anywhere by simply typing `aicp` in your terminal. Pass a directory (`aicp ./my-project`) or run it in the current folder.
 - 🧠 **Intelligent File Scanning**:
@@ -58,6 +59,22 @@ The core philosophy is simple: **You know your code best.** Instead of letting a
   - This is **not another IDE plugin**. It's a standalone utility that enhances your workflow with _any_ tool.
   - Perfect for preparing context for agent-based IDEs like **Cursor** or **Windsurf**, or for direct use in web-based chatbots.
   - This will help fix really hard bugs when none of those agents can figure out because they do not manage context very well.
+
+### 🌍 Internationalization & Accessibility
+
+|         Language Selector          |     Hindi (हिन्दी)     |    Chinese (简体中文)    |
+| :--------------------------------: | :--------------------: | :----------------------: |
+| ![Language Selector](scrs/len.png) | ![Hindi](scrs/lhi.png) | ![Chinese](scrs/lcn.png) |
+
+**Keyboard Shortcuts:**
+
+- **↑ / ↓**: Navigate file tree
+- **Space**: Check/uncheck files
+- **Tab**: Cycle between UI elements
+- **Enter**: Activate focused button
+- **Escape**: Close dialogs
+
+---
 
 ## Pro Features
 

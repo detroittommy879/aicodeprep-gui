@@ -2,9 +2,51 @@
 
 ---
 
-## [1.3.1] - Fixed bug with ~/.aicodeprep file and same folder name issue
+## [1.3.1] - 2026-01-30
 
-## [1.3.0] - Added intl languages (including Chinese, Arabic, Hindi) added accessibility & keyboard shortcuts
+### 🐛 Fixed
+
+- **Config File Bug**: Fixed an issue with the `~/.aicodeprep` file handling that could cause conflicts when working with folders that have the same name
+
+---
+
+## [1.3.0] - 2026-01-30
+
+### 🎨 New Branding
+
+- **Refreshed Logo**: Updated application logo with a cleaner, more modern design
+- **New Favicon/Taskbar Icon**: Added crisp new favicon and taskbar icon for better visual identity across all platforms
+
+### 🌍 Internationalization (i18n)
+
+- **Multi-Language Support**: Added full support for multiple languages including:
+  - 🇨🇳 Chinese (Simplified)
+  - 🇸🇦 Arabic
+  - 🇮🇳 Hindi
+  - And more languages available through the new language selector
+- **Language Selector**: Added a UI language selector in the application settings for easy switching between supported languages
+- **Complete Translation Coverage**: All UI elements, menus, tooltips, and messages are now translatable
+
+### ⌨️ Keyboard Accessibility & Navigation
+
+- **Full Keyboard Control**: Complete keyboard navigation support throughout the entire application:
+  - **↑ / ↓ Arrow Keys**: Navigate up and down through the file tree
+  - **Spacebar**: Check or uncheck the currently selected file/folder
+  - **Tab**: Cycle between buttons and UI elements
+  - **Enter/Return**: Activate the focused button
+  - **Escape**: Close dialogs or cancel current operation
+- **Focus Indicators**: Clear visual focus indicators show which element is currently selected
+- **Screen Reader Compatible**: Improved accessibility for users relying on assistive technologies
+
+### ♿ Accessibility Improvements
+
+- **Keyboard Shortcuts Documentation**: Added comprehensive keyboard shortcut reference
+
+### 🛠️ Technical Improvements
+
+- **i18n Framework**: Implemented robust internationalization framework using Qt's translation system
+- **Translation Management**: New scripts for generating, compiling, and managing translation files
+- **Automated Testing**: Added tests for i18n functionality to ensure translation quality
 
 ## [1.2.3] - 2025-10-15
 
