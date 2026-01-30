@@ -2,6 +2,8 @@
 
 ---
 
+## [1.3.1] - Fixed bug with ~/.aicodeprep file and same folder name issue
+
 ## [1.3.0] - Added intl languages (including Chinese, Arabic, Hindi) added accessibility & keyboard shortcuts
 
 ## [1.2.3] - 2025-10-15

@@ -5,15 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 # CRITICAL: Changed name to match your new package name
 name = "aicodeprep-gui" 
-version = "1.3.0"
+version = "1.3.2"
 description = "A smart GUI to select, filter, and concatenate code files for large language model (LLM) and AI analysis."
 readme = "README.md"
 authors = [{ name = "Tom Brothers", email = "tom@wuu73.org" }]
-license = { file = "SUSTAINABLE-LICENSE" }
+license = "LicenseRef-SUSTAINABLE"
+license-files = ["SUSTAINABLE-LICENSE"]
 classifiers = [
-    # NOTE: You might want to change "Proprietary" to an open-source license like "MIT"
-    # if you intend for others to use and contribute.
-    "License :: Other/Proprietary License",  # Changed from OSI approved
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
@@ -48,7 +46,14 @@ Homepage = "https://github.com/detroittommy879/aicodeprep-gui"
 
 [tool.setuptools.packages.find]
 # This is correct and will find your `aicodeprep_gui` package
-where = ["."] 
+where = ["."]
+exclude = [
+    "parallel-MCP*",
+    "old_random_scripts*",
+    "pyside6_docs*",
+    "scripts*",
+    "tests*",
+] 
 
 [tool.setuptools.package-data]
 # CRITICAL: Changed key to match your actual package name `aicodeprep_gui`

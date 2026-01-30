@@ -17,6 +17,13 @@ def get_config_dir() -> Path:
     """Get the user configuration directory (~/.aicodeprep-gui/)."""
     home = Path.home()
     config_dir = home / ".aicodeprep-gui"
+
+    # Handle case where .aicodeprep-gui exists as a file instead of directory
+    if config_dir.exists() and not config_dir.is_dir():
+        logger.warning(
+            f"Removing file {config_dir} to create config directory")
+        config_dir.unlink()
+
     config_dir.mkdir(exist_ok=True)
     return config_dir
 
