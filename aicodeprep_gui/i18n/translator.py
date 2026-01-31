@@ -28,6 +28,7 @@ class TranslationManager:
         'pt': 'Português (Portuguese)',
         'it': 'Italiano (Italian)',
         'ru': 'Русский (Russian)',
+        'uk': 'Українська (Ukrainian)',
         'zh_CN': '简体中文 (Chinese Simplified)',
         'zh_TW': '繁體中文 (Chinese Traditional)',
         'ja': '日本語 (Japanese)',
