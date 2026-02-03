@@ -53,7 +53,7 @@ def test_node_labels():
         name = ctx_node.name()
         print(f"   Default: {name}")
         assert "Context Output" in name, f"Expected 'Context Output' in name, got: {name}"
-        assert "fullcode.txt" in name, f"Expected 'fullcode.txt' in name, got: {name}"
+        assert "block.md" in name, f"Expected 'block.md' in name, got: {name}"
 
         # Change path
         ctx_node.set_property("path", "my_output.txt")

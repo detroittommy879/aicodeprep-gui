@@ -21,6 +21,7 @@ screenshots/
 zzz_gumroad.md
 
 .aicodeprep-gui
+.aicp/
 
 uv.lock
 
@@ -31,6 +32,7 @@ loca/
 aicodeprep_gui/gui_old.py
 
 fullcode.txt
+context_block.md
 
 requirements.txt
 

@@ -9,7 +9,8 @@ import logging
 from pathlib import Path
 from typing import List, Tuple, Optional
 from PySide6 import QtCore, QtWidgets
-from PySide6.QtCore import QTranslator, QLocale, QSettings
+from PySide6.QtCore import QTranslator, QLocale
+from aicodeprep_gui.user_settings import get_setting, set_setting
 
 
 logger = logging.getLogger(__name__)
@@ -54,7 +55,6 @@ class TranslationManager:
         self.app = app
         self.current_translator = None
         self.current_language = 'en'  # Default to English
-        self.settings = QSettings("aicodeprep-gui", "Language")
 
         # Get translations directory
         self.translations_dir = self._get_translations_directory()
@@ -82,12 +82,7 @@ class TranslationManager:
         Returns:
             Path to user translations directory
         """
-        # Platform-specific user data directory
-        if os.name == 'nt':  # Windows
-            user_dir = Path(os.environ.get('APPDATA', '~')) / \
-                'aicodeprep-gui' / 'translations'
-        else:  # macOS/Linux
-            user_dir = Path.home() / '.aicodeprep-gui' / 'translations'
+        user_dir = Path.home() / '.aicodeprep-gui' / 'translations'
 
         user_dir.mkdir(parents=True, exist_ok=True)
         return user_dir
@@ -190,7 +185,7 @@ class TranslationManager:
             # For English, no translation file needed (it's the source language)
             if lang_code == 'en':
                 self.current_language = 'en'
-                self.settings.setValue("current_language", 'en')
+                set_setting("language", "current_language", 'en')
                 logger.info("Set language to English (source)")
                 # Trigger live UI updates for already-open windows
                 self.retranslate_ui()
@@ -207,7 +202,7 @@ class TranslationManager:
             if not trans_file.exists():
                 logger.warning(f"Translation file not found: {trans_file}")
                 self.current_language = 'en'
-                self.settings.setValue("current_language", 'en')
+                set_setting("language", "current_language", 'en')
                 return False
 
             # Load the translation
@@ -216,7 +211,7 @@ class TranslationManager:
             if not success:
                 logger.error(f"Failed to load translation file: {trans_file}")
                 self.current_language = 'en'
-                self.settings.setValue("current_language", 'en')
+                set_setting("language", "current_language", 'en')
                 return False
 
             # Install the translator
@@ -225,7 +220,7 @@ class TranslationManager:
             self.current_language = lang_code
 
             # Save to settings
-            self.settings.setValue("current_language", lang_code)
+            set_setting("language", "current_language", lang_code)
 
             # Set layout direction for RTL languages
             if lang_code in ['ar', 'he']:
@@ -241,7 +236,7 @@ class TranslationManager:
         except Exception as e:
             logger.error(f"Error setting language to {lang_code}: {e}")
             self.current_language = 'en'
-            self.settings.setValue("current_language", 'en')
+            set_setting("language", "current_language", 'en')
             return False
 
     def get_current_language(self) -> str:
@@ -260,7 +255,7 @@ class TranslationManager:
         Returns:
             Saved language code, or None if not set
         """
-        return self.settings.value("current_language", None)
+        return get_setting("language", "current_language", None)
 
     def retranslate_ui(self):
         """

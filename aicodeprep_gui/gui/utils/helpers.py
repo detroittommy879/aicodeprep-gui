@@ -6,6 +6,8 @@ import logging
 from datetime import datetime, date
 from PySide6 import QtWidgets, QtCore, QtGui, QtNetwork
 from importlib import resources
+from aicodeprep_gui.config import get_config_dir
+from aicodeprep_gui.user_settings import get_setting, set_setting
 
 
 class WindowHelpers:
@@ -13,7 +15,7 @@ class WindowHelpers:
         self.main_window = main_window
 
     def open_settings_folder(self):
-        folder_path = os.getcwd()
+        folder_path = str(get_config_dir())
         if sys.platform.startswith("win"):
             os.startfile(folder_path)
         elif sys.platform.startswith("darwin"):
@@ -44,15 +46,14 @@ class WindowHelpers:
 
     def closeEvent(self, event):
         try:
-            settings = QtCore.QSettings("aicodeprep-gui", "UserIdentity")
-            has_voted = settings.value(
-                "has_voted_on_features_v2", False, type=bool)
+            has_voted = get_setting(
+                "user_identity", "has_voted_on_features_v2", False)
             if getattr(self.main_window, "app_open_count", 0) >= 5 and not has_voted:
                 from aicodeprep_gui.gui.components.dialogs import VoteDialog
                 dlg = VoteDialog(self.main_window.user_uuid,
                                  self.main_window.network_manager, parent=self.main_window)
                 dlg.exec()
-                settings.setValue("has_voted_on_features_v2", True)
+                set_setting("user_identity", "has_voted_on_features_v2", True)
         except Exception as e:
             logging.error(f"Error showing VoteDialog: {e}")
 

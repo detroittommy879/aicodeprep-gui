@@ -1,23 +1,23 @@
 """Premium plugin loader."""
 import os
 import sys
-from PySide6 import QtCore
+from aicodeprep_gui.user_settings import get_section
 
 
 def _check_pro_enabled():
     """Check if pro mode is enabled via license key validation."""
     # Check global settings for license key and pro status
     try:
-        settings = QtCore.QSettings("aicodeprep-gui", "ProLicense")
-        pro_enabled = settings.value("pro_enabled", False, type=bool)
+        data = get_section("pro_license")
+        pro_enabled = bool(data.get("pro_enabled", False))
         if not pro_enabled:
             return False
-        license_key = settings.value("license_key", "")
-        license_verified = settings.value("license_verified", False, type=bool)
+        license_key = data.get("license_key", "")
+        license_verified = bool(data.get("license_verified", False))
         return bool(pro_enabled and license_key and license_verified)
     except Exception as e:
         import logging
-        logging.error(f"QSettings error in _check_pro_enabled: {e}")
+        logging.error(f"Settings error in _check_pro_enabled: {e}")
         return False
 
 

@@ -203,7 +203,7 @@ For the ultimate workflow, add the right-click menu item after installing:
 2.  **Select**: Review the automatically selected files. The app will remember your choices for the next time you open it in this folder.
 3.  **Prompt (Optional)**: Click a preset button or type a question in the prompt box.
 4.  **Generate**: Click **GENERATE CONTEXT!**.
-5.  **Paste**: Your context is now on your clipboard. Paste it into your AI of choice. It also writes it to fullcode.txt file.
+5.  **Paste**: Your context is now on your clipboard. Paste it into your AI of choice. It also writes it to .aicp/context_block.md file.
 
 ![Screenshot](scrs/v1.png)
 

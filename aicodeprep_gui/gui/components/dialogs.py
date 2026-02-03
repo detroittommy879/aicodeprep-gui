@@ -8,6 +8,7 @@ import urllib.parse
 from datetime import datetime
 from PySide6 import QtWidgets, QtCore, QtGui, QtNetwork
 from aicodeprep_gui import __version__
+from aicodeprep_gui.user_settings import get_setting, set_section, set_setting
 
 
 class VoteDialog(QtWidgets.QDialog):
@@ -124,7 +125,7 @@ class UpdateNoticeDialog(QtWidgets.QDialog):
         msg = (
             "I changed the app so that this version no longer quits as soon as you click GENERATE CONTEXT! button.<br><br>"
             "The reason it used to be that way is because that was just the way worked when it was just a terminal command.<br><br>"
-            "Now, when you generate context, it just generates it, puts it onto the clipboard and writes to fullcode.txt, and that's it. You can just keep it open if you want and keep generating or adjusting.<br><br>"
+            "Now, when you generate context, it just generates it, puts it onto the clipboard and writes to .aicp/context_block.md, and that's it. You can just keep it open if you want and keep generating or adjusting.<br><br>"
             "<b>Note:</b> The file tree might not auto-update for new files (I'll add that soon) yet so if there are new files then you might have to restart the app.<br><br>"
             "Also there is a Font Size adjustment for people who wanted to increase the Font size.<br><br>"
             "Happy Coding!"
@@ -382,8 +383,7 @@ class DialogManager:
 
         try:
             # Submit bug report
-            user_uuid = QtCore.QSettings(
-                "aicodeprep-gui", "UserIdentity").value("user_uuid", "")
+            user_uuid = get_setting("user_identity", "user_uuid", "")
             payload = {
                 "email": email,
                 "data": {
@@ -413,8 +413,7 @@ class DialogManager:
     def open_about_dialog(self):
         """Show About dialog with version, install age, and links."""
         # read install_date from user settings
-        settings = QtCore.QSettings("aicodeprep-gui", "UserIdentity")
-        install_date_str = settings.value("install_date", "")
+        install_date_str = get_setting("user_identity", "install_date", "")
         try:
             dt = datetime.fromisoformat(install_date_str)
             days_installed = (datetime.now() - dt).days
@@ -743,20 +742,14 @@ class ActivateProDialog(QtWidgets.QDialog):
                 # persist activation globally
                 try:
                     # Save license information to global settings
-                    settings = QtCore.QSettings("aicodeprep-gui", "ProLicense")
                     license_key_value = self.license_key_input.text().strip()
-                    settings.setValue("license_key", license_key_value)
-                    settings.setValue("license_verified", True)
-                    settings.setValue(
-                        "activation_date", QtCore.QDateTime.currentDateTime().toString())
-                    settings.setValue("uses_count", uses)
-
-                    # Set global QSettings value for pro_enabled
-                    try:
-                        settings.setValue("pro_enabled", True)
-                    except Exception as e:
-                        logging.error(
-                            f"Failed to set pro_enabled in QSettings: {e}")
+                    set_section("pro_license", {
+                        "license_key": license_key_value,
+                        "license_verified": True,
+                        "activation_date": QtCore.QDateTime.currentDateTime().toString(),
+                        "uses_count": uses,
+                        "pro_enabled": True,
+                    })
 
                 except Exception as e:
                     QtWidgets.QMessageBox.warning(

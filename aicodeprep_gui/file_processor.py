@@ -1,9 +1,12 @@
+from aicodeprep_gui.smart_logic import is_binary_file
 import os
 import sys
 import logging
+from pathlib import Path
 from typing import List, Literal
 
 OutputFmt = Literal['xml', 'markdown']
+
 
 def _write_one_file_xml(outfile, rel_path, abs_path, skip_binfiles=None):
     if is_binary_file(abs_path):
@@ -18,7 +21,6 @@ def _write_one_file_xml(outfile, rel_path, abs_path, skip_binfiles=None):
         outfile.write(".. contents skipped (read error) ..")
     outfile.write("\n</code>\n\n")
 
-from aicodeprep_gui.smart_logic import is_binary_file
 
 def _write_one_file_md(outfile, rel_path, abs_path, skip_binfiles=None):
     if is_binary_file(abs_path):
@@ -32,6 +34,7 @@ def _write_one_file_md(outfile, rel_path, abs_path, skip_binfiles=None):
     except Exception:
         outfile.write(".. contents skipped (read error) ..\n")
     outfile.write(f"\n### END OF FILE {rel_path} ###\n\n")
+
 
 def process_files(
     selected_files: List[str],
@@ -47,7 +50,10 @@ def process_files(
     Returns the number of files processed.
     """
     try:
-        output_path = os.path.join(os.getcwd(), output_file)
+        output_path = Path(output_file)
+        if not output_path.is_absolute():
+            output_path = Path(os.getcwd()) / output_path
+        output_path.parent.mkdir(parents=True, exist_ok=True)
         logging.info(f"Writing output to: {output_path}")
 
         skip_binfiles = []
@@ -64,7 +70,8 @@ def process_files(
                         rel_path = os.path.relpath(file_path, os.getcwd())
                     except ValueError:
                         rel_path = file_path
-                    writer(outfile, rel_path, file_path, skip_binfiles=skip_binfiles)
+                    writer(outfile, rel_path, file_path,
+                           skip_binfiles=skip_binfiles)
                     logging.info(f"Processed: {rel_path}")
                 except Exception as exc:
                     logging.error(f"Error processing {file_path}: {exc}")

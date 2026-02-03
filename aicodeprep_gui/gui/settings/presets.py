@@ -1,5 +1,6 @@
 import logging
-from PySide6 import QtCore
+
+from aicodeprep_gui.user_settings import get_section, set_section
 
 AICODEPREP_GUI_VERSION = "1.0"
 
@@ -17,21 +18,12 @@ class GlobalPresetManager:
     PRESET_SCHEMA_VERSION = 1
 
     def __init__(self):
-        try:
-            self.settings = QtCore.QSettings("aicodeprep-gui", "ButtonPresets")
-            self._ensure_default_presets()
-        except Exception as e:
-            logging.error(f"Failed to initialize global preset manager: {e}")
-            self.settings = None
+        self._ensure_default_presets()
 
     def _ensure_default_presets(self):
         try:
-            if not self.settings:
-                return
-
-            self.settings.beginGroup("internal")
-            last_version = self.settings.value("preset_version", 0, type=int)
-            self.settings.endGroup()
+            data = get_section("presets")
+            last_version = data.get("preset_version", 0)
 
             if last_version >= self.PRESET_SCHEMA_VERSION:
                 return
@@ -39,15 +31,11 @@ class GlobalPresetManager:
             logging.info(
                 f"Updating default button presets (schema version {last_version} -> {self.PRESET_SCHEMA_VERSION})")
 
-            self.settings.beginGroup("presets")
-            for label, text in DEFAULT_PRESETS:
-                self.settings.setValue(label, text)
-            self.settings.endGroup()
-
-            self.settings.beginGroup("internal")
-            self.settings.setValue(
-                "preset_version", self.PRESET_SCHEMA_VERSION)
-            self.settings.endGroup()
+            items = {label: text for label, text in DEFAULT_PRESETS}
+            set_section("presets", {
+                "preset_version": self.PRESET_SCHEMA_VERSION,
+                "items": items,
+            })
 
             logging.info("Default button presets updated successfully.")
         except Exception as e:
@@ -55,13 +43,10 @@ class GlobalPresetManager:
 
     def get_all_presets(self):
         try:
-            if not self.settings:
-                return []
             presets = []
-            self.settings.beginGroup("presets")
-            for key in self.settings.childKeys():
-                presets.append((key, self.settings.value(key, "")))
-            self.settings.endGroup()
+            data = get_section("presets")
+            for key, value in data.get("items", {}).items():
+                presets.append((key, value))
             return presets
         except Exception as e:
             logging.error(f"Failed to get presets: {e}")
@@ -69,11 +54,15 @@ class GlobalPresetManager:
 
     def add_preset(self, label, text):
         try:
-            if not self.settings or not label.strip() or not text.strip():
+            if not label.strip() or not text.strip():
                 return False
-            self.settings.beginGroup("presets")
-            self.settings.setValue(label.strip(), text.strip())
-            self.settings.endGroup()
+            data = get_section("presets")
+            items = data.get("items", {})
+            items[label.strip()] = text.strip()
+            data["items"] = items
+            if "preset_version" not in data:
+                data["preset_version"] = self.PRESET_SCHEMA_VERSION
+            set_section("presets", data)
             return True
         except Exception as e:
             logging.error(f"Failed to add preset '{label}': {e}")
@@ -81,11 +70,14 @@ class GlobalPresetManager:
 
     def delete_preset(self, label):
         try:
-            if not self.settings or not label.strip():
+            if not label.strip():
                 return False
-            self.settings.beginGroup("presets")
-            self.settings.remove(label.strip())
-            self.settings.endGroup()
+            data = get_section("presets")
+            items = data.get("items", {})
+            if label.strip() in items:
+                items.pop(label.strip(), None)
+                data["items"] = items
+                set_section("presets", data)
             return True
         except Exception as e:
             logging.error(f"Failed to delete preset '{label}': {e}")

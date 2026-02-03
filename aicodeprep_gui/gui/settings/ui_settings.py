@@ -5,6 +5,7 @@ from aicodeprep_gui.apptheme import (
     system_pref_is_dark, apply_dark_palette, apply_light_palette,
     get_checkbox_style_dark, get_checkbox_style_light
 )
+from aicodeprep_gui.user_settings import get_setting, set_section, set_setting
 
 
 class UISettingsManager:
@@ -13,21 +14,19 @@ class UISettingsManager:
 
     def _load_dark_mode_setting(self) -> bool:
         try:
-            settings = QtCore.QSettings("aicodeprep-gui", "Appearance")
-            if settings.contains("dark_mode"):
-                return settings.value("dark_mode", type=bool)
-            else:
-                dark = system_pref_is_dark()
-                settings.setValue("dark_mode", dark)
-                return dark
+            if get_setting("appearance", "dark_mode", None) is not None:
+                return bool(get_setting("appearance", "dark_mode", False))
+            dark = system_pref_is_dark()
+            set_setting("appearance", "dark_mode", dark)
+            return dark
         except Exception as e:
             logging.error(f"Failed to load dark mode setting: {e}")
             return system_pref_is_dark()
 
     def _save_dark_mode_setting(self):
         try:
-            settings = QtCore.QSettings("aicodeprep-gui", "Appearance")
-            settings.setValue("dark_mode", self.main_window.is_dark_mode)
+            set_setting("appearance", "dark_mode",
+                        self.main_window.is_dark_mode)
         except Exception as e:
             logging.error(f"Failed to save dark mode setting: {e}")
 
@@ -85,32 +84,30 @@ class UISettingsManager:
         # Removed preview window refresh logic
 
     def _load_panel_visibility(self):
-        settings = QtCore.QSettings("aicodeprep-gui", "PanelVisibility")
-        options_visible = settings.value("options_visible", True, type=bool)
-        premium_visible = settings.value("premium_visible", False, type=bool)
+        options_visible = get_setting(
+            "panel_visibility", "options_visible", True)
+        premium_visible = get_setting(
+            "panel_visibility", "premium_visible", False)
         self.main_window.options_group_box.setChecked(options_visible)
         self.main_window.premium_group_box.setChecked(premium_visible)
 
     def _save_panel_visibility(self):
-        settings = QtCore.QSettings("aicodeprep-gui", "PanelVisibility")
-        settings.setValue("options_visible",
-                          self.main_window.options_group_box.isChecked())
-        settings.setValue("premium_visible",
-                          self.main_window.premium_group_box.isChecked())
+        set_section("panel_visibility", {
+            "options_visible": self.main_window.options_group_box.isChecked(),
+            "premium_visible": self.main_window.premium_group_box.isChecked(),
+        })
 
     def _load_prompt_options(self):
-        settings = QtCore.QSettings("aicodeprep-gui", "PromptOptions")
         self.main_window.prompt_top_checkbox.setChecked(
-            settings.value("prompt_to_top", True, type=bool))
+            get_setting("prompt_options", "prompt_to_top", True))
         self.main_window.prompt_bottom_checkbox.setChecked(
-            settings.value("prompt_to_bottom", True, type=bool))
+            get_setting("prompt_options", "prompt_to_bottom", True))
 
     def _save_prompt_options(self):
-        settings = QtCore.QSettings("aicodeprep-gui", "PromptOptions")
-        settings.setValue(
-            "prompt_to_top", self.main_window.prompt_top_checkbox.isChecked())
-        settings.setValue("prompt_to_bottom",
-                          self.main_window.prompt_bottom_checkbox.isChecked())
+        set_section("prompt_options", {
+            "prompt_to_top": self.main_window.prompt_top_checkbox.isChecked(),
+            "prompt_to_bottom": self.main_window.prompt_bottom_checkbox.isChecked(),
+        })
 
     def _save_format_choice(self, idx):
         fmt = self.main_window.format_combo.currentData()
@@ -130,5 +127,12 @@ class UISettingsManager:
             )
 
         from .preferences import _write_prefs_file
-        _write_prefs_file(checked_relpaths, window_size=(size.width(), size.height(
-        )), splitter_state=splitter_state, output_format=fmt, pro_features=pro_features)
+        prefs_path = self.main_window.preferences_manager._get_write_path()
+        _write_prefs_file(
+            checked_relpaths,
+            window_size=(size.width(), size.height()),
+            splitter_state=splitter_state,
+            output_format=fmt,
+            pro_features=pro_features,
+            prefs_path=prefs_path,
+        )

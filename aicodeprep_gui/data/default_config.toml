@@ -101,6 +101,7 @@ exclude_patterns = [
     # -- IDE & Editor Directories --
     ".idea/",
     ".vscode/",
+    ".aicp/",
     ".project",
     ".classpath",
     ".settings/",

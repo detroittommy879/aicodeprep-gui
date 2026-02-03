@@ -12,7 +12,7 @@
     "0x1f6a8c4ce10": {
       "type_": "aicp.flow.ContextOutputNode",
       "icon": null,
-      "name": "Context Output: fullcode.txt",
+      "name": "Context Output: context_block.md",
       "color": [50, 200, 100, 255],
       "border_color": [74, 84, 85, 255],
       "text_color": [255, 255, 255, 180],
@@ -27,7 +27,7 @@
       "subgraph_session": {},
       "custom": {
         "version": "1.0.0",
-        "path": "fullcode.txt",
+        "path": ".aicp/context_block.md",
         "use_latest_generated": true
       }
     },

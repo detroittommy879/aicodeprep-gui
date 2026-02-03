@@ -37,7 +37,7 @@ class ContextOutputNode(BaseExecNode):
         self.add_output("text")
 
         # Properties
-        self.create_property("path", "fullcode.txt")
+        self.create_property("path", os.path.join(".aicp", "context_block.md"))
         self.create_property("use_latest_generated", True)
 
         # Add read-only text widget to display file path
@@ -70,9 +70,10 @@ class ContextOutputNode(BaseExecNode):
         try:
             from NodeGraphQt import BaseNode as NGBaseNode
             # Try to get path property value
-            path = "fullcode.txt"
+            path = os.path.join(".aicp", "context_block.md")
             try:
-                path = NGBaseNode.get_property(self, "path") or "fullcode.txt"
+                path = NGBaseNode.get_property(self, "path") or os.path.join(
+                    ".aicp", "context_block.md")
             except Exception as e:
                 logging.debug(f"Error getting path property: {e}")
             # Truncate path if too long
@@ -104,10 +105,11 @@ class ContextOutputNode(BaseExecNode):
 
     def run(self, inputs: Dict[str, Any], settings: Optional[Dict] = None) -> Dict[str, Any]:
         """
-        Read the context text from path (default: fullcode.txt).
+        Read the context text from path (default: .aicp/context_block.md).
         In future we could regenerate context on-demand.
         """
-        path = self.get_property("path") or "fullcode.txt"
+        path = self.get_property("path") or os.path.join(
+            ".aicp", "context_block.md")
         abspath = os.path.join(os.getcwd(), path)
         logging.info("[ContextOutputNode] Resolving context path %s", abspath)
         if not os.path.isfile(abspath):
@@ -118,7 +120,7 @@ class ContextOutputNode(BaseExecNode):
                                               f"Context file not found: {abspath}\n\n"
                                               "To generate a context file:\n"
                                               "1. Go to File → Generate Code Context\n"
-                                              "2. Select files and generate fullcode.txt\n"
+                                              "2. Select files and generate .aicp/context_block.md\n"
                                               "3. Then run the flow again")
             return {}
         try:
@@ -167,11 +169,12 @@ class FileWriteNode(BaseExecNode):
         self.add_input("text")
 
         # Use text widget with clear label for file path
-        self.create_property("path", "fullcode.txt",
+        self.create_property("path", os.path.join(".aicp", "context_block.md"),
                              widget_type=NodePropWidgetEnum.FILE_SAVE.value)
         # If file_save not available, fallback to regular text
         if not self.has_property("path"):
-            self.create_property("path", "fullcode.txt")
+            self.create_property("path", os.path.join(
+                ".aicp", "context_block.md"))
 
         # Add read-only text widget to display file path
         try:

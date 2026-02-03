@@ -240,7 +240,7 @@ Added Flow Studio
 ### ✨ New Features
 
 - **Output Format Selection:**
-  - Added dropdown menu to select output format for `fullcode.txt`
+  - Added dropdown menu to select output format for `.aicp/context_block.md`
   - Options: "XML <code>" (uses `<code>...</code>` tags) or "Markdown ###" (uses `### File Path` ... `### END File Path`)
 
 - **Prompt Presets:**

@@ -2,23 +2,21 @@ import os
 import sys
 import platform
 import ctypes
-from PySide6.QtCore import QSettings
 from PySide6 import QtWidgets
 from aicodeprep_gui import pro
 from aicodeprep_gui.file_processor import process_files
 from aicodeprep_gui.gui.settings.preferences import _read_prefs_file
 from aicodeprep_gui.config import get_flows_dir, copy_builtin_flows
+from aicodeprep_gui.user_settings import (
+    delete_settings_file,
+    clear_legacy_qsettings,
+    get_setting,
+)
 
 # Handle --delset command-line option to delete user settings and exit
 if "--delset" in sys.argv:
-    # Delete ButtonPresets
-    QSettings("aicodeprep-gui", "ButtonPresets").clear()
-    # Delete PromptOptions
-    QSettings("aicodeprep-gui", "PromptOptions").clear()
-    # Delete UserIdentity
-    QSettings("aicodeprep-gui", "UserIdentity").clear()
-    # Delete ProLicense
-    QSettings("aicodeprep-gui", "ProLicense").clear()
+    delete_settings_file()
+    clear_legacy_qsettings()
     print("All aicodeprep-gui user settings deleted.")
     sys.exit(0)
 import argparse
@@ -56,8 +54,8 @@ def main():
         description="aicodeprep-gui: A smart GUI for preparing code repositories for AI analysis. Select and bundle files to be copied into your clipboard.")
     parser.add_argument("-n", "--no-copy", action="store_true",
                         help="Do NOT copy output to clipboard (default: copy to clipboard)")
-    parser.add_argument("-o", "--output", default="fullcode.txt",
-                        help="Output file name (default: fullcode.txt)")
+    parser.add_argument("-o", "--output", default=os.path.join(".aicp", "context_block.md"),
+                        help="Output file name (default: .aicp/context_block.md)")
     parser.add_argument("-d", "--debug", action="store_true",
                         help="Enable debug logging")
     parser.add_argument("directory", nargs="?", default=".",
@@ -124,9 +122,8 @@ def main():
             f"Initial scan collected {len(all_files_with_flags)} items.")
 
         # 2. Load preferences to determine which files to select
-        checked_from_prefs, _, _, output_format, _ = _read_prefs_file()
-        prefs_file_exists = os.path.exists(os.path.join(os.getcwd(), '.aicodeprep-gui')) or \
-            os.path.exists(os.path.join(os.getcwd(), '.auicp'))
+        checked_from_prefs, _, _, output_format, _, prefs_path, _ = _read_prefs_file()
+        prefs_file_exists = os.path.exists(prefs_path)
 
         selected_files = []
         rel_to_abs_map = {rel: abs for abs, rel,
@@ -150,17 +147,16 @@ def main():
             sys.exit(0)
 
         # 3. Load prompt placement settings from global config
-        # We need a QApplication instance for QSettings and clipboard
+        # We need a QApplication instance for clipboard access
         try:
             app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
         except Exception as e:
             logger.error(f"Failed to create QApplication instance: {e}")
             sys.exit(1)
 
-        prompt_settings = QSettings("aicodeprep-gui", "PromptOptions")
-        prompt_to_top = prompt_settings.value("prompt_to_top", True, type=bool)
-        prompt_to_bottom = prompt_settings.value(
-            "prompt_to_bottom", True, type=bool)
+        prompt_to_top = get_setting("prompt_options", "prompt_to_top", True)
+        prompt_to_bottom = get_setting(
+            "prompt_options", "prompt_to_bottom", True)
 
         # 4. Get prompt from arguments
         prompt = args.skipui if args.skipui else ""

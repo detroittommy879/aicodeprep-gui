@@ -5,6 +5,7 @@ Provides node graph UI for building AI processing flows.
 
 from __future__ import annotations
 import logging
+from aicodeprep_gui.user_settings import get_section, set_section
 import os
 from typing import Any
 
@@ -1283,7 +1284,8 @@ class FlowStudioDock(QtWidgets.QDockWidget):
             # Set file path property if available
             try:
                 if hasattr(fwr, "set_property"):
-                    fwr.set_property("path", "fullcode.txt")
+                    fwr.set_property("path", os.path.join(
+                        ".aicp", "context_block.md"))
             except Exception:
                 pass
 
@@ -1460,8 +1462,8 @@ class FlowStudioDock(QtWidgets.QDockWidget):
                     self, "Flow Import", "Import requires Pro (graph is read-only in Free mode)."
                 )
                 return
-            settings = QtCore.QSettings("aicodeprep-gui", "FlowStudio")
-            start_dir = settings.value("last_import_dir", os.getcwd())
+            start_dir = get_section("flow_studio").get(
+                "last_import_dir", os.getcwd())
             path, _ = QtWidgets.QFileDialog.getOpenFileName(
                 self, "Import Flow JSON", start_dir, "JSON Files (*.json);;All Files (*)"
             )
@@ -1476,7 +1478,9 @@ class FlowStudioDock(QtWidgets.QDockWidget):
             if import_from_json(self.graph, path):
                 # Re-register nodes after import (clear_session clears registrations)
                 self._register_nodes()
-                settings.setValue("last_import_dir", os.path.dirname(path))
+                data = get_section("flow_studio")
+                data["last_import_dir"] = os.path.dirname(path)
+                set_section("flow_studio", data)
                 QtWidgets.QMessageBox.information(
                     self, "Flow Import", "Flow imported successfully.")
             else:
@@ -1494,8 +1498,8 @@ class FlowStudioDock(QtWidgets.QDockWidget):
                     self, "Flow Export", "Export requires Pro (graph is read-only in Free mode)."
                 )
                 return
-            settings = QtCore.QSettings("aicodeprep-gui", "FlowStudio")
-            start_dir = settings.value("last_export_dir", os.getcwd())
+            start_dir = get_section("flow_studio").get(
+                "last_export_dir", os.getcwd())
             path, _ = QtWidgets.QFileDialog.getSaveFileName(
                 self, "Export Flow JSON", os.path.join(
                     start_dir, "flow.json"), "JSON Files (*.json)"
@@ -1509,7 +1513,9 @@ class FlowStudioDock(QtWidgets.QDockWidget):
                     self, "Flow Export", f"Serializer unavailable: {e}")
                 return
             if export_to_json(self.graph, path, redact=True):
-                settings.setValue("last_export_dir", os.path.dirname(path))
+                data = get_section("flow_studio")
+                data["last_export_dir"] = os.path.dirname(path)
+                set_section("flow_studio", data)
                 QtWidgets.QMessageBox.information(
                     self, "Flow Export", "Flow exported successfully.")
             else:

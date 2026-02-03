@@ -36,6 +36,16 @@ from .handlers.update_events import UpdateCheckWorker
 from .handlers.keyboard_handler import KeyboardShortcutManager
 from .utils.metrics import MetricsManager
 from .utils.helpers import WindowHelpers
+from aicodeprep_gui.user_settings import (
+    get_setting,
+    set_setting,
+    set_section,
+    legacy_qsettings_present,
+    migrate_legacy_qsettings,
+    clear_legacy_qsettings,
+    get_settings_file,
+)
+from aicodeprep_gui.gui.settings.preferences import _write_prefs_file, _prefs_path
 
 
 class LogoTreeWidget(QtWidgets.QTreeWidget):
@@ -189,37 +199,36 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.latest_pypi_version = None
         self.network_manager = QtNetwork.QNetworkAccessManager(self)
 
-        settings = QtCore.QSettings("aicodeprep-gui", "UserIdentity")
-        self.user_uuid = settings.value("user_uuid")
+        self.user_uuid = get_setting("user_identity", "user_uuid", None)
         if not self.user_uuid:
             self.user_uuid = str(uuid.uuid4())
-            settings.setValue("user_uuid", self.user_uuid)
+            set_setting("user_identity", "user_uuid", self.user_uuid)
             logging.info(
                 f"Generated new anonymous user UUID: {self.user_uuid}")
 
-        app_open_count = settings.value("app_open_count", 0, type=int)
+        app_open_count = get_setting("user_identity", "app_open_count", 0)
         try:
             app_open_count = int(app_open_count)
         except Exception:
             app_open_count = 0
         app_open_count += 1
-        settings.setValue("app_open_count", app_open_count)
+        set_setting("user_identity", "app_open_count", app_open_count)
         self.app_open_count = app_open_count
 
         self._send_metric_event("open")
 
         # Track generate context clicks for share dialog
-        generate_count = settings.value("generate_count", 0, type=int)
+        generate_count = get_setting("user_identity", "generate_count", 0)
         try:
             generate_count = int(generate_count)
         except Exception:
             generate_count = 0
         self.generate_count = generate_count
 
-        install_date_str = settings.value("install_date")
+        install_date_str = get_setting("user_identity", "install_date", "")
         if not install_date_str:
             today_iso = date.today().isoformat()
-            settings.setValue("install_date", today_iso)
+            set_setting("user_identity", "install_date", today_iso)
             install_date_str = today_iso
         logging.debug(f"Stored install_date: {install_date_str}")
 
@@ -236,9 +245,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.app = QtWidgets.QApplication([])
         self.action = 'quit'
 
-        self.prefs_filename = ".aicodeprep-gui"
+        self.prefs_filename = os.path.join(".aicp", "preferences.ini")
         self.remember_checkbox = None
         self.preferences_manager.load_prefs_if_exists()
+        self._maybe_prompt_project_prefs_migration()
+        self._maybe_prompt_user_settings_migration()
 
         if platform.system() == 'Windows':
             scale_factor = self.app.primaryScreen().logicalDotsPerInch() / 96.0
@@ -529,8 +540,6 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         main_layout.addSpacing(2)
 
         # Use PNG logo with transparent background
-        import os
-
         # Path to the PNG logo
         self.logo_path = os.path.join(os.path.dirname(
             os.path.dirname(__file__)), 'images', 'aicp-transparent-min.png')
@@ -584,7 +593,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         main_layout.addSpacing(1)
 
         self.info_label = QtWidgets.QLabel(self.tr(
-            "The selected files will be added to the LLM Context Block along with your prompt, written to fullcode.txt and copied to clipboard, ready to paste into your AI assistant."))
+            "The selected files will be added to the LLM Context Block along with your prompt, written to .aicp/context_block.md and copied to clipboard, ready to paste into your AI assistant."))
         self.info_label.setWordWrap(True)
         self.info_label.setOpenExternalLinks(True)
         self.info_label.setAlignment(QtCore.Qt.AlignHCenter)
@@ -1250,10 +1259,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         # --- Show v1.2.0 update notice on first run of this version ---
         try:
-            settings = QtCore.QSettings("aicodeprep-gui", "UserIdentity")
-            if not settings.value("v1.2.0_update_seen", False, type=bool):
+            if not get_setting("user_identity", "v1.2.0_update_seen", False):
                 self.dialog_manager.open_update_notice_dialog()
-                settings.setValue("v1.2.0_update_seen", True)
+                set_setting("user_identity", "v1.2.0_update_seen", True)
         except Exception as e:
             logging.error(f"Failed to show v1.2.0 update notice: {e}")
 
@@ -1457,21 +1465,20 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             )
 
     def _save_font_size_setting(self):
-        """Save the font size multiplier setting to QSettings."""
+        """Save the font size multiplier setting."""
         try:
-            settings = QtCore.QSettings("aicodeprep-gui", "Appearance")
-            settings.setValue("font_size_multiplier",
-                              self.font_size_multiplier)
+            set_setting("appearance", "font_size_multiplier",
+                        self.font_size_multiplier)
         except Exception as e:
             logging.error(f"Failed to save font size setting: {e}")
 
     def _load_font_size_setting(self):
-        """Load the font size multiplier setting from QSettings."""
+        """Load the font size multiplier setting."""
         try:
-            settings = QtCore.QSettings("aicodeprep-gui", "Appearance")
-            if settings.contains("font_size_multiplier"):
-                saved_value = settings.value("font_size_multiplier", type=int)
-                self.font_size_multiplier = saved_value
+            saved_value = get_setting(
+                "appearance", "font_size_multiplier", None)
+            if saved_value is not None:
+                self.font_size_multiplier = int(saved_value)
                 # Set the combo box to the saved value
                 current_index = self.font_size_combo.findData(saved_value)
                 if current_index >= 0:
@@ -1595,8 +1602,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
             # Save dark mode setting
             try:
-                settings = QtCore.QSettings("aicodeprep-gui", "Appearance")
-                settings.setValue("dark_mode_enabled", self.is_dark_mode)
+                set_setting("appearance", "dark_mode", self.is_dark_mode)
             except Exception as e:
                 logging.error(f"Failed to save dark mode setting: {e}")
 
@@ -1776,7 +1782,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 self.token_label.setText(self.tr("Estimated tokens: 0"))
         if hasattr(self, "info_label"):
             self.info_label.setText(self.tr(
-                "The selected files will be added to the LLM Context Block along with your prompt, written to fullcode.txt and copied to clipboard, ready to paste into your AI assistant."))
+                "The selected files will be added to the LLM Context Block along with your prompt, written to .aicp/context_block.md and copied to clipboard, ready to paste into your AI assistant."))
         if hasattr(self, "logo_toggle_btn"):
             # Tooltip depends on current state
             if getattr(self, "logo_visible", False):
@@ -2037,15 +2043,16 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         chosen_fmt = self.format_combo.currentData()
         prompt = self.prompt_textbox.toPlainText().strip()
 
+        output_filename = os.path.join(".aicp", "context_block.md")
         if process_files(
             selected_files,
-            "fullcode.txt",
+            output_filename,
             fmt=chosen_fmt,
             prompt=prompt,
             prompt_to_top=self.prompt_top_checkbox.isChecked(),
             prompt_to_bottom=self.prompt_bottom_checkbox.isChecked()
         ) > 0:
-            output_path = os.path.join(os.getcwd(), "fullcode.txt")
+            output_path = os.path.join(os.getcwd(), output_filename)
             with open(output_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
@@ -2054,7 +2061,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             if content_size_mb > 10:  # Warn for content larger than 10MB
                 logging.warning(f"Large content size: {content_size_mb:.2f}MB")
                 self.text_label.setText(
-                    f"Large content ({content_size_mb:.1f}MB) may exceed clipboard limits. Saved to fullcode.txt.")
+                    f"Large content ({content_size_mb:.1f}MB) may exceed clipboard limits. Saved to .aicp/context_block.md.")
 
             # Enhanced clipboard operation with error handling
             try:
@@ -2064,21 +2071,21 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 if clipboard.text() != content:
                     logging.warning("Clipboard verification failed")
                     self.text_label.setText(
-                        "Warning: Clipboard copy may have failed. Content saved to fullcode.txt")
+                        "Warning: Clipboard copy may have failed. Content saved to .aicp/context_block.md")
                     self.text_label.setStyleSheet(
                         f"font-size: {20 + self.font_size_multiplier}px; color: {'#ff9900' if self.is_dark_mode else '#cc7a00'}; font-weight: bold;"
                     )
                 else:
                     logging.info(f"Copied {len(content)} chars to clipboard.")
                     self.text_label.setText(
-                        "Copied to clipboard and fullcode.txt")
+                        "Copied to clipboard and .aicp/context_block.md")
                     self.text_label.setStyleSheet(
                         f"font-size: {20 + self.font_size_multiplier}px; color: {'#00c3ff' if self.is_dark_mode else '#0078d4'}; font-weight: bold;"
                     )
             except Exception as e:
                 logging.error(f"Failed to copy to clipboard: {e}")
                 self.text_label.setText(
-                    f"Clipboard error: {str(e)}. Content saved to fullcode.txt")
+                    f"Clipboard error: {str(e)}. Content saved to .aicp/context_block.md")
                 self.text_label.setStyleSheet(
                     f"font-size: {20 + self.font_size_multiplier}px; color: {'#ff6666' if self.is_dark_mode else '#cc0000'}; font-weight: bold;"
                 )
@@ -2087,8 +2094,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
             # Increment generate count and check if we should show share dialog
             self.generate_count += 1
-            settings = QtCore.QSettings("aicodeprep-gui", "UserIdentity")
-            settings.setValue("generate_count", self.generate_count)
+            set_setting("user_identity", "generate_count", self.generate_count)
 
             # Show share dialog every 6th generate (skip for pro users) but no longer close the app
             if self.generate_count > 0 and self.generate_count % 6 == 0 and not pro.enabled:
@@ -2126,20 +2132,86 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         return self.preferences_manager.load_from_prefs_button_clicked()
 
     def _save_prompt_options(self):
-        """Save global prompt/question placement options to QSettings."""
+        """Save global prompt/question placement options."""
         return self.ui_settings_manager._save_prompt_options()
 
     def _load_prompt_options(self):
-        """Load global prompt/question placement options from QSettings."""
+        """Load global prompt/question placement options."""
         return self.ui_settings_manager._load_prompt_options()
 
     def _save_panel_visibility(self):
-        """Save collapsible panel visibility states to QSettings."""
+        """Save collapsible panel visibility states."""
         return self.ui_settings_manager._save_panel_visibility()
 
     def _load_panel_visibility(self):
-        """Load collapsible panel visibility states from QSettings."""
+        """Load collapsible panel visibility states."""
         return self.ui_settings_manager._load_panel_visibility()
+
+    def _maybe_prompt_project_prefs_migration(self):
+        """Ask whether to migrate legacy per-project preferences into .aicp/."""
+        try:
+            if not self.preferences_manager.prefs_is_legacy:
+                return
+            if os.path.exists(_prefs_path()):
+                self.preferences_manager.write_legacy_prefs = False
+                return
+
+            legacy_path = self.preferences_manager.prefs_path or ""
+            prompt = (
+                "Legacy project preferences were found in this folder.\n\n"
+                "Would you like to move them into .aicp/preferences.ini?"
+            )
+            result = QtWidgets.QMessageBox.question(
+                self,
+                "Migrate Project Preferences",
+                prompt,
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+            )
+            if result == QtWidgets.QMessageBox.Yes:
+                _write_prefs_file(
+                    list(self.preferences_manager.checked_files_from_prefs),
+                    window_size=self.preferences_manager.window_size_from_prefs,
+                    splitter_state=self.preferences_manager.splitter_state_from_prefs,
+                    output_format=self.preferences_manager.output_format_from_prefs,
+                    pro_features=self.preferences_manager.pro_features_from_prefs,
+                    prefs_path=_prefs_path(),
+                )
+                self.preferences_manager.write_legacy_prefs = False
+                self.text_label.setText(
+                    "Migrated project preferences to .aicp/preferences.ini")
+            else:
+                self.preferences_manager.write_legacy_prefs = True
+                if legacy_path:
+                    logging.info(
+                        f"Continuing to use legacy project preferences at {legacy_path}")
+        except Exception as e:
+            logging.error(f"Failed to prompt for project prefs migration: {e}")
+
+    def _maybe_prompt_user_settings_migration(self):
+        """Ask whether to migrate legacy QSettings into ~/.aicodeprep-gui/."""
+        try:
+            if get_settings_file().exists():
+                return
+            if not legacy_qsettings_present():
+                return
+
+            prompt = (
+                "Legacy user settings were found in system storage.\n\n"
+                "Would you like to move them into ~/.aicodeprep-gui/settings.toml?"
+            )
+            result = QtWidgets.QMessageBox.question(
+                self,
+                "Migrate User Settings",
+                prompt,
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+            )
+            if result == QtWidgets.QMessageBox.Yes:
+                if migrate_legacy_qsettings():
+                    clear_legacy_qsettings()
+                    self.text_label.setText(
+                        "Migrated user settings to ~/.aicodeprep-gui")
+        except Exception as e:
+            logging.error(f"Failed to prompt for user settings migration: {e}")
 
     def _expand_folders_for_paths(self, checked_paths):
         """Auto-expand folders that contain files from the given paths."""
@@ -2293,7 +2365,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 QtWidgets.QMessageBox.warning(
                     self, "Flow Studio", "Flow Studio could not be initialized.")
                 return
-            # Delegate to dock handler (has gating + QSettings dir)
+            # Delegate to dock handler (has gating + settings dir)
             if hasattr(self.flow_dock, "_on_import_clicked"):
                 self.flow_dock._on_import_clicked()
             else:
@@ -2355,16 +2427,16 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         """Check if pro mode is enabled globally."""
         # Check global settings for pro_enabled, license key, and verification
         try:
-            settings = QtCore.QSettings("aicodeprep-gui", "ProLicense")
-            pro_enabled = settings.value("pro_enabled", False, type=bool)
+            pro_enabled = bool(get_setting(
+                "pro_license", "pro_enabled", False))
             if not pro_enabled:
                 return False
-            license_key = settings.value("license_key", "")
-            license_verified = settings.value(
-                "license_verified", False, type=bool)
+            license_key = get_setting("pro_license", "license_key", "")
+            license_verified = bool(get_setting(
+                "pro_license", "license_verified", False))
             return bool(pro_enabled and license_key and license_verified)
         except Exception as e:
-            logging.error(f"QSettings error in _is_pro_enabled: {e}")
+            logging.error(f"Settings error in _is_pro_enabled: {e}")
             return False
 
     # ===== Debug Menu Methods (for i18n/a11y testing) =====
