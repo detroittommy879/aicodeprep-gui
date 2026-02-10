@@ -1,5 +1,6 @@
 import os
 import logging
+from typing import List
 from PySide6 import QtWidgets, QtCore, QtGui
 from aicodeprep_gui import smart_logic
 # LEVEL_ROLE is provided dynamically from main_window when Pro Level column is installed
@@ -255,6 +256,100 @@ class FileTreeManager:
         if (hasattr(self.main_window, "level_role") and self.main_window.level_delegate
                 and self.main_window.is_pro_level_column_enabled()):
             self.sync_levels_to_checks()
+        self.main_window.update_token_counter()
+
+    def check_files_by_paths(self, file_paths: List[str]):
+        """
+        Programmatically deselect all files, then check only the files whose
+        relative paths match the provided list. Used by AI Smart Select.
+
+        Args:
+            file_paths: List of relative file paths (e.g., ["src/main.py", "tests/test_main.py"])
+        """
+        self.main_window.tree_widget.blockSignals(True)
+        try:
+            # 1. Deselect all items
+            iterator = QtWidgets.QTreeWidgetItemIterator(
+                self.main_window.tree_widget)
+            while iterator.value():
+                item = iterator.value()
+                if item.flags() & QtCore.Qt.ItemIsUserCheckable:
+                    item.setCheckState(0, QtCore.Qt.Unchecked)
+                iterator += 1
+
+            # 2. Normalize and check specified files
+            for rel_path in file_paths:
+                # Normalize path
+                norm_path = rel_path.replace("/", os.sep).replace("\\", os.sep)
+                if norm_path.startswith("." + os.sep):
+                    norm_path = norm_path[2:]
+
+                # Try finding the item
+                item = self.main_window.path_to_item.get(norm_path)
+
+                if not item:
+                    # Try lazy-loading parents
+                    parts = norm_path.split(os.sep)
+                    current_rel = ""
+                    for part in parts[:-1]:
+                        current_rel = os.path.join(
+                            current_rel, part) if current_rel else part
+                        if current_rel in self.main_window.path_to_item:
+                            parent_item = self.main_window.path_to_item[current_rel]
+                            self.on_item_expanded(parent_item)
+
+                    # Retry after expansion
+                    item = self.main_window.path_to_item.get(norm_path)
+
+                if item:
+                    item.setCheckState(0, QtCore.Qt.Checked)
+
+            # 3. Update parent folder states
+            def update_parents(child_item):
+                parent = child_item.parent()
+                while parent:
+                    all_children_checked = True
+                    all_children_unchecked = True
+                    has_checkable_children = False
+                    for i in range(parent.childCount()):
+                        child = parent.child(i)
+                        if child.flags() & QtCore.Qt.ItemIsUserCheckable and child.flags() & QtCore.Qt.ItemIsEnabled:
+                            has_checkable_children = True
+                            if child.checkState(0) == QtCore.Qt.Checked:
+                                all_children_unchecked = False
+                            elif child.checkState(0) == QtCore.Qt.Unchecked:
+                                all_children_checked = False
+                            else:
+                                all_children_checked = False
+                                all_children_unchecked = False
+                    if has_checkable_children:
+                        if all_children_checked:
+                            parent.setCheckState(0, QtCore.Qt.Checked)
+                        elif all_children_unchecked:
+                            parent.setCheckState(0, QtCore.Qt.Unchecked)
+                        else:
+                            parent.setCheckState(0, QtCore.Qt.PartiallyChecked)
+                    else:
+                        parent.setCheckState(0, QtCore.Qt.Unchecked)
+                    parent = parent.parent()
+
+            # Update parents for all top-level items recursively (or just iterate all items and if checked, update parents)
+            iterator = QtWidgets.QTreeWidgetItemIterator(
+                self.main_window.tree_widget)
+            while iterator.value():
+                item = iterator.value()
+                if item.checkState(0) == QtCore.Qt.Checked:
+                    update_parents(item)
+                iterator += 1
+
+        finally:
+            self.main_window.tree_widget.blockSignals(False)
+
+        # Sync Level column if enabled
+        if (hasattr(self.main_window, "level_role") and self.main_window.level_delegate
+                and self.main_window.is_pro_level_column_enabled()):
+            self.sync_levels_to_checks()
+
         self.main_window.update_token_counter()
 
     def _expand_folders_for_paths(self, checked_paths):

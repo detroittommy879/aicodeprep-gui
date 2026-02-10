@@ -36,6 +36,7 @@ from .handlers.update_events import UpdateCheckWorker
 from .handlers.keyboard_handler import KeyboardShortcutManager
 from .utils.metrics import MetricsManager
 from .utils.helpers import WindowHelpers
+from aicodeprep_gui.gui.handlers.ai_workers import PromptRewriteWorker, SmartSelectWorker
 from aicodeprep_gui.user_settings import (
     get_setting,
     set_setting,
@@ -726,6 +727,36 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.clear_prompt_btn.clicked.connect(self.prompt_textbox.clear)
         prompt_layout.addWidget(self.clear_prompt_btn)
 
+        # AI Assist Layout
+        ai_assist_layout = QtWidgets.QHBoxLayout()
+
+        self.ai_rewrite_btn = QtWidgets.QPushButton(self.tr("✨ AI Rewrite"))
+        ai_rewrite_tooltip = self.tr(
+            "Rewrite your prompt for better AI responses (Pro)")
+        if not pro.enabled:
+            ai_rewrite_tooltip += " " + \
+                self.tr("(Pro feature - upgrade to unlock)")
+        self.ai_rewrite_btn.setToolTip(ai_rewrite_tooltip)
+        self.ai_rewrite_btn.setEnabled(pro.enabled)
+        self.ai_rewrite_btn.clicked.connect(self._on_ai_rewrite_clicked)
+        ai_assist_layout.addWidget(self.ai_rewrite_btn)
+
+        # (AI Smart Select button removed)
+
+        self.ai_model_combo = QtWidgets.QComboBox()
+        self.ai_model_combo.setPlaceholderText(self.tr("Select model..."))
+        self.ai_model_combo.currentIndexChanged.connect(
+            self._on_ai_model_changed)
+        ai_assist_layout.addWidget(self.ai_model_combo, 1)
+
+        self.ai_settings_btn = QtWidgets.QPushButton("⚙")
+        self.ai_settings_btn.setFixedWidth(30)
+        self.ai_settings_btn.setToolTip(self.tr("AI endpoint settings"))
+        self.ai_settings_btn.clicked.connect(self._open_ai_settings)
+        ai_assist_layout.addWidget(self.ai_settings_btn)
+
+        prompt_layout.addLayout(ai_assist_layout)
+
         self.splitter.addWidget(prompt_widget)
         self.splitter.setStretchFactor(0, 4)
         self.splitter.setStretchFactor(1, 1)
@@ -1265,6 +1296,222 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         except Exception as e:
             logging.error(f"Failed to show v1.2.0 update notice: {e}")
 
+        # AI Assist setup
+        QtCore.QTimer.singleShot(1000, self._setup_ai_models)
+
+    def _setup_ai_models(self):
+        """Populate the AI model dropdown from the active endpoint."""
+        try:
+            from aicodeprep_gui.pro.ai_assist.ai_client import AIClient
+            from aicodeprep_gui.pro.ai_assist.endpoint_config import get_active_endpoint
+
+            endpoint = get_active_endpoint()
+            if not endpoint:
+                return
+
+            client = AIClient()
+            models = client.list_models(
+                endpoint.get("url", ""),
+                endpoint.get("api_key", ""),
+                timeout=5,
+                retries=1
+            )
+
+            self.ai_model_combo.clear()
+            for m in models:
+                model_id = m.get("id", "")
+                if model_id:
+                    self.ai_model_combo.addItem(model_id, model_id)
+
+            # Select previously chosen model
+            selected = endpoint.get("selected_model", "")
+            if selected:
+                idx = self.ai_model_combo.findData(selected)
+                if idx >= 0:
+                    self.ai_model_combo.setCurrentIndex(idx)
+        except Exception as e:
+            logging.error(f"Failed to populate AI models: {e}")
+
+    def _on_ai_model_changed(self, index):
+        """Save the selected model when user changes the dropdown."""
+        if index < 0:
+            return
+        try:
+            from aicodeprep_gui.pro.ai_assist.endpoint_config import get_active_endpoint, set_active_model
+            model_id = self.ai_model_combo.currentData()
+            endpoint = get_active_endpoint()
+            if endpoint and model_id:
+                set_active_model(endpoint.get("id", "local"), model_id)
+        except Exception as e:
+            logging.error(f"Failed to save model selection: {e}")
+
+    def _on_ai_rewrite_clicked(self):
+        """Handle AI Rewrite button click."""
+        prompt = self.prompt_textbox.toPlainText().strip()
+        if not prompt:
+            QtWidgets.QMessageBox.information(
+                self, "AI Rewrite", "Please enter a prompt first.")
+            return
+
+        try:
+            from aicodeprep_gui.pro.ai_assist.endpoint_config import get_active_endpoint
+            endpoint = get_active_endpoint()
+            if not endpoint or not endpoint.get("url"):
+                QtWidgets.QMessageBox.warning(
+                    self, "AI Rewrite", "No AI endpoint configured. Click the ⚙ button to set one up.")
+                return
+
+            model = self.ai_model_combo.currentData()
+            if not model:
+                QtWidgets.QMessageBox.warning(
+                    self, "AI Rewrite", "Please select a model from the dropdown first.")
+                return
+
+            # Show busy dialog
+            self._ai_busy_dialog = QtWidgets.QProgressDialog(
+                "Waiting for AI...", "Cancel", 0, 0, self)
+            self._ai_busy_dialog.setWindowTitle("AI Rewrite")
+            self._ai_busy_dialog.setWindowModality(QtCore.Qt.WindowModal)
+            self._ai_busy_dialog.setCancelButton(None)  # No cancel for now
+            self._ai_busy_dialog.setMinimumDuration(0)
+            self._ai_busy_dialog.show()
+
+            # Disable buttons during operation
+            self.ai_rewrite_btn.setEnabled(False)
+            self.ai_smart_select_btn.setEnabled(False)
+
+            # Create worker and thread
+            self._ai_thread = QtCore.QThread()
+            self._ai_worker = PromptRewriteWorker(
+                original_prompt=prompt,
+                model=model,
+                base_url=endpoint.get("url", ""),
+                api_key=endpoint.get("api_key", "")
+            )
+            self._ai_worker.moveToThread(self._ai_thread)
+            self._ai_thread.started.connect(self._ai_worker.run)
+            self._ai_worker.finished.connect(self._on_rewrite_done)
+            self._ai_worker.error.connect(self._on_ai_error)
+            self._ai_worker.finished.connect(self._ai_thread.quit)
+            self._ai_worker.error.connect(self._ai_thread.quit)
+            self._ai_thread.start()
+
+        except Exception as e:
+            self._hide_ai_busy_dialog()
+            QtWidgets.QMessageBox.critical(self, "AI Rewrite Error", str(e))
+
+    def _on_ai_smart_select_clicked(self):
+        """Handle AI Smart Select button click."""
+        prompt = self.prompt_textbox.toPlainText().strip()
+        if not prompt:
+            QtWidgets.QMessageBox.information(
+                self, "AI Smart Select", "Please enter a prompt describing your task first.")
+            return
+
+        try:
+            from aicodeprep_gui.pro.ai_assist.endpoint_config import get_active_endpoint
+            endpoint = get_active_endpoint()
+            if not endpoint or not endpoint.get("url"):
+                QtWidgets.QMessageBox.warning(
+                    self, "AI Smart Select", "No AI endpoint configured. Click the ⚙ button to set one up.")
+                return
+
+            model = self.ai_model_combo.currentData()
+            if not model:
+                QtWidgets.QMessageBox.warning(
+                    self, "AI Smart Select", "Please select a model from the dropdown first.")
+                return
+
+            # Show busy dialog
+            self._ai_busy_dialog = QtWidgets.QProgressDialog(
+                "Waiting for AI to analyze files...", "Cancel", 0, 0, self)
+            self._ai_busy_dialog.setWindowTitle("AI Smart Select")
+            self._ai_busy_dialog.setWindowModality(QtCore.Qt.WindowModal)
+            self._ai_busy_dialog.setCancelButton(None)
+            self._ai_busy_dialog.setMinimumDuration(0)
+            self._ai_busy_dialog.show()
+
+            # Disable buttons
+            self.ai_rewrite_btn.setEnabled(False)
+            self.ai_smart_select_btn.setEnabled(False)
+
+            # Create worker and thread
+            self._ai_thread = QtCore.QThread()
+            self._ai_worker = SmartSelectWorker(
+                user_prompt=prompt,
+                project_dir=os.getcwd(),
+                model=model,
+                base_url=endpoint.get("url", ""),
+                api_key=endpoint.get("api_key", "")
+            )
+            self._ai_worker.moveToThread(self._ai_thread)
+            self._ai_thread.started.connect(self._ai_worker.run)
+            self._ai_worker.finished.connect(self._on_smart_select_done)
+            self._ai_worker.error.connect(self._on_ai_error)
+            self._ai_worker.finished.connect(self._ai_thread.quit)
+            self._ai_worker.error.connect(self._ai_thread.quit)
+            self._ai_thread.start()
+
+        except Exception as e:
+            self._hide_ai_busy_dialog()
+            QtWidgets.QMessageBox.critical(
+                self, "AI Smart Select Error", str(e))
+
+    def _on_rewrite_done(self, rewritten_text):
+        """Handle successful prompt rewrite."""
+        self._hide_ai_busy_dialog()
+        self._restore_ai_buttons()
+        if rewritten_text:
+            self.prompt_textbox.setPlainText(rewritten_text)
+
+    def _on_smart_select_done(self, file_list):
+        """Handle successful smart select."""
+        self._hide_ai_busy_dialog()
+        self._restore_ai_buttons()
+        if file_list:
+            self.tree_manager.check_files_by_paths(file_list)
+            QtWidgets.QMessageBox.information(
+                self, "AI Smart Select",
+                f"AI selected {len(file_list)} files based on your prompt."
+            )
+        else:
+            QtWidgets.QMessageBox.information(
+                self, "AI Smart Select",
+                "AI couldn't determine which files to select. Try being more specific in your prompt."
+            )
+
+    def _on_ai_error(self, error_msg):
+        """Handle AI operation error."""
+        self._hide_ai_busy_dialog()
+        self._restore_ai_buttons()
+        QtWidgets.QMessageBox.warning(
+            self, "AI Error", f"AI operation failed:\n{error_msg}")
+
+    def _hide_ai_busy_dialog(self):
+        """Hide and clean up the busy dialog."""
+        if hasattr(self, '_ai_busy_dialog') and self._ai_busy_dialog:
+            self._ai_busy_dialog.close()
+            self._ai_busy_dialog = None
+
+    def _restore_ai_buttons(self):
+        """Re-enable AI buttons after operation completes."""
+        if pro.enabled:
+            self.ai_rewrite_btn.setEnabled(True)
+            self.ai_smart_select_btn.setEnabled(False)
+
+    def _open_ai_settings(self):
+        """Open the AI endpoint settings dialog."""
+        try:
+            from aicodeprep_gui.gui.components.ai_settings_dialog import AIEndpointSettingsDialog
+            dialog = AIEndpointSettingsDialog(self)
+            if dialog.exec() == QtWidgets.QDialog.Accepted:
+                # Refresh models after settings change
+                self._setup_ai_models()
+        except Exception as e:
+            logging.error(f"Failed to open AI settings: {e}")
+            QtWidgets.QMessageBox.warning(
+                self, "Error", f"Could not open AI settings:\n{e}")
+
     def update_font_size(self, index):
         """Update all fonts in the application based on the font size multiplier."""
         value = self.font_size_combo.itemData(index)
@@ -1801,6 +2048,19 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         if hasattr(self, "clear_prompt_btn"):
             self.clear_prompt_btn.setText(self.tr("Clear"))
             self.clear_prompt_btn.setToolTip(self.tr("Clear the prompt box"))
+        if hasattr(self, "ai_rewrite_btn"):
+            self.ai_rewrite_btn.setText(self.tr("✨ AI Rewrite"))
+            tooltip = self.tr(
+                "Rewrite your prompt for better AI responses (Pro)")
+            if not pro.enabled:
+                tooltip += " " + \
+                    self.tr("(Pro feature - upgrade to unlock)")
+            self.ai_rewrite_btn.setToolTip(tooltip)
+        # (AI Smart Select button removed)
+        if hasattr(self, "ai_model_combo"):
+            self.ai_model_combo.setPlaceholderText(self.tr("Select model..."))
+        if hasattr(self, "ai_settings_btn"):
+            self.ai_settings_btn.setToolTip(self.tr("AI endpoint settings"))
 
         # Buttons
         if hasattr(self, "process_button"):
