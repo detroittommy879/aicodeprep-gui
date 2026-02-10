@@ -156,12 +156,15 @@ class AdWidget(QtWidgets.QFrame):
 
         layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(4)
 
         self.title_label = QtWidgets.QLabel()
         self.title_label.setWordWrap(True)
         self.title_label.setAlignment(
             QtCore.Qt.AlignRight | QtCore.Qt.AlignTop)
         self.title_label.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents)
+        self.title_label.setSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Maximum)
         font = self.title_label.font()
         font.setBold(True)
         font.setPointSize(11)
@@ -172,6 +175,8 @@ class AdWidget(QtWidgets.QFrame):
         self.content_label.setAlignment(
             QtCore.Qt.AlignRight | QtCore.Qt.AlignTop)
         self.content_label.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents)
+        self.content_label.setSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Maximum)
 
         self.link_button = QtWidgets.QPushButton()
         self.link_button.setFlat(True)
@@ -181,10 +186,13 @@ class AdWidget(QtWidgets.QFrame):
         self.link_button.setVisible(False)
         self.link_url = ""
         self.link_button.clicked.connect(self._on_link_clicked)
+        self.link_button.setSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Maximum)
 
         layout.addWidget(self.title_label)
         layout.addWidget(self.content_label)
         layout.addWidget(self.link_button, 0, QtCore.Qt.AlignRight)
+        layout.addStretch(1)
 
         self.flash_timer = QtCore.QTimer(self)
         self.flash_timer.timeout.connect(self._do_flash)
@@ -195,6 +203,7 @@ class AdWidget(QtWidgets.QFrame):
         self.repeat_timer.timeout.connect(self._start_flash)
 
         self.is_dark = False
+        self.base_font_size = None
         self.setMinimumHeight(60)
         self.setVisible(False)
 
@@ -221,12 +230,33 @@ class AdWidget(QtWidgets.QFrame):
                 "color: rgba(204, 204, 204, 180);")
             self.title_label.setStyleSheet("color: rgba(255, 255, 255, 200);")
             self.setStyleSheet(
-                "AdWidget { background-color: transparent; border: none; }")
+                "AdWidget { background-color: rgba(20, 20, 20, 90); border: 1px solid rgba(255, 255, 255, 30); border-radius: 6px; }")
         else:
             self.content_label.setStyleSheet("color: rgba(68, 68, 68, 150);")
             self.title_label.setStyleSheet("color: rgba(0, 0, 0, 180);")
             self.setStyleSheet(
-                "AdWidget { background-color: transparent; border: none; }")
+                "AdWidget { background-color: rgba(255, 255, 255, 120); border: 1px solid rgba(0, 0, 0, 25); border-radius: 6px; }")
+
+    def wheelEvent(self, event):
+        parent = self.parent()
+        if parent and hasattr(parent, "viewport"):
+            QtWidgets.QApplication.sendEvent(parent.viewport(), event)
+            return
+        super().wheelEvent(event)
+
+    def update_base_font_size(self, base_point_size):
+        if not base_point_size:
+            return
+        self.base_font_size = base_point_size
+        point_size = max(7, int(base_point_size) - 1)
+        title_font = QtGui.QFont(self.title_label.font())
+        title_font.setPointSize(point_size)
+        title_font.setBold(True)
+        self.title_label.setFont(title_font)
+
+        content_font = QtGui.QFont(self.content_label.font())
+        content_font.setPointSize(point_size)
+        self.content_label.setFont(content_font)
 
     def _on_link_clicked(self):
         if self.link_url:

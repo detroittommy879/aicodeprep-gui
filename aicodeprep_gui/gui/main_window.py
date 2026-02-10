@@ -751,6 +751,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.ad_manager = AdManager(self)
             self.ad_widget = AdWidget()
             self.ad_widget.update_theme(self.is_dark_mode)
+            self.ad_widget.update_base_font_size(self.default_font.pointSize())
             self._attach_ad_widget_to_tree()
             self.ad_manager.ad_changed.connect(self.ad_widget.set_ad)
 
@@ -1602,6 +1603,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         # Update all widgets with dynamic font sizes
         self._update_dynamic_fonts()
 
+        if hasattr(self, "ad_widget"):
+            self.ad_widget.update_base_font_size(self.default_font.pointSize())
+
         # Save the setting
         self._save_font_size_setting()
 
@@ -1832,9 +1836,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         if available_width <= 0 or available_height <= 0:
             return
 
-        ad_width = min(220, max(120, available_width))
+        ad_width = min(260, max(140, available_width))
         ad_width = min(ad_width, available_width)
-        ad_height = min(200, max(120, available_height))
+        ad_height = min(260, max(140, available_height))
         ad_height = min(ad_height, available_height)
 
         x = max(8, rect.x() + rect.width() - ad_width - 8)
