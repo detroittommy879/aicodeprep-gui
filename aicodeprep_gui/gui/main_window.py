@@ -27,6 +27,7 @@ from .components.layouts import FlowLayout
 from .components.dialogs import DialogManager, VoteDialog
 from .components.tree_widget import FileTreeManager
 from .components.preset_buttons import PresetButtonManager
+from .components.ad_widget import AdManager, AdWidget
 # Level delegate is provided via Pro getter when enabled
 # from aicodeprep_gui import pro # Duplicate import, removed
 from .settings.presets import global_preset_manager
@@ -106,12 +107,44 @@ class LogoCentralWidget(QtWidgets.QWidget):
         self.logo_pixmap = None
         self.logo_opacity = 0.48
         self.logo_padding = 5  # Padding from edges
+        self.ad_widget = None
 
     def set_logo(self, pixmap, opacity=0.48):
         """Set the logo pixmap and opacity for the background watermark."""
         self.logo_pixmap = pixmap
         self.logo_opacity = opacity
         self.update()
+
+    def set_ad_widget(self, ad_widget):
+        self.ad_widget = ad_widget
+        if self.ad_widget:
+            self.ad_widget.setParent(self)
+            self.ad_widget.show()
+            self._position_ad_widget()
+
+    def _position_ad_widget(self):
+        if self.ad_widget and self.ad_widget.isVisible():
+            # Position at the right side of the main area, floating over the tree
+            width = self.width()
+            height = self.height()
+
+            # Constrain width strictly to keep it on the right side
+            # 200px is wide enough for text but narrow enough for a sidebar look
+            ad_width = 200
+            ad_height = 200  # Fixed height to ensure it doesn't shrink
+
+            # Position it with a margin from the right edge
+            # We move it lower (centered vertically) so it's clearly in the tree area
+            self.ad_widget.setGeometry(
+                width - ad_width - 40,
+                (height // 2) - (ad_height // 2),
+                ad_width,
+                ad_height
+            )
+            # Push it to the bottom of the stack so it stays behind the tree items
+            self.ad_widget.lower()
+            # The tree is already transparent, so we'll see the ad behind it
+            # and because it's lowered, the tree mouse events will work.
 
     def paintEvent(self, event):
         """Override paint event to draw logo in the background."""
@@ -307,6 +340,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             try:
                 self.apply_gradient_to_central()
                 self.update_logo_size()  # Update logo size based on window width
+                if hasattr(self, "_position_ad_widget_in_tree"):
+                    self._position_ad_widget_in_tree()
             except Exception:
                 pass
             if original_resize:
@@ -684,10 +719,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         base_style = """
             QTreeView, QTreeWidget {
-                outline: 2; /* Remove focus rectangle */
+                outline: 0;
+                background: transparent;
             }
             QTreeView::item:selected, QTreeWidget::item:selected {
-                background-color: #8B0000; /* Dark red instead of blue */
+                background-color: rgba(139, 0, 0, 180); /* Semi-transparent dark red */
                 color: #ffffff;
             }
         """
@@ -709,6 +745,15 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         prompt_widget = QtWidgets.QWidget()
         prompt_layout = QtWidgets.QVBoxLayout(prompt_widget)
         prompt_layout.setContentsMargins(0, 0, 0, 0)
+
+        # Ads system (Free version only)
+        if not pro.enabled:
+            self.ad_manager = AdManager(self)
+            self.ad_widget = AdWidget()
+            self.ad_widget.update_theme(self.is_dark_mode)
+            self._attach_ad_widget_to_tree()
+            self.ad_manager.ad_changed.connect(self.ad_widget.set_ad)
+
         self.prompt_label = QtWidgets.QLabel(
             self.tr("Optional prompt/question for LLM (will be appended to the end):"))
         prompt_layout.addWidget(self.prompt_label)
@@ -1762,6 +1807,46 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         except Exception as e:
             logging.error(f"apply_gradient_to_central failed: {e}")
 
+    def _attach_ad_widget_to_tree(self):
+        """Pin the ad widget inside the tree viewport so it stays in place on resize/scroll."""
+        if not hasattr(self, "tree_widget") or not hasattr(self, "ad_widget"):
+            return
+        self.ad_widget.setParent(self.tree_widget)
+        self.ad_widget.raise_()
+        # Keep it positioned on tree/viewport resizes.
+        self.tree_widget.installEventFilter(self)
+        self.tree_widget.viewport().installEventFilter(self)
+        self._position_ad_widget_in_tree()
+
+    def _position_ad_widget_in_tree(self):
+        if not hasattr(self, "tree_widget") or not hasattr(self, "ad_widget"):
+            return
+        if not self.ad_widget.isVisible():
+            return
+
+        viewport = self.tree_widget.viewport()
+        rect = viewport.geometry()
+
+        available_width = max(0, rect.width() - 16)
+        available_height = max(0, rect.height() - 16)
+        if available_width <= 0 or available_height <= 0:
+            return
+
+        ad_width = min(220, max(120, available_width))
+        ad_width = min(ad_width, available_width)
+        ad_height = min(200, max(120, available_height))
+        ad_height = min(ad_height, available_height)
+
+        x = max(8, rect.x() + rect.width() - ad_width - 8)
+        y = max(8, rect.y() + (rect.height() - ad_height) // 2)
+        self.ad_widget.setGeometry(x, y, ad_width, ad_height)
+
+    def eventFilter(self, obj, event):
+        if hasattr(self, "tree_widget") and obj in (self.tree_widget, self.tree_widget.viewport()):
+            if event.type() in (QtCore.QEvent.Resize, QtCore.QEvent.Show):
+                QtCore.QTimer.singleShot(0, self._position_ad_widget_in_tree)
+        return super().eventFilter(obj, event)
+
     def _create_disabled_feature_row(self, text: str, tooltip: str) -> QtWidgets.QHBoxLayout:
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -1840,6 +1925,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 self.text_label.setStyleSheet(
                     f"font-size: {20 + self.font_size_multiplier}px; color: {'#00c3ff' if self.is_dark_mode else '#0078d4'}; font-weight: bold;"
                 )
+
+            if hasattr(self, "ad_widget"):
+                self.ad_widget.update_theme(self.is_dark_mode)
 
             self._update_groupbox_style(self.options_group_box)
             self._update_groupbox_style(self.premium_group_box)
@@ -2410,37 +2498,79 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
     def _maybe_prompt_project_prefs_migration(self):
         """Ask whether to migrate legacy per-project preferences into .aicp/."""
         try:
-            if not self.preferences_manager.prefs_is_legacy:
+            has_legacy_prefs = self.preferences_manager.prefs_is_legacy
+            has_legacy_fullcode = self.preferences_manager.has_legacy_fullcode
+
+            if not has_legacy_prefs and not has_legacy_fullcode:
                 return
-            if os.path.exists(_prefs_path()):
+
+            if os.path.exists(os.path.join(".aicp", "preferences.ini")) and \
+               os.path.exists(os.path.join(".aicp", "context_block.md")):
+                # Already migrated both
                 self.preferences_manager.write_legacy_prefs = False
                 return
 
             legacy_path = self.preferences_manager.prefs_path or ""
+
+            items_to_migrate = []
+            if has_legacy_prefs:
+                items_to_migrate.append(
+                    f"Project preferences ({os.path.basename(legacy_path)})")
+            if has_legacy_fullcode:
+                items_to_migrate.append("LLM Context (fullcode.txt)")
+
             prompt = (
-                "Legacy project preferences were found in this folder.\n\n"
-                "Would you like to move them into .aicp/preferences.ini?"
+                "Legacy project files were found in this folder:\n" +
+                "\n".join([f"- {item}" for item in items_to_migrate]) +
+                "\n\nWould you like to move them into the new .aicp/ directory?\n"
+                "(fullcode.txt will be renamed to context_block.md)"
             )
+
             result = QtWidgets.QMessageBox.question(
                 self,
-                "Migrate Project Preferences",
+                "Migrate Project Files",
                 prompt,
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
             )
+
             if result == QtWidgets.QMessageBox.Yes:
-                _write_prefs_file(
-                    list(self.preferences_manager.checked_files_from_prefs),
-                    window_size=self.preferences_manager.window_size_from_prefs,
-                    splitter_state=self.preferences_manager.splitter_state_from_prefs,
-                    output_format=self.preferences_manager.output_format_from_prefs,
-                    pro_features=self.preferences_manager.pro_features_from_prefs,
-                    prefs_path=_prefs_path(),
-                )
+                # Migrate prefs if they exist
+                if has_legacy_prefs:
+                    from .settings.preferences import _write_prefs_file, _prefs_path
+                    _write_prefs_file(
+                        list(self.preferences_manager.checked_files_from_prefs),
+                        window_size=self.preferences_manager.window_size_from_prefs,
+                        splitter_state=self.preferences_manager.splitter_state_from_prefs,
+                        output_format=self.preferences_manager.output_format_from_prefs,
+                        pro_features=self.preferences_manager.pro_features_from_prefs,
+                        prefs_path=_prefs_path(),
+                    )
+                    # Delete legacy prefs file
+                    if legacy_path and os.path.exists(legacy_path):
+                        try:
+                            os.remove(legacy_path)
+                            logging.info(
+                                f"Deleted legacy prefs file: {legacy_path}")
+                        except Exception as e:
+                            logging.warning(
+                                f"Could not delete legacy prefs file: {e}")
+
+                # Migrate fullcode.txt if it exists
+                if has_legacy_fullcode and os.path.exists("fullcode.txt"):
+                    target = os.path.join(".aicp", "context_block.md")
+                    os.makedirs(".aicp", exist_ok=True)
+                    try:
+                        import shutil
+                        shutil.move("fullcode.txt", target)
+                        logging.info(f"Moved fullcode.txt to {target}")
+                    except Exception as e:
+                        logging.error(f"Failed to move fullcode.txt: {e}")
+
                 self.preferences_manager.write_legacy_prefs = False
                 self.text_label.setText(
-                    "Migrated project preferences to .aicp/preferences.ini")
+                    "Migrated project files to .aicp/ directory")
             else:
-                self.preferences_manager.write_legacy_prefs = True
+                self.preferences_manager.write_legacy_prefs = has_legacy_prefs
                 if legacy_path:
                     logging.info(
                         f"Continuing to use legacy project preferences at {legacy_path}")
@@ -2685,19 +2815,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
     def _is_pro_enabled(self):
         """Check if pro mode is enabled globally."""
-        # Check global settings for pro_enabled, license key, and verification
-        try:
-            pro_enabled = bool(get_setting(
-                "pro_license", "pro_enabled", False))
-            if not pro_enabled:
-                return False
-            license_key = get_setting("pro_license", "license_key", "")
-            license_verified = bool(get_setting(
-                "pro_license", "license_verified", False))
-            return bool(pro_enabled and license_key and license_verified)
-        except Exception as e:
-            logging.error(f"Settings error in _is_pro_enabled: {e}")
-            return False
+        return pro.enabled
 
     # ===== Debug Menu Methods (for i18n/a11y testing) =====
 

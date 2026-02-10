@@ -166,11 +166,14 @@ class PreferencesManager:
         self.prefs_is_legacy = False
         # When legacy prefs are in use, keep writing to legacy until user migrates
         self.write_legacy_prefs = False
+        # Track fullcode.txt for migration
+        self.has_legacy_fullcode = os.path.exists("fullcode.txt")
 
     def load_prefs_if_exists(self):
         # Determine if a prefs file exists before reading so we don't override smart defaults when missing
         prefs_path, prefs_is_legacy = _existing_prefs_path()
         self.prefs_file_exists = os.path.exists(prefs_path)
+        self.has_legacy_fullcode = os.path.exists("fullcode.txt")
 
         checked, window_size, splitter_state, output_format, pro_features, prefs_path, prefs_is_legacy = _read_prefs_file()
         self.checked_files_from_prefs = checked

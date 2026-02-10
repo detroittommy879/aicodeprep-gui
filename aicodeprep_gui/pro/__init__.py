@@ -6,6 +6,14 @@ from aicodeprep_gui.user_settings import get_section
 
 def _check_pro_enabled():
     """Check if pro mode is enabled via license key validation."""
+    # Command-line override to temporarily disable Pro features
+    import sys
+    if "--notpro" in sys.argv:
+        import logging
+        logging.info(
+            "Pro features temporarily disabled via command-line (--notpro flag).")
+        return False
+
     # Check global settings for license key and pro status
     try:
         data = get_section("pro_license")

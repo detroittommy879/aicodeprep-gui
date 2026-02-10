@@ -62,6 +62,8 @@ def main():
                         help="Directory to process (default: current directory)")
     parser.add_argument("--force-update-check", action="store_true",
                         help="Force update check (ignore 24h limit)")
+    parser.add_argument("--notpro", action="store_true",
+                        help="Temporarily disable Pro features for this session")
     parser.add_argument("-s", "--skipui", nargs='?', const='', default=None,
                         help="Pro: Skip UI and generate context immediately. Optionally provide a prompt string after the flag.")
     parser.add_argument("--list-languages", action="store_true",
