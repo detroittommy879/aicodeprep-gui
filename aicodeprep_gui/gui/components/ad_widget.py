@@ -162,6 +162,7 @@ class AdWidget(QtWidgets.QFrame):
         self.title_label.setWordWrap(True)
         self.title_label.setAlignment(
             QtCore.Qt.AlignRight | QtCore.Qt.AlignTop)
+        self.title_label.setTextFormat(QtCore.Qt.RichText)
         self.title_label.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents)
         self.title_label.setSizePolicy(
             QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Maximum)
@@ -174,9 +175,13 @@ class AdWidget(QtWidgets.QFrame):
         self.content_label.setWordWrap(True)
         self.content_label.setAlignment(
             QtCore.Qt.AlignRight | QtCore.Qt.AlignTop)
+        self.content_label.setTextFormat(QtCore.Qt.RichText)
+        self.content_label.setTextInteractionFlags(
+            QtCore.Qt.TextBrowserInteraction)
+        self.content_label.setOpenExternalLinks(True)
         self.content_label.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents)
         self.content_label.setSizePolicy(
-            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Maximum)
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding)
 
         self.link_button = QtWidgets.QPushButton()
         self.link_button.setFlat(True)
@@ -192,7 +197,9 @@ class AdWidget(QtWidgets.QFrame):
         layout.addWidget(self.title_label)
         layout.addWidget(self.content_label)
         layout.addWidget(self.link_button, 0, QtCore.Qt.AlignRight)
-        layout.addStretch(1)
+        layout.setStretch(0, 0)
+        layout.setStretch(1, 1)
+        layout.setStretch(2, 0)
 
         self.flash_timer = QtCore.QTimer(self)
         self.flash_timer.timeout.connect(self._do_flash)
