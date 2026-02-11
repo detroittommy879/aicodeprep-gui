@@ -63,6 +63,29 @@ def get_level_delegate(parent, is_dark_mode: bool = False):
         return None
 
 
+# AI Chat singleton
+_ai_chat_dock = None
+
+
+def get_ai_chat_dock():
+    """
+    Create or return the AI Chat dock.
+
+    - If Pro is enabled: fully functional chat with model selection.
+    - If Pro is not enabled: dock is still visible but may have limited functionality.
+    """
+    global _ai_chat_dock
+    try:
+        if _ai_chat_dock is None:
+            from .ai_chat.chat_dock import AIChatDock
+            _ai_chat_dock = AIChatDock()
+        return _ai_chat_dock
+    except Exception as e:
+        import logging
+        logging.error(f"Failed to load AI Chat dock: {e}")
+        return None
+
+
 # Flow Studio singleton
 _flow_dock = None
 

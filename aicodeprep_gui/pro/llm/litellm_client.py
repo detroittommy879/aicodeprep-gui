@@ -24,6 +24,76 @@ class LLMError(Exception):
     pass
 
 
+class ChatResponseIterator:
+    """
+    Iterator that yields chunks from a streaming LLM response.
+    Supports both chunk-based and full-response modes.
+    """
+
+    def __init__(self, model: str, messages: list, api_key: str = None,
+                 base_url: str = None, extra_headers: dict = None,
+                 temperature: float = None, top_p: float = None):
+        self.model = model
+        self.messages = messages
+        self.api_key = api_key
+        self.base_url = base_url
+        self.extra_headers = extra_headers or {}
+        self.temperature = temperature
+        self.top_p = top_p
+        self._iterator = None
+        self._complete_response = ""
+
+    def _init_stream(self):
+        """Initialize the streaming iterator."""
+        LLMClient.ensure_lib()
+
+        import litellm
+
+        kwargs = {}
+        if self.api_key:
+            kwargs["api_key"] = self.api_key
+        if self.base_url:
+            kwargs["base_url"] = self.base_url
+
+        if self.temperature is not None:
+            kwargs["temperature"] = self.temperature
+        if self.top_p is not None:
+            kwargs["top_p"] = self.top_p
+
+        # Set timeout for streaming
+        if 'timeout' not in kwargs:
+            kwargs['timeout'] = 120
+
+        return litellm.completion(
+            model=self.model,
+            messages=self.messages,
+            stream=True,
+            extra_headers=self.extra_headers if self.extra_headers else None,
+            **kwargs
+        )
+
+    def __iter__(self):
+        self._iterator = self._init_stream()
+        self._complete_response = ""
+        return self
+
+    def __next__(self):
+        try:
+            chunk = next(self._iterator)
+            content = chunk.choices[0].delta.get("content", "")
+            if content:
+                self._complete_response += content
+            return content
+        except StopIteration:
+            return ""
+        except Exception as e:
+            raise LLMError(f"Stream error: {e}") from e
+
+    def get_complete_response(self) -> str:
+        """Get the complete accumulated response."""
+        return self._complete_response
+
+
 class LLMClient:
     """
     Minimal wrapper on top of LiteLLM for simple chat completions and model listing.
@@ -139,6 +209,32 @@ class LLMClient:
             error_msg = f"Fatal LLM client error: {outer_e}"
             logging.error(error_msg, exc_info=True)
             raise LLMError(error_msg) from outer_e
+
+    @staticmethod
+    def stream_chat(
+        model: str,
+        messages: List[Dict[str, str]],
+        api_key: Optional[str] = None,
+        base_url: Optional[str] = None,
+        extra_headers: Optional[Dict[str, str]] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
+    ) -> ChatResponseIterator:
+        """
+        Perform a streaming chat completion.
+
+        Returns an iterator that yields chunks of the response as they arrive.
+        Use this for real-time streaming updates in the UI.
+        """
+        return ChatResponseIterator(
+            model=model,
+            messages=messages,
+            api_key=api_key,
+            base_url=base_url,
+            extra_headers=extra_headers,
+            temperature=temperature,
+            top_p=top_p,
+        )
 
     # ---- Model listing helpers ----
 

@@ -1042,6 +1042,33 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 "Show the Flow Studio dock (read-only in Free mode).")
         self.flow_studio_toggle.toggled.connect(self.toggle_flow_studio)
 
+        # AI Chat toggle (Pro feature)
+        self.ai_chat_toggle = QtWidgets.QCheckBox(
+            self.tr("Enable AI Chat (Pro feature)"))
+        ai_chat_help = QtWidgets.QLabel(
+            "<b style='color:#0098D4; font-size:14px; cursor:help;'>?</b>")
+        ai_chat_help.setToolTip(
+            self.tr("Show the AI Chat dock with multi-tab chat interface."))
+        ai_chat_help.setAlignment(QtCore.Qt.AlignVCenter)
+
+        ai_chat_layout = QtWidgets.QHBoxLayout()
+        ai_chat_layout.setContentsMargins(0, 0, 0, 0)
+        ai_chat_layout.addWidget(self.ai_chat_toggle)
+        ai_chat_layout.addWidget(ai_chat_help)
+        ai_chat_layout.addStretch()
+        premium_content_layout.addLayout(ai_chat_layout)
+
+        # Configure AI Chat toggle
+        if pro.enabled:
+            self.ai_chat_toggle.setEnabled(True)
+            self.ai_chat_toggle.setToolTip(
+                "Show the AI Chat dock with full functionality.")
+        else:
+            self.ai_chat_toggle.setEnabled(False)
+            self.ai_chat_toggle.setToolTip(
+                "AI Chat requires Pro license. Upgrade to enable.")
+        self.ai_chat_toggle.toggled.connect(self.toggle_ai_chat)
+
         # # Add Font selection dropdown to premium features
         # font_layout = QtWidgets.QHBoxLayout()
         # font_layout.setContentsMargins(0, 0, 0, 0)
@@ -1234,6 +1261,17 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.tr("Generate context from selected files and copy to clipboard"))
         self.process_button.clicked.connect(self.process_selected)
         button_layout1.addWidget(self.process_button)
+
+        # Generate Context to AI button (Pro feature)
+        self.generate_ai_button = QtWidgets.QPushButton(
+            self.tr("GENERATE CONTEXT TO AI!"))
+        self.generate_ai_button.setAccessibleName(
+            self.tr("Generate Context to AI Button"))
+        self.generate_ai_button.setAccessibleDescription(
+            self.tr("Generate context and send to selected AI chat tabs"))
+        self.generate_ai_button.clicked.connect(self.generate_context_to_ai)
+        self.generate_ai_button.setEnabled(False)  # Disabled until AI Chat is enabled
+        button_layout1.addWidget(self.generate_ai_button)
 
         self.select_all_button = QtWidgets.QPushButton(self.tr("Select All"))
         self.select_all_button.setAccessibleName(self.tr("Select All Button"))
@@ -1917,6 +1955,13 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     self.preview_window.set_dark_mode(self.is_dark_mode)
                 except Exception as e:
                     logging.error(f"Preview window theme update failed: {e}")
+
+            # Update AI Chat dock theme
+            if hasattr(self, 'ai_chat_dock') and self.ai_chat_dock:
+                try:
+                    self.ai_chat_dock.set_dark_mode(self.is_dark_mode)
+                except Exception as e:
+                    logging.error(f"AI Chat dock theme update failed: {e}")
 
             # Update other UI elements
             for child in self.findChildren(QtWidgets.QLabel):
@@ -2734,6 +2779,112 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     self.flow_dock.hide()
         except Exception as e:
             logging.error(f"toggle_flow_studio failed: {e}")
+
+    def toggle_ai_chat(self, enabled):
+        """Show/hide the AI Chat dock."""
+        try:
+            if enabled:
+                if not hasattr(self, "ai_chat_dock") or self.ai_chat_dock is None:
+                    self.ai_chat_dock = pro.get_ai_chat_dock()
+                if self.ai_chat_dock:
+                    # Add to right dock area if not already added
+                    if self.ai_chat_dock.parent() is None:
+                        self.addDockWidget(
+                            QtCore.Qt.RightDockWidgetArea, self.ai_chat_dock)
+                    self.ai_chat_dock.show()
+                    # Enable the Generate Context to AI button
+                    self.generate_ai_button.setEnabled(True)
+                else:
+                    logging.error("AI Chat dock is None after creation.")
+                    QtWidgets.QMessageBox.warning(
+                        self,
+                        "AI Chat",
+                        "AI Chat could not be initialized. See logs for details.",
+                    )
+                    # Disable the toggle
+                    self.ai_chat_toggle.setChecked(False)
+            else:
+                if hasattr(self, "ai_chat_dock") and self.ai_chat_dock:
+                    self.ai_chat_dock.hide()
+                self.generate_ai_button.setEnabled(False)
+        except Exception as e:
+            logging.error(f"toggle_ai_chat failed: {e}")
+
+    def generate_context_to_ai(self):
+        """Generate context and send to selected AI chat tabs."""
+        if not pro.enabled:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Pro Feature",
+                "AI Chat requires a Pro license. Please upgrade to use this feature."
+            )
+            return
+
+        try:
+            if not hasattr(self, "ai_chat_dock") or self.ai_chat_dock is None:
+                self.ai_chat_dock = pro.get_ai_chat_dock()
+            if not self.ai_chat_dock:
+                logging.error("AI Chat dock is None.")
+                return
+
+            # Generate context
+            self._send_metric_event(
+                "generate_to_ai_start", token_count=self.total_tokens)
+            self.action = 'process'
+            selected_files = self.get_selected_files()
+            chosen_fmt = self.format_combo.currentData()
+            prompt = self.prompt_textbox.toPlainText().strip()
+
+            output_filename = os.path.join(".aicp", "context_block.md")
+            context_text = process_files(
+                selected_files,
+                output_filename,
+                fmt=chosen_fmt,
+                prompt=prompt,
+                prompt_to_top=self.prompt_top_checkbox.isChecked(),
+                prompt_to_bottom=self.prompt_bottom_checkbox.isChecked()
+            )
+
+            if not context_text:
+                self._send_metric_event("generate_to_ai_canceled")
+                return
+
+            # Send to selected AI chat tabs
+            tabs_count = self.ai_chat_dock.send_context_to_selected_tabs(context_text)
+
+            if tabs_count > 0:
+                QtWidgets.QMessageBox.information(
+                    self,
+                    "Context Sent",
+                    f"Context sent to {tabs_count} AI chat tab(s).\n"
+                    f"Check the AI Chat dock for responses."
+                )
+                self._send_metric_event(
+                    "generate_to_ai_success",
+                    token_count=self.total_tokens,
+                    files_count=len(selected_files),
+                    tabs_count=tabs_count
+                )
+            else:
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    "No Tabs Selected",
+                    "Please select at least one AI chat tab by checking its box.\n"
+                    "Open the AI Chat dock to select tabs."
+                )
+                self._send_metric_event("generate_to_ai_canceled")
+
+        except Exception as e:
+            logging.error(f"generate_context_to_ai failed: {e}")
+            self._send_metric_event(
+                "generate_to_ai_failed",
+                error=str(e)
+            )
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error",
+                f"Failed to send context to AI: {e}"
+            )
 
     # ---- Flow menu helpers (Phase 2) ----
     def _ensure_flow_dock(self) -> bool:
