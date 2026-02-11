@@ -2836,7 +2836,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             prompt = self.prompt_textbox.toPlainText().strip()
 
             output_filename = os.path.join(".aicp", "context_block.md")
-            context_text = process_files(
+            files_processed = process_files(
                 selected_files,
                 output_filename,
                 fmt=chosen_fmt,
@@ -2845,8 +2845,17 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 prompt_to_bottom=self.prompt_bottom_checkbox.isChecked()
             )
 
-            if not context_text:
+            if files_processed <= 0:
                 self._send_metric_event("generate_to_ai_canceled")
+                return
+
+            # Read the generated context from file
+            try:
+                with open(output_filename, 'r', encoding='utf-8') as f:
+                    context_text = f.read()
+            except Exception as read_err:
+                logging.error(f"Failed to read context file: {read_err}")
+                self._send_metric_event("generate_to_ai_failed")
                 return
 
             # Send to selected AI chat tabs
@@ -2861,9 +2870,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 )
                 self._send_metric_event(
                     "generate_to_ai_success",
-                    token_count=self.total_tokens,
-                    files_count=len(selected_files),
-                    tabs_count=tabs_count
+                    token_count=self.total_tokens
                 )
             else:
                 QtWidgets.QMessageBox.warning(
@@ -2876,10 +2883,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         except Exception as e:
             logging.error(f"generate_context_to_ai failed: {e}")
-            self._send_metric_event(
-                "generate_to_ai_failed",
-                error=str(e)
-            )
+            self._send_metric_event("generate_to_ai_failed")
             QtWidgets.QMessageBox.critical(
                 self,
                 "Error",

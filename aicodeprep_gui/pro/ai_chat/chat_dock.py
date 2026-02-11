@@ -20,10 +20,12 @@ class AIChatDock(QtWidgets.QDockWidget):
         super().__init__("AI Chat", parent)
         self.setObjectName("ai_chat_dock")
         self.setAllowedAreas(QtCore.Qt.RightDockWidgetArea | QtCore.Qt.LeftDockWidgetArea)
+        self.setFloating(False)
 
         # Track dark mode state
         self._is_dark_mode = system_pref_is_dark()
         self._side_by_side = False  # Toggle for side-by-side view
+        self._chat_tabs = []  # List of ChatTabWidget instances
 
         # Main widget container
         self._content_widget = QtWidgets.QWidget()
@@ -55,6 +57,7 @@ class AIChatDock(QtWidgets.QDockWidget):
         self._splitter.setChildrenCollapsible(True)
         self._splitter.setHandleWidth(8)
         self._splitter.hide()  # Hidden by default
+        self._layout.addWidget(self._splitter, stretch=1)
 
         # Bottom toolbar for adding tabs and actions
         toolbar = QtWidgets.QHBoxLayout()
@@ -116,54 +119,73 @@ class AIChatDock(QtWidgets.QDockWidget):
     def _add_new_tab(self, name: str = None) -> ChatTabWidget:
         """Add a new chat tab."""
         if name is None or not isinstance(name, str):
-            count = self._tab_bar.count() + 1
+            count = len(self._chat_tabs) + 1
             tab_name = f"Chat {count}"
         else:
             tab_name = name
 
         # Create chat tab widget
         chat_tab = ChatTabWidget()
-        tab_index = self._stack.addWidget(chat_tab)
+        self._chat_tabs.append(chat_tab)
 
-        # Also add to splitter for side-by-side view
+        # Add to stacked widget (for tabbed view)
+        self._stack.addWidget(chat_tab)
+
+        # Add to splitter (for side-by-side view)
         self._splitter.addWidget(chat_tab)
 
         # Add to tab bar
         tab_id = self._tab_bar.addTab(tab_name)
         self._tab_bar.setCurrentIndex(tab_id)
 
+        # In side-by-side mode, ensure all widgets are visible
+        if self._side_by_side:
+            chat_tab.show()
+
         return chat_tab
 
     def _close_tab(self, index: int):
         """Close a tab."""
         # Don't close the last tab
-        if self._tab_bar.count() <= 1:
+        if len(self._chat_tabs) <= 1:
             return
 
+        # Get the widget
+        if index < 0 or index >= len(self._chat_tabs):
+            return
+
+        widget = self._chat_tabs[index]
+
         # Remove from stack
-        widget = self._stack.widget(index)
         self._stack.removeWidget(widget)
 
         # Remove from splitter
         self._splitter.removeWidget(widget)
 
+        # Remove from list and delete
+        self._chat_tabs.pop(index)
+        widget.deleteLater()
+
         # Remove from tab bar
         self._tab_bar.removeTab(index)
 
-        # Delete the widget
-        widget.deleteLater()
-
         # Update stack index
-        current = self._tab_bar.currentIndex()
+        current = min(index, self._tab_bar.count() - 1)
         if current >= 0:
+            self._tab_bar.setCurrentIndex(current)
             self._stack.setCurrentIndex(current)
 
     def _switch_tab(self, index: int):
         """Switch to a different chat tab."""
-        self._stack.setCurrentIndex(index)
+        # Only switch stack if NOT in side-by-side mode
+        if not self._side_by_side and index >= 0:
+            self._stack.setCurrentIndex(index)
 
-    def _toggle_side_by_side(self, enabled: bool):
+    def _toggle_side_by_side(self, enabled: bool = None):
         """Toggle between tabbed view and side-by-side view."""
+        if enabled is None:
+            enabled = not self._side_by_side
+
         self._side_by_side = enabled
         self._side_by_side_button.setChecked(enabled)
 
@@ -174,17 +196,22 @@ class AIChatDock(QtWidgets.QDockWidget):
             self._splitter.show()
 
             # Ensure all widgets in splitter are visible
-            for i in range(self._splitter.count()):
-                self._splitter.widget(i).show()
+            for i in range(len(self._chat_tabs)):
+                self._chat_tabs[i].show()
         else:
             # Show tabbed view, hide splitter
             self._tab_bar_container.show()
             self._stack.show()
             self._splitter.hide()
 
-            # Hide widgets in splitter
-            for i in range(self._splitter.count()):
-                self._splitter.widget(i).hide()
+            # Hide widgets in splitter (but they're still in stack)
+            for i in range(len(self._chat_tabs)):
+                self._chat_tabs[i].hide()
+
+            # Show the current tab in stack
+            current = self._tab_bar.currentIndex()
+            if current >= 0 and current < len(self._chat_tabs):
+                self._stack.setCurrentIndex(current)
 
     def _clear_all_chats(self):
         """Clear all chat histories."""
@@ -200,15 +227,13 @@ class AIChatDock(QtWidgets.QDockWidget):
             return
 
         # Clear each tab
-        for i in range(self._stack.count()):
-            widget = self._stack.widget(i)
+        for widget in self._chat_tabs:
             if hasattr(widget, 'clear_chat'):
                 widget.clear_chat()
 
     def _refresh_models(self):
         """Refresh model list in all tabs."""
-        for i in range(self._stack.count()):
-            widget = self._stack.widget(i)
+        for widget in self._chat_tabs:
             if hasattr(widget, 'load_endpoint_config'):
                 widget.load_endpoint_config()
 
@@ -232,8 +257,7 @@ class AIChatDock(QtWidgets.QDockWidget):
         self._is_dark_mode = is_dark
 
         # Update all chat tabs
-        for i in range(self._stack.count()):
-            widget = self._stack.widget(i)
+        for widget in self._chat_tabs:
             if hasattr(widget, 'set_dark_mode'):
                 widget.set_dark_mode(is_dark)
 
@@ -284,8 +308,7 @@ class AIChatDock(QtWidgets.QDockWidget):
         Selected tabs have their checkbox checked.
         """
         count = 0
-        for i in range(self._stack.count()):
-            widget = self._stack.widget(i)
+        for widget in self._chat_tabs:
             if hasattr(widget, 'is_selected') and widget.is_selected():
                 if hasattr(widget, 'send_context'):
                     widget.send_context(context_text)
@@ -295,11 +318,11 @@ class AIChatDock(QtWidgets.QDockWidget):
 
     def get_selected_tab(self) -> ChatTabWidget:
         """Get the currently selected chat tab widget."""
-        index = self._stack.currentIndex()
-        if index >= 0:
-            return self._stack.widget(index)
+        index = self._tab_bar.currentIndex()
+        if index >= 0 and index < len(self._chat_tabs):
+            return self._chat_tabs[index]
         return None
 
     def get_all_tabs(self) -> list:
         """Get all chat tab widgets."""
-        return [self._stack.widget(i) for i in range(self._stack.count())]
+        return self._chat_tabs.copy()

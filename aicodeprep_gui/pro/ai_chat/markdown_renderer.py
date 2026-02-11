@@ -338,20 +338,25 @@ class ChatMessageDisplay(QtWidgets.QTextEdit):
         # Style based on role
         colors = self._renderer._colors
         if role == 'user':
-            header = f'<div style="color:{colors['heading']}; font-weight:bold; margin-bottom:5px;">User</div>'
+            header = f'<div style="color:{colors["heading"]}; font-weight:bold; margin-bottom:8px;">User</div>'
             bg_style = f'background:{colors["code_bg"]};'
         else:
-            header = f'<div style="color:#4CAF50; font-weight:bold; margin-bottom:5px;">AI</div>'
+            header = f'<div style="color:#4CAF50; font-weight:bold; margin-bottom:8px;">AI</div>'
             bg_style = ''
 
-        # Render markdown content
+        # Render markdown content with proper spacing
         content_html = self._renderer.render(content)
+
+        # Add line breaks between HTML elements for better rendering
+        content_html = content_html.replace('</div>', '</div><br>')
+        content_html = content_html.replace('<br><br>', '<br>')
+        content_html = content_html.rstrip('<br>')
 
         # Combine
         message_html = f'''
-        <div style="{bg_style} padding:5px; margin:5px 0; border-radius:5px;">
+        <div style="{bg_style} padding:10px; margin:8px 0; border-radius:5px; line-height:1.6;">
             {header}
-            <div style="color:{colors['text']};">
+            <div style="color:{colors["text"]};">
                 {content_html}
             </div>
         </div>
