@@ -357,6 +357,10 @@ aicp --pro --skipui "test prompt"
 # Test Flow Studio
 aicp --pro
 # Then use Flow Studio interface
+
+# Take screenshot of any app window using the title on Windows (if you need to see) - appsnap -h will show options
+appsnap -o screenshot.png "aicodeprep-gui"
+
 ```
 
 ## Important Documentation

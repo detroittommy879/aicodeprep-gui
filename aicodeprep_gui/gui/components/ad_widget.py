@@ -40,7 +40,9 @@ class AdManager(QtCore.QObject):
             self.current_ad_index = random.randint(0, len(self.ads) - 1)
             QtCore.QTimer.singleShot(0, lambda: self.ad_changed.emit(
                 self.ads[self.current_ad_index]))
-            self.rotation_timer.start(60000)  # 1 minute rotation
+            rotation_interval = 1500 if os.environ.get(
+                "AICODEPREP_FASTADS") == "1" else 60000
+            self.rotation_timer.start(rotation_interval)
 
         # Fetch new ads if needed
         self._maybe_fetch_ads()
@@ -71,7 +73,9 @@ class AdManager(QtCore.QObject):
                 # If we didn't have ads before, start now
                 if self.ads and self.current_ad_index == -1:
                     self.rotate_ad()
-                    self.rotation_timer.start(60000)
+                    rotation_interval = 1500 if os.environ.get(
+                        "AICODEPREP_FASTADS") == "1" else 60000
+                    self.rotation_timer.start(rotation_interval)
             except Exception as e:
                 logger.error(f"Error processing fetched ads: {e}")
         else:

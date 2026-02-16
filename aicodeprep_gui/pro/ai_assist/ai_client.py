@@ -1,7 +1,8 @@
 import requests
 import time
+import json
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Callable
 
 logger = logging.getLogger(__name__)
 
@@ -107,6 +108,79 @@ class AIClient:
             if isinstance(e, AIClientError):
                 raise
             raise AIClientError(f"Chat completion failed: {str(e)}")
+
+    def chat_stream(
+        self,
+        model: str,
+        messages: List[Dict[str, Any]],
+        base_url: str,
+        api_key: str = "",
+        timeout: int = 60,
+        on_chunk: Callable[[str], None] = None
+    ) -> str:
+        """
+        Sends a streaming chat completion request.
+        Calls on_chunk callback with each piece of content as it arrives.
+
+        Args:
+            model: The model to use
+            messages: List of message dicts with 'role' and 'content'
+            base_url: The API base URL
+            api_key: Optional API key
+            timeout: Request timeout in seconds
+            on_chunk: Callback called with each content chunk
+
+        Returns:
+            The complete response text
+        """
+        url = f"{base_url.rstrip('/')}/chat/completions"
+
+        headers = {
+            "Content-Type": "application/json"
+        }
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+
+        payload = {
+            "model": model,
+            "messages": messages,
+            "stream": True
+        }
+
+        try:
+            response = self._request_with_retry(
+                "POST",
+                url,
+                json=payload,
+                headers=headers,
+                timeout=timeout
+            )
+            response.raise_for_status()
+
+            complete_response = ""
+            for line in response.iter_lines(decode_unicode=True):
+                if line.startswith("data: "):
+                    data = line[6:]
+                    if data == "[DONE]":
+                        break
+                    try:
+                        chunk = json.loads(data)
+                        if "choices" in chunk and len(chunk["choices"]) > 0:
+                            delta = chunk["choices"][0].get("delta", {})
+                            content = delta.get("content", "")
+                            if content:
+                                complete_response += content
+                                if on_chunk:
+                                    on_chunk(content)
+                    except json.JSONDecodeError:
+                        continue
+
+            return complete_response
+
+        except Exception as e:
+            if isinstance(e, AIClientError):
+                raise
+            raise AIClientError(f"Streaming chat failed: {str(e)}")
 
     def list_models(
         self,

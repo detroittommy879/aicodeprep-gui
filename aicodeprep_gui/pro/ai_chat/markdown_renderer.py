@@ -312,6 +312,10 @@ class ChatMessageDisplay(QtWidgets.QTextEdit):
         # Renderer
         self._renderer = MarkdownRenderer(is_dark_mode)
 
+        # Streaming state
+        self._streaming_message_div = None
+        self._streaming_content = ""
+
         # Initial styling
         self.set_dark_mode(is_dark_mode)
 
@@ -373,6 +377,79 @@ class ChatMessageDisplay(QtWidgets.QTextEdit):
         if at_bottom:
             self.verticalScrollBar().setValue(self.verticalScrollBar().maximum())
 
+    def start_streaming(self, role: str):
+        """
+        Start a streaming response message.
+        Creates a placeholder that will be populated with streaming content.
+        """
+        colors = self._renderer._colors
+        if role == 'user':
+            header = f'<div style="color:{colors["heading"]}; font-weight:bold; margin-bottom:8px;">User</div>'
+            bg_style = f'background:{colors["code_bg"]};'
+        else:
+            header = f'<div style="color:#4CAF50; font-weight:bold; margin-bottom:8px;">AI</div>'
+            bg_style = ''
+
+        # Create placeholder message
+        self._streaming_message_html = f'''
+        <div style="{bg_style} padding:10px; margin:8px 0; border-radius:5px; line-height:1.6;">
+            {header}
+            <div id="streaming-content" style="color:{colors["text"]};">
+            </div>
+        </div>
+        '''
+        self._streaming_content = ""
+
+        # Store scroll position
+        self._was_at_bottom = self.verticalScrollBar().value() >= self.verticalScrollBar().maximum() - 10
+
+        # Append the placeholder
+        self.append(self._streaming_message_html)
+
+    def append_stream_chunk(self, chunk: str):
+        """
+        Append a chunk of content to the streaming message.
+        Uses word wrap to prevent horizontal scrolling.
+        """
+        self._streaming_content += chunk
+
+        # Escape HTML for proper display
+        escaped_chunk = chunk.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+
+        # Insert with automatic wrapping - use a space to trigger word wrap
+        cursor = self.textCursor()
+        cursor.movePosition(QtGui.QTextCursor.End)
+
+        # Insert text with zero-width space after spaces to encourage wrapping
+        # This prevents very long words from causing horizontal scroll
+        if escaped_chunk:
+            # Add a space after content to help with wrapping
+            text_to_insert = escaped_chunk
+            cursor.insertText(text_to_insert)
+
+        self.setTextCursor(cursor)
+
+        # Auto-scroll
+        if self._was_at_bottom:
+            self.verticalScrollBar().setValue(self.verticalScrollBar().maximum())
+
+    def finish_streaming(self):
+        """
+        Finish streaming and render the complete markdown.
+        The streaming content is already in the document, so we just re-render it.
+        """
+        if not self._streaming_content:
+            return
+
+        # For simplicity, the streaming content is already visible.
+        # We could re-render with proper markdown here if needed.
+        # For now, just keep the plain text that was streamed.
+
+        self._streaming_message_html = None
+        self._streaming_content = ""
+
     def clear(self):
         """Clear all messages."""
         self.setHtml('')
+        self._streaming_message_html = None
+        self._streaming_content = ""

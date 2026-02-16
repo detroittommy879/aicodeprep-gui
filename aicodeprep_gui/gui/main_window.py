@@ -746,14 +746,17 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         prompt_layout = QtWidgets.QVBoxLayout(prompt_widget)
         prompt_layout.setContentsMargins(0, 0, 0, 0)
 
-        # Ads system (Free version only)
-        if not pro.enabled:
-            self.ad_manager = AdManager(self)
-            self.ad_widget = AdWidget()
-            self.ad_widget.update_theme(self.is_dark_mode)
-            self.ad_widget.update_base_font_size(self.default_font.pointSize())
-            self._attach_ad_widget_to_tree()
-            self.ad_manager.ad_changed.connect(self.ad_widget.set_ad)
+        # Ads system (all users; Pro users can disable via toggle)
+        self.ad_manager = AdManager(self)
+        self.ad_widget = AdWidget()
+        self.ad_widget.update_theme(self.is_dark_mode)
+        self.ad_widget.update_base_font_size(self.default_font.pointSize())
+        self._attach_ad_widget_to_tree()
+        self.ad_manager.ad_changed.connect(self.ad_widget.set_ad)
+        # If pro user has ads disabled, hide them
+        if pro.enabled and get_setting("pro_options", "ads_disabled", False):
+            self.ad_widget.setVisible(False)
+            self.ad_manager.rotation_timer.stop()
 
         self.prompt_label = QtWidgets.QLabel(
             self.tr("Optional prompt/question for LLM (will be appended to the end):"))
@@ -809,50 +812,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         main_layout.addWidget(self.splitter)
 
         # Build tree from files
-        self.path_to_item = {}
-        root_node = self.tree_widget.invisibleRootItem()
-        for abs_path, rel_path, is_checked in files:
-            parts = rel_path.split(os.sep)
-            parent_node = root_node
-            path_so_far = ""
-            for part in parts[:-1]:
-                # Ensure Level column default state for intermediate folders if created
-                path_so_far = os.path.join(
-                    path_so_far, part) if path_so_far else part
-                if path_so_far in self.path_to_item:
-                    parent_node = self.path_to_item[path_so_far]
-                else:
-                    # Always create with two columns since tree widget always has two columns
-                    new_parent = QtWidgets.QTreeWidgetItem(
-                        parent_node, [part, ""])
-                    new_parent.setIcon(0, self.folder_icon)
-                    new_parent.setFlags(new_parent.flags()
-                                        | QtCore.Qt.ItemIsUserCheckable)
-                    new_parent.setCheckState(0, QtCore.Qt.Unchecked)
-                    self.path_to_item[path_so_far] = new_parent
-                    parent_node = new_parent
-
-            item_text = parts[-1]
-            # Always create with two columns since tree widget always has two columns
-            item = QtWidgets.QTreeWidgetItem(parent_node, [item_text, ""])
-            item.setData(0, QtCore.Qt.UserRole, abs_path)
-            self.path_to_item[rel_path] = item
-
-            if self.preferences_manager.prefs_loaded:
-                is_checked = rel_path in self.preferences_manager.checked_files_from_prefs
-
-            if os.path.isdir(abs_path):
-                item.setIcon(0, self.folder_icon)
-                item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-                item.setCheckState(0, QtCore.Qt.Unchecked)
-            else:
-                item.setIcon(0, self.file_icon)
-                item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-                if smart_logic.is_binary_file(abs_path):
-                    is_checked = False
-
-            item.setCheckState(
-                0, QtCore.Qt.Checked if is_checked else QtCore.Qt.Unchecked)
+        self.tree_manager.populate_tree(self.files)
 
         # Do not attach Level delegate by default; installed via Pro toggle
         self.level_delegate = None
@@ -1211,6 +1171,35 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         premium_group_box.toggled.connect(premium_container.setVisible)
         premium_group_box.toggled.connect(self._save_panel_visibility)
 
+        # Disable Ads toggle (Pro only)
+        ads_layout = QtWidgets.QHBoxLayout()
+        ads_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.disable_ads_toggle = QtWidgets.QCheckBox(
+            self.tr("Disable Ads"))
+        ads_help = QtWidgets.QLabel(
+            "<b style='color:#0098D4; font-size:14px; cursor:help;'>?</b>")
+        ads_help.setToolTip(
+            self.tr("Hide advertisement banners from the file tree area"))
+        ads_help.setAlignment(QtCore.Qt.AlignVCenter)
+        ads_layout.addWidget(self.disable_ads_toggle)
+        ads_layout.addWidget(ads_help)
+        ads_layout.addStretch()
+        premium_content_layout.addLayout(ads_layout)
+
+        if pro.enabled:
+            self.disable_ads_toggle.setEnabled(True)
+            self.disable_ads_toggle.setToolTip(
+                self.tr("Hide advertisement banners"))
+            # Load saved state
+            ads_disabled = get_setting("pro_options", "ads_disabled", False)
+            self.disable_ads_toggle.setChecked(bool(ads_disabled))
+            self.disable_ads_toggle.toggled.connect(self._toggle_ads)
+        else:
+            self.disable_ads_toggle.setEnabled(False)
+            self.disable_ads_toggle.setToolTip(
+                self.tr("Disable Ads (Pro Feature)"))
+
         # Pro: Enable Skeleton Level column toggle
         level_layout = QtWidgets.QHBoxLayout()
         level_layout.setContentsMargins(0, 0, 0, 0)
@@ -1270,7 +1259,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.generate_ai_button.setAccessibleDescription(
             self.tr("Generate context and send to selected AI chat tabs"))
         self.generate_ai_button.clicked.connect(self.generate_context_to_ai)
-        self.generate_ai_button.setEnabled(False)  # Disabled until AI Chat is enabled
+        # Disabled until AI Chat is enabled
+        self.generate_ai_button.setEnabled(False)
         button_layout1.addWidget(self.generate_ai_button)
 
         self.select_all_button = QtWidgets.QPushButton(self.tr("Select All"))
@@ -1290,6 +1280,14 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         button_layout1.addWidget(self.deselect_all_button)
 
         button_layout2.addStretch()
+        self.open_folder_btn = QtWidgets.QPushButton(self.tr("Open Folder"))
+        self.open_folder_btn.clicked.connect(self.open_folder_dialog)
+        button_layout2.addWidget(self.open_folder_btn)
+
+        self.open_repo_btn = QtWidgets.QPushButton(self.tr("Open Repo"))
+        self.open_repo_btn.clicked.connect(self.open_repo_dialog)
+        button_layout2.addWidget(self.open_repo_btn)
+
         self.load_prefs_button = QtWidgets.QPushButton(
             self.tr("Load preferences"))
         self.load_prefs_button.clicked.connect(
@@ -2080,6 +2078,82 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         dialog = LanguageSelectionDialog(self)
         dialog.exec()
 
+    def reload_folder(self, folder_path):
+        """Reload the app with a new folder without creating a new window."""
+        import os
+        try:
+            os.chdir(folder_path)
+            # Reset folder-specific preferences
+            self.preferences_manager.prefs_loaded = False
+            self.preferences_manager.load_prefs_if_exists()
+
+            from aicodeprep_gui.smart_logic import collect_all_files
+            new_files = collect_all_files()
+            if not new_files:
+                logging.warning(f"No files found in {folder_path}")
+                # We still proceed but show empty tree
+                new_files = []
+
+            self.files = new_files
+            # Re-populate the tree
+            self.tree_manager.populate_tree(self.files)
+            # Update window title
+            self.setWindowTitle(
+                f"aicodeprep-gui - {os.path.basename(folder_path)}")
+            # Clear status text
+            self.text_label.setText("")
+            # Update token counter
+            self.update_token_counter()
+
+            logging.info(f"Reloaded folder: {folder_path}")
+        except Exception as e:
+            logging.error(f"Failed to reload folder: {e}")
+            QtWidgets.QMessageBox.warning(
+                self, "Error", f"Failed to open folder: {e}")
+
+    def open_folder_dialog(self):
+        """Open a folder picker and reload the app with the selected folder."""
+        folder = QtWidgets.QFileDialog.getExistingDirectory(
+            self, self.tr("Open Folder"), os.path.expanduser("~"))
+        if folder:
+            self.reload_folder(folder)
+
+    def open_repo_dialog(self):
+        """Prompt for a git repo URL, clone to temp dir, and reload."""
+        url, ok = QtWidgets.QInputDialog.getText(
+            self, self.tr("Open Repository"),
+            self.tr("Enter git repository URL:"),
+            QtWidgets.QLineEdit.Normal, "")
+        if ok and url.strip():
+            url = url.strip()
+            import tempfile
+            import subprocess
+            tmp_dir = tempfile.mkdtemp(prefix="aicodeprep_repo_")
+            try:
+                self.statusBar().showMessage(self.tr("Cloning repository..."), 0)
+                QtWidgets.QApplication.processEvents()
+                result = subprocess.run(
+                    ["git", "clone", "--depth", "1", url, tmp_dir],
+                    capture_output=True, text=True, timeout=120)
+                if result.returncode != 0:
+                    raise RuntimeError(result.stderr or "git clone failed")
+                self.statusBar().showMessage(
+                    self.tr("Repository cloned successfully"), 3000)
+                self.reload_folder(tmp_dir)
+            except FileNotFoundError:
+                QtWidgets.QMessageBox.warning(
+                    self, self.tr("Git Not Found"),
+                    self.tr("git is not installed or not in PATH. Please install git first."))
+            except subprocess.TimeoutExpired:
+                QtWidgets.QMessageBox.warning(
+                    self, self.tr("Timeout"),
+                    self.tr("Cloning took too long. Please try a smaller repository."))
+            except Exception as e:
+                QtWidgets.QMessageBox.warning(
+                    self, self.tr("Clone Failed"),
+                    self.tr("Failed to clone repository: {}").format(str(e)))
+                self.statusBar().showMessage("", 0)
+
     def dragEnterEvent(self, event):
         return self.window_helpers.dragEnterEvent(event)
 
@@ -2206,6 +2280,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.select_all_button.setText(self.tr("Select All"))
         if hasattr(self, "deselect_all_button"):
             self.deselect_all_button.setText(self.tr("Deselect All"))
+        if hasattr(self, "open_folder_btn"):
+            self.open_folder_btn.setText(self.tr("Open Folder"))
+        if hasattr(self, "open_repo_btn"):
+            self.open_repo_btn.setText(self.tr("Open Repo"))
         if hasattr(self, "load_prefs_button"):
             self.load_prefs_button.setText(self.tr("Load preferences"))
         if hasattr(self, "scan_button"):
@@ -2780,6 +2858,27 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         except Exception as e:
             logging.error(f"toggle_flow_studio failed: {e}")
 
+    def _toggle_ads(self, disabled):
+        """Toggle ad visibility (Pro feature)."""
+        try:
+            set_setting("pro_options", "ads_disabled", disabled)
+            if disabled:
+                if hasattr(self, "ad_widget"):
+                    self.ad_widget.setVisible(False)
+                if hasattr(self, "ad_manager"):
+                    self.ad_manager.rotation_timer.stop()
+            else:
+                if hasattr(self, "ad_manager"):
+                    rotation_interval = 1500 if os.environ.get(
+                        "AICODEPREP_FASTADS") == "1" else 60000
+                    self.ad_manager.rotation_timer.start(rotation_interval)
+                    self.ad_manager.rotate_ad()
+                if hasattr(self, "ad_widget"):
+                    self.ad_widget.setVisible(True)
+                    self._position_ad_widget_in_tree()
+        except Exception as e:
+            logging.error(f"_toggle_ads failed: {e}")
+
     def toggle_ai_chat(self, enabled):
         """Show/hide the AI Chat dock."""
         try:
@@ -2858,16 +2957,12 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 self._send_metric_event("generate_to_ai_failed")
                 return
 
-            # Send to selected AI chat tabs
-            tabs_count = self.ai_chat_dock.send_context_to_selected_tabs(context_text)
+            # Send to selected AI chat tabs (includes auto-send)
+            tabs_count = self.ai_chat_dock.send_context_to_selected_tabs(
+                context_text, prompt)
 
             if tabs_count > 0:
-                QtWidgets.QMessageBox.information(
-                    self,
-                    "Context Sent",
-                    f"Context sent to {tabs_count} AI chat tab(s).\n"
-                    f"Check the AI Chat dock for responses."
-                )
+                # Don't show blocking dialog - streaming is visible in AI chat
                 self._send_metric_event(
                     "generate_to_ai_success",
                     token_count=self.total_tokens

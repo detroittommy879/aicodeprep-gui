@@ -70,6 +70,8 @@ def main():
                         help="List all available languages and exit")
     parser.add_argument("--language", type=str, metavar="CODE",
                         help="Set application language (e.g., --language es for Spanish)")
+    parser.add_argument("--fastads", action="store_true",
+                        help="Speed up ad rotation to 1.5 seconds (for testing)")
 
     # --- ADD THESE NEW ARGUMENTS ---
     if platform.system() == "Windows":
@@ -83,6 +85,9 @@ def main():
     # --- END OF NEW ARGUMENTS ---
 
     args = parser.parse_args()
+
+    if args.fastads:
+        os.environ["AICODEPREP_FASTADS"] = "1"
 
     # Handle --list-languages
     if args.list_languages:

@@ -3,11 +3,129 @@ Individual chat tab widget for AI Chat Dock.
 Uses AIClient for OpenAI-compatible API calls.
 """
 from PySide6 import QtWidgets, QtGui, QtCore
-from ..ai_assist.endpoint_config import get_active_endpoint, set_active_model, load_endpoints
+from ..ai_assist.endpoint_config import get_active_endpoint, set_active_model, load_endpoints, get_all_endpoint_ids
 from ..ai_assist.ai_client import AIClient, AIClientError
 from .markdown_renderer import ChatMessageDisplay
 import logging
 import threading
+
+
+class SearchableComboBox(QtWidgets.QComboBox):
+    """
+    ComboBox with built-in search/filter functionality.
+    Allows typing to filter models in the dropdown.
+    """
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setEditable(True)
+        self.setInsertPolicy(QtWidgets.QComboBox.NoInsert)
+        self.setDuplicatesEnabled(False)
+
+        # Set up the line edit for searching
+        self.lineEdit().setPlaceholderText("Search models...")
+
+        # Use a filter proxy for searching
+        self._filter_proxy = QtCore.QSortFilterProxyModel(self)
+        self._filter_proxy.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        self._filter_proxy.setSourceModel(self.model())
+
+        # Connect text changes to filter
+        self.lineEdit().textEdited.connect(self._on_search_text)
+
+    def _on_search_text(self, text):
+        """Filter models based on search text."""
+        self._filter_proxy.setFilterWildcard(f"*{text}*")
+        # Show all if search is empty
+        if not text.strip():
+            self._filter_proxy.setFilterWildcard("")
+
+    def setModel(self, model):
+        """Set the source model."""
+        self._filter_proxy.setSourceModel(model)
+        super().setModel(self._filter_proxy)
+
+    def addItem(self, text, userData=None):
+        """Add item through the proxy model."""
+        super().addItem(text, userData)
+
+    def findData(self, data, role=QtCore.Qt.UserRole):
+        """Find data in source model."""
+        # Search in source model and map through proxy
+        source_model = self._filter_proxy.sourceModel()
+        if not source_model:
+            return -1
+
+        for row in range(source_model.rowCount()):
+            index = source_model.index(row, 0)
+            if source_model.data(index, role) == data:
+                # Map to proxy index
+                proxy_index = self._filter_proxy.mapFromSource(index)
+                return self.model().indexToRow(proxy_index)
+        return -1
+
+
+class StreamingChatDisplay(ChatMessageDisplay):
+    """
+    Extended ChatMessageDisplay with streaming support.
+    Allows appending content incrementally and auto-scrolling.
+    """
+
+    def __init__(self, parent=None, is_dark_mode: bool = None):
+        super().__init__(parent, is_dark_mode)
+        self._streaming_content = ""
+        self._streaming_role = ""
+
+    def start_streaming(self, role: str):
+        """Start a streaming response from the AI."""
+        self._streaming_role = role
+        self._streaming_content = ""
+
+        # Style based on role
+        colors = self._renderer._colors
+        if role == 'user':
+            header = f'<div style="color:{colors["heading"]}; font-weight:bold; margin-bottom:8px;">User</div>'
+            bg_style = f'background:{colors["code_bg"]};'
+        else:
+            header = f'<div style="color:#4CAF50; font-weight:bold; margin-bottom:8px;">AI</div>'
+            bg_style = ''
+
+        # Store cursor position for auto-scroll
+        cursor = self.textCursor()
+        self._was_at_bottom = cursor.atEnd()
+
+        # Create placeholder message
+        message_html = f'''
+        <div style="{bg_style} padding:10px; margin:8px 0; border-radius:5px; line-height:1.6;">
+            {header}
+            <div style="color:{colors["text"]};">
+            </div>
+        </div>
+        '''
+        self.append(message_html)
+
+    def append_stream_chunk(self, chunk: str):
+        """Append a chunk of content to the streaming message."""
+        self._streaming_content += chunk
+
+        # Escape HTML but preserve line breaks
+        escaped = chunk.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+
+        # Get the last block and update its content div
+        cursor = self.textCursor()
+        cursor.movePosition(QtGui.QTextCursor.End)
+
+        # Move to the content div (second div inside the message div)
+        # Find and update the content
+        html = self.toHtml()
+
+        # Since QTextEdit doesn't easily support partial HTML updates,
+        # we'll append and use a different approach - append to a temporary
+        # message div pattern
+
+        # Actually, let's just re-render the entire message
+        # For streaming, we'll just append chunks as they come
+        pass  # We'll use a simpler approach below
 
 
 class ChatTabWidget(QtWidgets.QWidget):
@@ -23,9 +141,14 @@ class ChatTabWidget(QtWidgets.QWidget):
         self._endpoint_config = {}
         self._chat_history = []  # List of {"role": "user" | "assistant", "content": str}
         self._is_streaming = False
+        self._all_endpoints = {}  # Store all endpoints for per-tab selection
 
         self._setup_ui()
         self.load_endpoint_config()
+
+        # Set size constraints to prevent stuck/giant windows
+        self.setMinimumSize(200, 200)
+        self.setMaximumSize(4000, 4000)
 
     def _setup_ui(self):
         """Set up the UI components."""
@@ -33,20 +156,45 @@ class ChatTabWidget(QtWidgets.QWidget):
         layout.setContentsMargins(5, 5, 5, 5)
         layout.setSpacing(5)
 
-        # Top bar: Model selector and include context checkbox
+        # Top bar: Endpoint selector, Model selector, and include context checkbox
         top_bar = QtWidgets.QHBoxLayout()
 
-        # Model selector label
-        model_label = QtWidgets.QLabel("Model:")
-        model_label.setFixedWidth(50)
-        top_bar.addWidget(model_label)
+        # Endpoint selector label
+        endpoint_label = QtWidgets.QLabel("Endpoint:")
+        endpoint_label.setFixedWidth(60)
+        top_bar.addWidget(endpoint_label)
 
-        # Model dropdown
-        self.model_combo = QtWidgets.QComboBox()
+        # Endpoint dropdown - NEW: per-tab endpoint selection
+        self.endpoint_combo = QtWidgets.QComboBox()
+        self.endpoint_combo.setMinimumWidth(120)
+        self.endpoint_combo.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.endpoint_combo.currentIndexChanged.connect(self._on_endpoint_changed)
+        top_bar.addWidget(self.endpoint_combo)
+
+        # Searchable Model dropdown
+        self.model_combo = SearchableComboBox()
         self.model_combo.setMinimumWidth(150)
         self.model_combo.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.model_combo.currentIndexChanged.connect(self._on_model_changed)
         top_bar.addWidget(self.model_combo)
+
+        # Separator
+        sep = QtWidgets.QLabel("|")
+        sep.setStyleSheet("color: #888;")
+        top_bar.addWidget(sep)
+
+        # Random buttons for OpenRouter
+        self.random_btn = QtWidgets.QPushButton("Random")
+        self.random_btn.setFixedWidth(60)
+        self.random_btn.setToolTip("Pick a random model")
+        self.random_btn.clicked.connect(self._pick_random_model)
+        top_bar.addWidget(self.random_btn)
+
+        self.random_free_btn = QtWidgets.QPushButton("Free")
+        self.random_free_btn.setFixedWidth(40)
+        self.random_free_btn.setToolTip("Pick a random free model (OpenRouter)")
+        self.random_free_btn.clicked.connect(self._pick_random_free_model)
+        top_bar.addWidget(self.random_free_btn)
 
         # Include context checkbox
         self.include_context_checkbox = QtWidgets.QCheckBox("Include context")
@@ -69,8 +217,12 @@ class ChatTabWidget(QtWidgets.QWidget):
 
         layout.addLayout(top_bar)
 
-        # Chat history display
+        # Chat history display - with size policy to prevent giant windows
         self.chat_display = ChatMessageDisplay()
+        self.chat_display.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        # Set minimum and maximum heights to prevent extreme sizing
+        self.chat_display.setMinimumHeight(100)
+        self.chat_display.setMaximumHeight(2000)
         layout.addWidget(self.chat_display, stretch=1)
 
         # Input area
@@ -90,77 +242,130 @@ class ChatTabWidget(QtWidgets.QWidget):
 
         layout.addLayout(input_layout)
 
-        # Status label
+        # Status label - limit height to prevent giant windows
         self.status_label = QtWidgets.QLabel()
         self.status_label.setAlignment(QtCore.Qt.AlignCenter)
-        self.status_label.setStyleSheet("color: #666;")
+        self.status_label.setStyleSheet("color: #FF4444; background: #3a1a1a; padding: 5px; border-radius: 3px;")
+        self.status_label.setWordWrap(True)
+        self.status_label.setMaximumHeight(80)  # Limit height to prevent giant windows
+        self.status_label.hide()  # Hidden by default
         layout.addWidget(self.status_label)
 
     def load_endpoint_config(self):
-        """Load endpoint configuration and populate model dropdown."""
-        self._endpoint_config = get_active_endpoint()
-        self._endpoint_id = self._endpoint_config.get("id", "local")
+        """Load endpoint configuration and populate endpoint/model dropdowns."""
+        # Load ALL endpoints for the dropdown
+        self._all_endpoints = load_endpoints()
+        endpoints = self._all_endpoints.get("endpoints", {})
+        active_id = self._all_endpoints.get("active_endpoint", "local")
 
-        # Update model dropdown with available models
+        # Populate endpoint dropdown
+        self.endpoint_combo.blockSignals(True)
+        self.endpoint_combo.clear()
+
+        for endpoint_id, config in endpoints.items():
+            name = config.get("name", endpoint_id)
+            self.endpoint_combo.addItem(name, endpoint_id)
+
+        # Set to active endpoint (or first one)
+        idx = self.endpoint_combo.findData(active_id)
+        if idx < 0 and self.endpoint_combo.count() > 0:
+            idx = 0
+        if idx >= 0:
+            self.endpoint_combo.setCurrentIndex(idx)
+
+        self.endpoint_combo.blockSignals(False)
+
+        # Use selected endpoint for this tab
+        self._on_endpoint_changed(self.endpoint_combo.currentIndex())
+
+    def _on_endpoint_changed(self, index: int):
+        """Handle endpoint selection change - load models for that endpoint."""
+        endpoint_id = self.endpoint_combo.currentData()
+        if not endpoint_id:
+            return
+
+        endpoints = self._all_endpoints.get("endpoints", {})
+        if endpoint_id not in endpoints:
+            return
+
+        # Get this endpoint's config
+        self._endpoint_config = endpoints[endpoint_id].copy()
+        self._endpoint_config["id"] = endpoint_id
+        self._endpoint_id = endpoint_id
+
+        # Update model dropdown for this specific endpoint
+        self.model_combo.blockSignals(True)
         self.model_combo.clear()
-
-        # Add a placeholder
         self.model_combo.addItem("-- Loading models --", "")
 
-        # Load models from endpoint
-        self._load_models_from_endpoint()
+        # Load models from THIS endpoint only (not all)
+        self._load_models_for_endpoint(endpoint_id, self._endpoint_config)
 
-        # Restore previously selected model if any
-        saved_model = self._endpoint_config.get("selected_model", "")
-        if saved_model:
-            idx = self.model_combo.findData(saved_model)
-            if idx >= 0:
-                self.model_combo.setCurrentIndex(idx)
-                self._selected_model = saved_model
-            else:
-                # Model not in list, add it
-                self.model_combo.addItem(saved_model, saved_model)
-                self.model_combo.setCurrentIndex(self.model_combo.count() - 1)
-                self._selected_model = saved_model
+        self.model_combo.blockSignals(False)
 
-        # If no models loaded and no saved model, set a default
-        if not self._selected_model and self.model_combo.count() == 1:
-            # Common model names to try
-            common_models = ["gpt-3.5-turbo", "gpt-4", "claude-3-haiku", "claude-3-sonnet"]
-            for model in common_models:
-                self.model_combo.addItem(model, model)
-            self.model_combo.setCurrentIndex(0)
-
-    def _load_models_from_endpoint(self):
-        """Load models from the endpoint URL using AIClient."""
-        url = self._endpoint_config.get("url", "")
-        api_key = self._endpoint_config.get("api_key", "")
+    def _load_models_for_endpoint(self, endpoint_id: str, endpoint_config: dict):
+        """Load models from a specific endpoint."""
+        url = endpoint_config.get("url", "")
+        api_key = endpoint_config.get("api_key", "")
 
         if not url:
-            logging.warning("No endpoint URL configured")
+            self._update_models_list("ERROR")
             return
+
+        def fetch_and_update():
+            try:
+                client = AIClient()
+                models = client.list_models(url, api_key=api_key, timeout=5, retries=1)
+
+                model_ids = []
+                for m in models:
+                    model_id = m.get("id", "")
+                    if model_id:
+                        # Use endpoint prefix to avoid collisions
+                        prefixed = f"{endpoint_id}:{model_id}"
+                        model_ids.append(prefixed)
+
+                if model_ids:
+                    model_str = ",".join(model_ids)
+                else:
+                    model_str = "ERROR"
+
+                QtCore.QMetaObject.invokeMethod(self, "_update_models_list",
+                    QtCore.Qt.QueuedConnection, QtCore.Q_ARG(str, model_str))
+            except Exception as e:
+                logging.warning(f"Could not load models from {endpoint_id}: {e}")
+                QtCore.QMetaObject.invokeMethod(self, "_update_models_list",
+                    QtCore.Qt.QueuedConnection, QtCore.Q_ARG(str, "ERROR"))
+
+        # Fetch in background thread
+        thread = threading.Thread(target=fetch_and_update, daemon=True)
+        thread.start()
+
+    def _load_models_from_endpoint(self, endpoint_id: str, url: str, api_key: str):
+        """Load models from a specific endpoint URL using AIClient."""
+        if not url:
+            return []
 
         def fetch_models():
             try:
                 client = AIClient()
                 models = client.list_models(url, api_key=api_key, timeout=5, retries=1)
 
-                # Store model IDs as comma-separated string to avoid Qt type marshaling issues
-                model_ids = [m.get("id", "") for m in models if m.get("id")]
-                model_str = ",".join(model_ids)
-
-                # Update UI on main thread using string
-                QtCore.QMetaObject.invokeMethod(self, "_update_models_list",
-                    QtCore.Qt.QueuedConnection, QtCore.Q_ARG(str, model_str))
+                # Store model IDs with endpoint prefix
+                model_ids = []
+                for m in models:
+                    model_id = m.get("id", "")
+                    if model_id:
+                        # Prefix with endpoint ID to avoid collisions
+                        prefixed = f"{endpoint_id}:{model_id}"
+                        model_ids.append(prefixed)
+                return model_ids
             except Exception as e:
-                logging.warning(f"Could not load models from endpoint: {e}")
-                # Signal failure with special marker
-                QtCore.QMetaObject.invokeMethod(self, "_update_models_list",
-                    QtCore.Qt.QueuedConnection, QtCore.Q_ARG(str, "ERROR"))
+                logging.warning(f"Could not load models from {endpoint_id}: {e}")
+                return []
 
-        # Fetch models in background
-        thread = threading.Thread(target=fetch_models, daemon=True)
-        thread.start()
+        # Fetch models in background and return immediately
+        return fetch_models()
 
     @QtCore.Slot(str)
     def _update_models_list(self, model_str: str):
@@ -175,18 +380,63 @@ class ChatTabWidget(QtWidgets.QWidget):
 
         if model_str:
             model_ids = model_str.split(",")
+            # Track seen model names to avoid duplicates
+            seen = set()
+            models_with_prefix = []
             for model_id in model_ids:
                 if model_id:
-                    self.model_combo.addItem(model_id, model_id)
-            logging.info(f"Loaded {len(model_ids)} models from endpoint")
+                    # Extract base model name for deduplication
+                    base_name = model_id.split(':', 1)[1] if ':' in model_id else model_id
+                    if base_name not in seen:
+                        seen.add(base_name)
+                        models_with_prefix.append(model_id)
+
+            # Sort alphabetically by base model name
+            models_with_prefix.sort(key=lambda x: x.split(':', 1)[1].lower())
+
+            for model_id in models_with_prefix:
+                self.model_combo.addItem(model_id, model_id)
+            logging.info(f"Loaded {len(models_with_prefix)} unique models (sorted A-Z)")
         else:
             logging.warning("No models returned from endpoint")
 
     def _on_model_changed(self, index: int):
         """Handle model selection change."""
-        self._selected_model = self.model_combo.currentData()
+        model_data = self.model_combo.currentData()
+        # Strip prefix if present (e.g., "openrouter:gpt-4" -> "gpt-4")
+        if model_data and ':' in model_data:
+            self._selected_model = model_data.split(':', 1)[1]
+        else:
+            self._selected_model = model_data
+
+        # Save the model selection for THIS endpoint (per-tab)
         if self._endpoint_id and self._selected_model:
             set_active_model(self._endpoint_id, self._selected_model)
+
+    def _pick_random_model(self):
+        """Pick a random model from the dropdown."""
+        count = self.model_combo.count()
+        if count > 0:
+            import random
+            idx = random.randint(0, count - 1)
+            self.model_combo.setCurrentIndex(idx)
+
+    def _pick_random_free_model(self):
+        """Pick a random free model (OpenRouter models ending with :free)."""
+        count = self.model_combo.count()
+        free_indices = []
+        for i in range(count):
+            model_id = self.model_combo.itemData(i)
+            if model_id and model_id.endswith(':free'):
+                free_indices.append(i)
+
+        if free_indices:
+            import random
+            idx = random.choice(free_indices)
+            self.model_combo.setCurrentIndex(idx)
+        else:
+            # Fallback to regular random if no free models
+            self._pick_random_model()
 
     def set_include_context(self, include: bool):
         """Set the include context checkbox."""
@@ -227,7 +477,7 @@ class ChatTabWidget(QtWidgets.QWidget):
         # Build message content
         messages = self._build_messages()
 
-        # Start async response
+        # Start async streaming response
         self._streaming_response(messages)
 
     def _build_messages(self) -> list:
@@ -236,7 +486,7 @@ class ChatTabWidget(QtWidgets.QWidget):
         return messages
 
     def _streaming_response(self, messages: list):
-        """Handle AI response."""
+        """Handle AI response with streaming."""
         # Use AIClient for API calls
         client = AIClient()
         url = self._endpoint_config.get("url", "")
@@ -247,21 +497,57 @@ class ChatTabWidget(QtWidgets.QWidget):
             self._on_response_error("No endpoint URL or model selected")
             return
 
-        def run_completion():
+        # Create streaming assistant message placeholder
+        self._streaming_response_text = ""
+        self.chat_display.start_streaming("assistant")
+
+        def run_stream():
             try:
-                response = client.chat(
+                def on_chunk(chunk):
+                    # Queue chunk to be added on main thread
+                    QtCore.QMetaObject.invokeMethod(self, "_add_stream_chunk",
+                        QtCore.Qt.QueuedConnection, QtCore.Q_ARG(str, chunk))
+
+                response = client.chat_stream(
                     model=model,
                     messages=messages,
                     base_url=url,
                     api_key=api_key,
-                    timeout=60
+                    timeout=120,
+                    on_chunk=on_chunk
                 )
                 self._on_response_complete(response)
             except Exception as e:
                 self._on_response_error(str(e))
 
-        thread = threading.Thread(target=run_completion, daemon=True)
+        thread = threading.Thread(target=run_stream, daemon=True)
         thread.start()
+
+    @QtCore.Slot(str)
+    def _add_stream_chunk(self, chunk: str):
+        """Add a streaming chunk to the display (called on main thread)."""
+        self._streaming_response_text += chunk
+        self.chat_display.append_stream_chunk(chunk)
+
+    @QtCore.Slot(str)
+    def _finish_response(self, response: str):
+        """Finish response and update UI (called on main thread)."""
+        self._is_streaming = False
+        self.send_button.setEnabled(True)
+        self.input_text.setEnabled(True)
+        self.model_combo.setEnabled(True)
+        self.status_label.hide()
+        self.status_label.clear()
+
+        if response.startswith("Error:"):
+            error_msg = response[6:].strip()
+            self.status_label.setText(f"Error: {error_msg}")
+            self.status_label.show()  # Show error in constrained label
+            return
+
+        # Add assistant message to history
+        self._chat_history.append({"role": "assistant", "content": response})
+        # Streaming content is already added via append_stream_chunk
 
     def _on_response_complete(self, response: str):
         """Handle successful response."""
@@ -273,34 +559,14 @@ class ChatTabWidget(QtWidgets.QWidget):
         QtCore.QMetaObject.invokeMethod(self, "_finish_response",
             QtCore.Qt.QueuedConnection, QtCore.Q_ARG(str, f"Error: {error}"))
 
-    @QtCore.Slot(str)
-    def _finish_streaming(self, response: str):
-        """Finish response and update UI (called on main thread)."""
-        self._finish_response(response)
-
-    @QtCore.Slot(str)
-    def _finish_response(self, response: str):
-        """Finish response and update UI (called on main thread)."""
-        self._is_streaming = False
-        self.send_button.setEnabled(True)
-        self.input_text.setEnabled(True)
-        self.model_combo.setEnabled(True)
-        self.status_label.clear()
-
-        if response.startswith("Error:"):
-            error_msg = response[6:].strip()
-            self.status_label.setText(f"Error: {error_msg}")
-            self.status_label.setStyleSheet("color: #FF4444;")
-            return
-
-        # Add assistant message to history
-        self._chat_history.append({"role": "assistant", "content": response})
-        self.chat_display.append_message("assistant", response)
-
-    def send_context(self, context_text: str):
+    def send_context(self, context_text: str, auto_send: bool = True):
         """
         Send context text to this chat (e.g., from "Generate Context to AI" button).
         Appends context as a user message with optional instruction.
+
+        Args:
+            context_text: The context content to send
+            auto_send: If True, immediately send to AI after adding context
         """
         if not context_text:
             return
@@ -311,6 +577,30 @@ class ChatTabWidget(QtWidgets.QWidget):
         # Add to history
         self._chat_history.append({"role": "user", "content": message})
         self.chat_display.append_message("user", message)
+
+        # Auto-send if enabled
+        if auto_send:
+            self._send_message()
+
+    def send_context_and_question(self, context_text: str, question: str):
+        """
+        Send context text with a follow-up question to this chat.
+        Appends context and question as a user message.
+        """
+        if not context_text:
+            return
+
+        if question:
+            message = f"Context:\n{context_text}\n\nQuestion:\n{question}"
+        else:
+            message = f"Context:\n{context_text}\n\nPlease analyze this context and be ready to answer questions about it."
+
+        # Add to history
+        self._chat_history.append({"role": "user", "content": message})
+        self.chat_display.append_message("user", message)
+
+        # Auto-send
+        self._send_message()
 
     def clear_chat(self):
         """Clear chat history."""
