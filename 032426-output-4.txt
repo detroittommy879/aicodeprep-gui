@@ -1,0 +1,50 @@
+   Building aicodeprep-gui @ file:///G:/aicodeprep-2026/aicodeprep-gui
+      Built aicodeprep-gui @ file:///G:/aicodeprep-2026/aicodeprep-gui
+Uninstalled 1 package in 3ms
+warning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.
+         If the cache and target directories are on different filesystems, hardlinking may not be supported.
+         If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.
+Installed 1 package in 18ms
+2026-03-24 21:52:19,408 - INFO - Flow initialization: copied 0, skipped 2 existing
+2026-03-24 21:52:19,717 - INFO - TranslationManager initialized. Translations dir: G:\aicodeprep-2026\aicodeprep-gui\aicodeprep_gui\i18n\translations
+2026-03-24 21:52:19,745 - INFO - Loading saved language: en
+2026-03-24 21:52:19,748 - INFO - Set language to English (source)
+2026-03-24 21:52:19,748 - INFO - Retranslation event sent to all widgets
+2026-03-24 21:52:19,760 - INFO - Loaded font: JetBrains Mono from JetBrainsMono-VariableFont_wght.ttf
+2026-03-24 21:52:19,764 - INFO - Loaded font: Fira Code from FiraCode-VariableFont_wght.ttf
+2026-03-24 21:52:19,765 - INFO - Loaded font: Space Mono from SpaceMono-Regular.ttf
+2026-03-24 21:52:19,765 - INFO - All loaded custom fonts: JetBrains Mono, Fira Code, Space Mono
+2026-03-24 21:52:19,765 - INFO - Loaded custom fonts: JetBrains Mono, Fira Code, Space Mono
+2026-03-24 21:52:19,765 - INFO - Target directory: .
+2026-03-24 21:52:19,765 - INFO - Starting code concatenation...
+2026-03-24 21:52:19,765 - INFO - Starting initial fast scan in: G:\aicodeprep-2026\aicodeprep-gui
+2026-03-24 21:52:19,823 - INFO - Initial scan collected 312 items.
+2026-03-24 21:52:20,132 - INFO - Loaded font: JetBrains Mono from JetBrainsMono-VariableFont_wght.ttf
+2026-03-24 21:52:20,138 - INFO - Loaded font: Fira Code from FiraCode-VariableFont_wght.ttf
+2026-03-24 21:52:20,139 - INFO - Loaded font: Space Mono from SpaceMono-Regular.ttf
+2026-03-24 21:52:20,139 - INFO - All loaded custom fonts: JetBrains Mono, Fira Code, Space Mono
+Font debug info: Loaded font families: ['JetBrains Mono', 'Fira Code', 'Space Mono']
+2026-03-24 21:52:22,418 - INFO - Fetching fresh ads...
+2026-03-24 21:52:22,537 - INFO - SyntaxHighlightedTextEdit: Using font family 'JetBrains Mono' (requested: 'JetBrains Mono')
+2026-03-24 21:52:22,547 - INFO - Loaded preview window state from preferences: True
+2026-03-24 21:52:22,604 - ERROR - toggle_ai_chat failed: 'FileSelectionGUI' object has no attribute 'generate_ai_button'
+2026-03-24 21:52:23,341 - INFO - Application is up to date. (current: 1.4.0, latest: 1.3.2)
+2026-03-24 21:52:23,421 - WARNING - Server error 503 on attempt 1. Retrying...
+2026-03-24 21:52:23,421 - ERROR - Final attempt failed: 503 Server Error: Service Unavailable for url: https://extra.wuu73.org/aimodels/v1/models
+2026-03-24 21:52:23,421 - ERROR - Failed to list models from https://extra.wuu73.org/aimodels/v1/models: Request failed after 1 attempts: 503 Server Error: Service Unavailable for url: https://extra.wuu73.org/aimodels/v1/models
+2026-03-24 21:52:23,455 - ERROR - Failed to load models from endpoint
+2026-03-24 21:52:24,496 - WARNING - Server error 503 on attempt 1. Retrying...
+2026-03-24 21:52:24,497 - ERROR - Final attempt failed: 503 Server Error: Service Unavailable for url: https://extra.wuu73.org/aimodels/v1/models
+2026-03-24 21:52:24,497 - ERROR - Failed to list models from https://extra.wuu73.org/aimodels/v1/models: Request failed after 1 attempts: 503 Server Error: Service Unavailable for url: https://extra.wuu73.org/aimodels/v1/models
+2026-03-24 21:52:32,152 - WARNING - Metrics flush failed (status=404, error=NetworkError.ContentNotFoundError): {"detail":"Not Found"}
+2026-03-24 21:52:32,152 - INFO - Metrics: batch endpoint unavailable, falling back to single-event delivery
+2026-03-24 21:52:41,300 - WARNING - Server error 503 on attempt 1. Retrying...
+2026-03-24 21:52:41,300 - ERROR - Final attempt failed: 503 Server Error: Service Unavailable for url: https://extra.wuu73.org/aimodels/v1/models
+2026-03-24 21:52:41,300 - ERROR - Failed to list models from https://extra.wuu73.org/aimodels/v1/models: Request failed after 1 attempts: 503 Server Error: Service Unavailable for url: https://extra.wuu73.org/aimodels/v1/models
+2026-03-24 21:52:41,300 - ERROR - Failed to load models from endpoint
+2026-03-24 22:00:23,158 - INFO - Loaded 14 unique models (sorted A-Z)
+2026-03-24 22:00:23,186 - INFO - Loaded 14 unique models (sorted A-Z)
+2026-03-24 22:00:56,108 - WARNING - Metrics flush failed (status=422, error=NetworkError.UnknownContentError): {"detail":[{"type":"literal_error","loc":["body","event_type"],"msg":"Input should be 'open', 'generate_start', 'generate_end', 'quit' or 'feature_vote'","input":"ai_chat_request_started","ctx":{"expected":"'open', 'generate_start', 'generate_end', 'quit' or 'feature_vote'"}}]}
+2026-03-24 22:01:06,288 - WARNING - Metrics flush failed (status=422, error=NetworkError.UnknownContentError): {"detail":[{"type":"literal_error","loc":["body","event_type"],"msg":"Input should be 'open', 'generate_start', 'generate_end', 'quit' or 'feature_vote'","input":"ai_chat_request_started","ctx":{"expected":"'open', 'generate_start', 'generate_end', 'quit' or 'feature_vote'"}}]}
+2026-03-24 22:01:19,983 - WARNING - Metrics flush failed (status=422, error=NetworkError.UnknownContentError): {"detail":[{"type":"literal_error","loc":["body","event_type"],"msg":"Input should be 'open', 'generate_start', 'generate_end', 'quit' or 'feature_vote'","input":"ai_chat_request_started","ctx":{"expected":"'open', 'generate_start', 'generate_end', 'quit' or 'feature_vote'"}}]}
+2026-03-24 22:01:21,543 - WARNING - Metrics flush failed (status=422, error=NetworkError.UnknownContentError): {"detail":[{"type":"literal_error","loc":["body","event_type"],"msg":"Input should be 'open', 'generate_start', 'generate_end', 'quit' or 'feature_vote'","input":"ai_chat_request_started","ctx":{"expected":"'open', 'generate_start', 'generate_end', 'quit' or 'feature_vote'"}}]}

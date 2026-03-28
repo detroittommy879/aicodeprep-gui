@@ -114,3 +114,6 @@ venv.bak/
 ehthumbs.db
 Thumbs.dbnul
 nul
+plans/
+pyside6_docs/
+old_random_scripts

@@ -42,10 +42,6 @@ class AIEndpointSettingsDialog(QtWidgets.QDialog):
         left_btn_layout.addWidget(remove_btn)
         left_layout.addLayout(left_btn_layout)
 
-        set_active_btn = QtWidgets.QPushButton(self.tr("Set Active"))
-        set_active_btn.clicked.connect(self._on_set_active)
-        left_layout.addWidget(set_active_btn)
-
         content_layout.addLayout(left_layout, 1)
 
         # --- Right Panel (Form) ---
@@ -57,7 +53,7 @@ class AIEndpointSettingsDialog(QtWidgets.QDialog):
         form_layout.addRow(self.tr("Name:"), self.name_edit)
 
         self.url_edit = QtWidgets.QLineEdit()
-        self.url_edit.setPlaceholderText("http://localhost:59999/v1")
+        self.url_edit.setPlaceholderText("https://your-endpoint.example/v1")
         self.url_edit.textEdited.connect(self._marked_changed)
         form_layout.addRow(self.tr("URL:"), self.url_edit)
 
@@ -83,12 +79,22 @@ class AIEndpointSettingsDialog(QtWidgets.QDialog):
         models_label = QtWidgets.QLabel(self.tr("Model:"))
         self.models_combo = QtWidgets.QComboBox()
         self.models_combo.setEditable(True)  # Allow custom entry
+        self.models_combo.currentTextChanged.connect(self._marked_changed)
         self.refresh_btn = QtWidgets.QPushButton(self.tr("Refresh Models"))
         self.refresh_btn.clicked.connect(self._on_refresh_models)
         models_layout.addWidget(models_label)
         models_layout.addWidget(self.models_combo, 1)
         models_layout.addWidget(self.refresh_btn)
         right_layout.addLayout(models_layout)
+
+        actions_layout = QtWidgets.QHBoxLayout()
+        self.set_active_btn = QtWidgets.QPushButton(self.tr("Set Active"))
+        self.set_active_btn.setToolTip(
+            self.tr("Make this endpoint the one used by AI Chat and compatible Flow nodes"))
+        self.set_active_btn.clicked.connect(self._on_set_active)
+        actions_layout.addWidget(self.set_active_btn)
+        actions_layout.addStretch()
+        right_layout.addLayout(actions_layout)
 
         right_layout.addStretch()
 
@@ -168,23 +174,54 @@ class AIEndpointSettingsDialog(QtWidgets.QDialog):
 
     def _marked_changed(self):
         """Called when text fields change."""
-        if self.ignore_changes or not self.current_endpoint_id:
+        if self.ignore_changes:
             return
 
         # Save to memory immediately
-        eid = self.current_endpoint_id
+        eid = self._get_selected_endpoint_id()
+        if not eid:
+            return
+
         if eid in self.config_data.get("endpoints", {}):
             self.config_data["endpoints"][eid]["name"] = self.name_edit.text()
             self.config_data["endpoints"][eid]["url"] = self.url_edit.text()
             self.config_data["endpoints"][eid]["api_key"] = self.key_edit.text()
             self.config_data["endpoints"][eid]["selected_model"] = self.models_combo.currentText(
             )
+            self.current_endpoint_id = eid
+            self._update_list_item_display(eid)
+
+    def _get_selected_endpoint_id(self):
+        item = self.endpoint_list.currentItem()
+        if item is not None:
+            endpoint_id = item.data(QtCore.Qt.UserRole)
+            if endpoint_id:
+                return endpoint_id
+        return self.current_endpoint_id
+
+    def _update_list_item_display(self, endpoint_id: str):
+        active_id = self.config_data.get("active_endpoint", "")
+        for i in range(self.endpoint_list.count()):
+            item = self.endpoint_list.item(i)
+            if item.data(QtCore.Qt.UserRole) != endpoint_id:
+                continue
+
+            endpoint_data = self.config_data.get(
+                "endpoints", {}).get(endpoint_id, {})
+            name = endpoint_data.get("name", endpoint_id) or endpoint_id
+            item.setText(f"► {name}" if endpoint_id == active_id else name)
+
+            font = item.font()
+            font.setBold(endpoint_id == active_id)
+            item.setFont(font)
+            break
 
     def _save_current_selection(self):
         """Flush ALL current form fields into the in-memory config_data."""
-        if not self.current_endpoint_id:
+        eid = self._get_selected_endpoint_id()
+        if not eid:
             return
-        eid = self.current_endpoint_id
+
         if eid in self.config_data.get("endpoints", {}):
             self.config_data["endpoints"][eid]["name"] = self.name_edit.text()
             self.config_data["endpoints"][eid]["url"] = self.url_edit.text(
@@ -193,6 +230,7 @@ class AIEndpointSettingsDialog(QtWidgets.QDialog):
             ).strip()
             self.config_data["endpoints"][eid]["selected_model"] = self.models_combo.currentText(
             )
+            self.current_endpoint_id = eid
 
     def _on_selection_changed(self):
         if self.ignore_changes:
@@ -222,6 +260,7 @@ class AIEndpointSettingsDialog(QtWidgets.QDialog):
 
     def _populate_form(self, eid):
         self.ignore_changes = True
+        self.current_endpoint_id = eid
         data = self.config_data.get("endpoints", {}).get(eid, {})
 
         self.name_edit.setText(data.get("name", ""))
@@ -238,6 +277,7 @@ class AIEndpointSettingsDialog(QtWidgets.QDialog):
 
     def _persist_memory_to_disk(self):
         """Saves current self.config_data to disk."""
+        self._save_current_selection()
         save_endpoints(self.config_data)
 
     def _on_add_endpoint(self):
@@ -261,7 +301,7 @@ class AIEndpointSettingsDialog(QtWidgets.QDialog):
             return
 
         # 3. Call config function
-        add_endpoint(eid, "New Endpoint", "https://")
+        add_endpoint(eid, "New Endpoint", "")
 
         # 4. Reload
         self.config_data = load_endpoints()
@@ -311,15 +351,16 @@ class AIEndpointSettingsDialog(QtWidgets.QDialog):
             return
         eid = item.data(QtCore.Qt.UserRole)
 
-        # 1. Save current
+        # Save current form values to memory, then flip active endpoint and
+        # write everything to disk in a single save_endpoints() call.
+        # Avoid calling set_active_endpoint() (which re-reads disk and runs
+        # migrations) because that round-trip can overwrite freshly typed data.
         self._save_current_selection()
+        self.config_data["active_endpoint"] = eid
         self._persist_memory_to_disk()
+        logger.info("AI endpoint set active: %s", eid)
 
-        # 2. Set active
-        set_active_endpoint(eid)
-
-        # 3. Reload
-        self.config_data = load_endpoints()
+        # Refresh the list from the in-memory state (no disk re-read needed).
         self._refresh_list()
 
     def _on_test_connection(self):
@@ -410,7 +451,12 @@ class AIEndpointSettingsDialog(QtWidgets.QDialog):
     def _on_save(self):
         self._save_current_selection()
         self._persist_memory_to_disk()
+        logger.info("AI endpoint settings saved. active=%s",
+                    self.config_data.get("active_endpoint"))
         self.accept()
 
     def _on_cancel(self):
         self.reject()
+
+
+EndpointSettingsDialog = AIEndpointSettingsDialog

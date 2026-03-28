@@ -2,6 +2,9 @@
 AI Chat Dock Widget - Main dockable panel for AI chat functionality.
 Supports both tabbed view and side-by-side view for multiple chats.
 """
+import base64
+import json
+
 from PySide6 import QtWidgets, QtGui, QtCore
 from .chat_tab import ChatTabWidget
 from ..ai_assist.ai_client import AIClient
@@ -152,6 +155,72 @@ class AIChatDock(QtWidgets.QDockWidget):
 
         # Enable side-by-side mode by default after tab is created
         self._toggle_side_by_side(True)
+
+    def _serialize_splitter(self, splitter: QtWidgets.QSplitter) -> dict:
+        data = {
+            "orientation": int(splitter.orientation()),
+            "state": base64.b64encode(bytes(splitter.saveState())).decode("utf-8"),
+            "children": [],
+        }
+        for index in range(splitter.count()):
+            child = splitter.widget(index)
+            if isinstance(child, QtWidgets.QSplitter):
+                data["children"].append(self._serialize_splitter(child))
+            else:
+                data["children"].append(None)
+        return data
+
+    def _restore_splitter(self, splitter: QtWidgets.QSplitter, data: dict):
+        if not isinstance(data, dict):
+            return
+
+        try:
+            splitter.setOrientation(QtCore.Qt.Orientation(
+                data.get("orientation", int(splitter.orientation()))))
+        except Exception:
+            pass
+
+        encoded_state = data.get("state")
+        if encoded_state:
+            try:
+                splitter.restoreState(QtCore.QByteArray(
+                    base64.b64decode(encoded_state.encode("utf-8"))
+                ))
+            except Exception:
+                pass
+
+        for index, child_state in enumerate(data.get("children", [])):
+            if child_state is None or index >= splitter.count():
+                continue
+            child = splitter.widget(index)
+            if isinstance(child, QtWidgets.QSplitter):
+                self._restore_splitter(child, child_state)
+
+    def get_layout_state(self) -> dict:
+        """Return persistent layout state for project-level preferences."""
+        return {
+            "side_by_side": bool(self._side_by_side),
+            "tile_mode": self._tile_mode,
+            "root_splitter": self._serialize_splitter(self._root_splitter),
+        }
+
+    def restore_layout_state(self, state: dict):
+        """Restore persistent layout state for project-level preferences."""
+        if not isinstance(state, dict):
+            return
+
+        side_by_side = bool(state.get("side_by_side", True))
+        tile_mode = str(state.get("tile_mode") or "auto")
+        self._toggle_side_by_side(side_by_side)
+        if side_by_side:
+            self._apply_tile_layout(tile_mode)
+
+            root_state = state.get("root_splitter")
+            if isinstance(root_state, dict):
+                QtCore.QTimer.singleShot(
+                    0, lambda rs=root_state: self._restore_splitter(
+                        self._root_splitter, rs)
+                )
 
     def _all_chat_tabs(self):
         """Return all chat tabs (docked + floating) for operations like send-to-all."""
@@ -542,9 +611,10 @@ class AIChatDock(QtWidgets.QDockWidget):
         """Open AI endpoint settings."""
         try:
             # Import and show endpoint settings dialog
-            from aicodeprep_gui.gui.components.ai_settings_dialog import EndpointSettingsDialog
-            dialog = EndpointSettingsDialog(self)
-            dialog.exec()
+            from aicodeprep_gui.gui.components.ai_settings_dialog import AIEndpointSettingsDialog
+            dialog = AIEndpointSettingsDialog(self)
+            if dialog.exec() == QtWidgets.QDialog.Accepted:
+                self._refresh_models()
         except ImportError:
             # Fallback: show a message
             QtWidgets.QMessageBox.information(
@@ -623,6 +693,20 @@ class AIChatDock(QtWidgets.QDockWidget):
                     count += 1
 
         return count
+
+    def get_selected_models(self) -> list[str]:
+        """Return the selected model ids for checked chat tabs."""
+        models: list[str] = []
+        for widget in self._all_chat_tabs():
+            if hasattr(widget, 'is_selected') and widget.is_selected():
+                if hasattr(widget, 'get_selected_model'):
+                    model = widget.get_selected_model()
+                else:
+                    model = str(
+                        getattr(widget, '_selected_model', '') or '').strip()
+                if model:
+                    models.append(model)
+        return models
 
     def get_selected_tab(self) -> ChatTabWidget:
         """Get the currently selected chat tab widget."""

@@ -215,8 +215,16 @@ class AdWidget(QtWidgets.QFrame):
 
         self.is_dark = False
         self.base_font_size = None
+        self._ads_disabled = False
         self.setMinimumHeight(60)
         self.setVisible(False)
+
+    def set_ads_disabled(self, disabled: bool):
+        self._ads_disabled = bool(disabled)
+        if self._ads_disabled:
+            self.flash_timer.stop()
+            self.repeat_timer.stop()
+            self.setVisible(False)
 
     def set_ad(self, ad_data):
         self.title_label.setText(ad_data.get('title', ''))
@@ -229,6 +237,12 @@ class AdWidget(QtWidgets.QFrame):
             self.link_button.setVisible(True)
         else:
             self.link_button.setVisible(False)
+
+        if self._ads_disabled:
+            self.flash_timer.stop()
+            self.repeat_timer.stop()
+            self.setVisible(False)
+            return
 
         self.setVisible(True)
         self._start_flash()

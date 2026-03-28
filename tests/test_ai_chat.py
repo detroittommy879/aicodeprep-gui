@@ -31,8 +31,8 @@ class TestChatTabEndpointSelections:
             "active_endpoint": "local",
             "endpoints": {
                 "local": {
-                    "name": "Local Server",
-                    "url": "http://localhost:59999/v1",
+                    "name": "zoobies coding plan",
+                    "url": "https://extra.wuu73.org/aimodels/v1",
                     "api_key": "",
                     "selected_model": "gpt-3.5-turbo"
                 },
@@ -46,8 +46,8 @@ class TestChatTabEndpointSelections:
         }
         mock_get_active.return_value = {
             "id": "local",
-            "name": "Local Server",
-            "url": "http://localhost:59999/v1",
+            "name": "zoobies coding plan",
+            "url": "https://extra.wuu73.org/aimodels/v1",
             "api_key": "",
             "selected_model": "gpt-3.5-turbo"
         }
@@ -63,12 +63,14 @@ class TestChatTabEndpointSelections:
             assert tab.endpoint_combo.count() == 2
 
             # Check endpoint names are displayed
-            endpoint_names = [tab.endpoint_combo.itemText(i) for i in range(tab.endpoint_combo.count())]
-            assert "Local Server" in endpoint_names
+            endpoint_names = [tab.endpoint_combo.itemText(
+                i) for i in range(tab.endpoint_combo.count())]
+            assert "zoobies coding plan" in endpoint_names
             assert "OpenRouter" in endpoint_names
 
             # Check data values
-            data_values = [tab.endpoint_combo.itemData(i) for i in range(tab.endpoint_combo.count())]
+            data_values = [tab.endpoint_combo.itemData(
+                i) for i in range(tab.endpoint_combo.count())]
             assert "local" in data_values
             assert "openrouter" in data_values
 
@@ -87,8 +89,8 @@ class TestChatTabEndpointSelections:
             "active_endpoint": "local",
             "endpoints": {
                 "local": {
-                    "name": "Local Server",
-                    "url": "http://localhost:59999/v1",
+                    "name": "zoobies coding plan",
+                    "url": "https://extra.wuu73.org/aimodels/v1",
                     "api_key": "",
                     "selected_model": "gpt-3.5-turbo"
                 },
@@ -102,8 +104,8 @@ class TestChatTabEndpointSelections:
         }
         mock_get_active.return_value = {
             "id": "local",
-            "name": "Local Server",
-            "url": "http://localhost:59999/v1",
+            "name": "zoobies coding plan",
+            "url": "https://extra.wuu73.org/aimodels/v1",
             "api_key": "",
             "selected_model": "gpt-3.5-turbo"
         }
@@ -117,7 +119,8 @@ class TestChatTabEndpointSelections:
 
             # Initially should have local endpoint
             assert tab._endpoint_id == "local"
-            assert tab._endpoint_config.get("url") == "http://localhost:59999/v1"
+            assert tab._endpoint_config.get(
+                "url") == "https://extra.wuu73.org/aimodels/v1"
 
             # Switch to openrouter
             idx = tab.endpoint_combo.findData("openrouter")
@@ -125,7 +128,8 @@ class TestChatTabEndpointSelections:
 
             # Now should have openrouter
             assert tab._endpoint_id == "openrouter"
-            assert tab._endpoint_config.get("url") == "https://openrouter.ai/api/v1"
+            assert tab._endpoint_config.get(
+                "url") == "https://openrouter.ai/api/v1"
             assert tab._endpoint_config.get("api_key") == "test-key"
 
             # Clean up
@@ -147,8 +151,8 @@ class TestChatTabWindowSizings:
             "active_endpoint": "local",
             "endpoints": {
                 "local": {
-                    "name": "Local Server",
-                    "url": "http://localhost:59999/v1",
+                    "name": "zoobies coding plan",
+                    "url": "https://extra.wuu73.org/aimodels/v1",
                     "api_key": "",
                     "selected_model": ""
                 }
@@ -156,8 +160,8 @@ class TestChatTabWindowSizings:
         }
         mock_get_active.return_value = {
             "id": "local",
-            "name": "Local Server",
-            "url": "http://localhost:59999/v1",
+            "name": "zoobies coding plan",
+            "url": "https://extra.wuu73.org/aimodels/v1",
             "api_key": "",
             "selected_model": ""
         }
@@ -192,8 +196,8 @@ class TestChatTabWindowSizings:
             "active_endpoint": "local",
             "endpoints": {
                 "local": {
-                    "name": "Local Server",
-                    "url": "http://localhost:59999/v1",
+                    "name": "zoobies coding plan",
+                    "url": "https://extra.wuu73.org/aimodels/v1",
                     "api_key": "",
                     "selected_model": ""
                 }
@@ -201,8 +205,8 @@ class TestChatTabWindowSizings:
         }
         mock_get_active.return_value = {
             "id": "local",
-            "name": "Local Server",
-            "url": "http://localhost:59999/v1",
+            "name": "zoobies coding plan",
+            "url": "https://extra.wuu73.org/aimodels/v1",
             "api_key": "",
             "selected_model": ""
         }
@@ -249,8 +253,8 @@ class TestModelSortings:
             "active_endpoint": "local",
             "endpoints": {
                 "local": {
-                    "name": "Local Server",
-                    "url": "http://localhost:59999/v1",
+                    "name": "zoobies coding plan",
+                    "url": "https://extra.wuu73.org/aimodels/v1",
                     "api_key": "",
                     "selected_model": ""
                 }
@@ -258,8 +262,8 @@ class TestModelSortings:
         }
         mock_get_active.return_value = {
             "id": "local",
-            "name": "Local Server",
-            "url": "http://localhost:59999/v1",
+            "name": "zoobies coding plan",
+            "url": "https://extra.wuu73.org/aimodels/v1",
             "api_key": "",
             "selected_model": ""
         }
@@ -314,8 +318,8 @@ class TestErrorHandlings:
             "active_endpoint": "local",
             "endpoints": {
                 "local": {
-                    "name": "Local Server",
-                    "url": "http://localhost:59999/v1",
+                    "name": "zoobies coding plan",
+                    "url": "https://extra.wuu73.org/aimodels/v1",
                     "api_key": "",
                     "selected_model": ""
                 }
@@ -323,8 +327,8 @@ class TestErrorHandlings:
         }
         mock_get_active.return_value = {
             "id": "local",
-            "name": "Local Server",
-            "url": "http://localhost:59999/v1",
+            "name": "zoobies coding plan",
+            "url": "https://extra.wuu73.org/aimodels/v1",
             "api_key": "",
             "selected_model": ""
         }
@@ -341,6 +345,112 @@ class TestErrorHandlings:
 
             # Label should be constrained height
             assert tab.status_label.maximumHeight() == 80
+
+
+class TestChatRequestGuards:
+    """Regression tests for duplicate AI chat sends."""
+
+    @patch("aicodeprep_gui.pro.ai_chat.chat_tab.load_endpoints")
+    @patch("aicodeprep_gui.pro.ai_chat.chat_tab.set_active_model")
+    @patch("aicodeprep_gui.pro.ai_chat.chat_tab.get_active_endpoint")
+    def test_send_message_ignored_while_streaming(
+        self, mock_get_active, mock_set_model, mock_load_endpoints
+    ):
+        """A second send should not append duplicate history while a request is active."""
+        mock_load_endpoints.return_value = {
+            "active_endpoint": "local",
+            "endpoints": {
+                "local": {
+                    "name": "Local",
+                    "url": "https://extra.wuu73.org/aimodels/v1",
+                    "api_key": "",
+                    "selected_model": "glm-5"
+                }
+            }
+        }
+        mock_get_active.return_value = {
+            "id": "local",
+            "name": "Local",
+            "url": "https://extra.wuu73.org/aimodels/v1",
+            "api_key": "",
+            "selected_model": "glm-5"
+        }
+
+        from aicodeprep_gui.pro.ai_chat.chat_tab import ChatTabWidget
+
+        with patch("aicodeprep_gui.pro.ai_chat.chat_tab.AIClient") as mock_client:
+            mock_client.return_value.list_models.return_value = [
+                {"id": "glm-5"}]
+
+            tab = ChatTabWidget()
+            tab._selected_model = "glm-5"
+
+            with patch.object(tab, "_streaming_response") as mock_streaming:
+                tab.input_text.setPlainText("first message")
+                tab._send_message()
+
+                assert mock_streaming.call_count == 1
+                assert tab._is_streaming is True
+                assert tab._chat_history == [
+                    {"role": "user", "content": "first message"}
+                ]
+
+                tab.input_text.setPlainText("second message")
+                tab._send_message()
+
+                assert mock_streaming.call_count == 1
+                assert tab._chat_history == [
+                    {"role": "user", "content": "first message"}
+                ]
+
+            tab.close()
+            tab.deleteLater()
+
+    @patch("aicodeprep_gui.pro.ai_chat.chat_tab.load_endpoints")
+    @patch("aicodeprep_gui.pro.ai_chat.chat_tab.set_active_model")
+    @patch("aicodeprep_gui.pro.ai_chat.chat_tab.get_active_endpoint")
+    def test_stale_completion_does_not_append_response(
+        self, mock_get_active, mock_set_model, mock_load_endpoints
+    ):
+        """Late completions from older requests should be ignored."""
+        mock_load_endpoints.return_value = {
+            "active_endpoint": "local",
+            "endpoints": {
+                "local": {
+                    "name": "Local",
+                    "url": "https://extra.wuu73.org/aimodels/v1",
+                    "api_key": "",
+                    "selected_model": "glm-5"
+                }
+            }
+        }
+        mock_get_active.return_value = {
+            "id": "local",
+            "name": "Local",
+            "url": "https://extra.wuu73.org/aimodels/v1",
+            "api_key": "",
+            "selected_model": "glm-5"
+        }
+
+        from aicodeprep_gui.pro.ai_chat.chat_tab import ChatTabWidget
+
+        with patch("aicodeprep_gui.pro.ai_chat.chat_tab.AIClient") as mock_client:
+            mock_client.return_value.list_models.return_value = [
+                {"id": "glm-5"}]
+
+            tab = ChatTabWidget()
+            tab._chat_history = [{"role": "user", "content": "hello"}]
+            tab._is_streaming = True
+            tab._active_request_token = "2"
+
+            tab._finish_response("1", "stale response")
+
+            assert tab._chat_history == [{"role": "user", "content": "hello"}]
+            assert tab._is_streaming is True
+            assert tab._active_request_token == "2"
+
+            tab.close()
+            tab.deleteLater()
 
 
 if __name__ == "__main__":

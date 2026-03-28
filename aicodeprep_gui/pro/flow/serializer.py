@@ -22,6 +22,26 @@ def _has_method(obj: Any, name: str) -> bool:
     return hasattr(obj, name) and callable(getattr(obj, name))
 
 
+def _normalize_json_object(value: Any) -> Dict[str, Any]:
+    """Coerce serialized object payloads back into dictionaries."""
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+            if isinstance(parsed, dict):
+                return parsed
+        except json.JSONDecodeError:
+            pass
+    return {}
+
+
+def _normalize_string(value: Any) -> Any:
+    if isinstance(value, str):
+        return value.strip()
+    return value
+
+
 def _clear_graph(graph: NodeGraph) -> None:
     """Best-effort clear of all nodes if load requires an empty scene."""
     try:
@@ -85,34 +105,86 @@ def _normalize_node_data(data: dict) -> dict:
     if "nodes" in data and isinstance(data["nodes"], dict):
         for node_id, node_data in data["nodes"].items():
             if isinstance(node_data, dict):
-                # If 'custom' is a JSON string, parse it to a dict
-                if "custom" in node_data and isinstance(node_data["custom"], str):
-                    try:
-                        node_data["custom"] = json.loads(node_data["custom"])
-                    except json.JSONDecodeError:
-                        logging.warning(
-                            f"[Flow Serializer] Failed to parse 'custom' for node {node_id}")
-                        node_data["custom"] = {}
+                node_data["custom"] = _normalize_json_object(
+                    node_data.get("custom", {}))
+                node_data["subgraph_session"] = _normalize_json_object(
+                    node_data.get("subgraph_session", {}))
 
-                # Ensure 'custom' is a dict if it doesn't exist
-                if "custom" not in node_data:
-                    node_data["custom"] = {}
+                custom = node_data["custom"]
+                for key in ("model", "model_mode", "provider", "base_url", "path", "output_file"):
+                    if key in custom:
+                        custom[key] = _normalize_string(custom[key])
 
-                # If 'subgraph_session' is a JSON string, parse it to a dict
-                if "subgraph_session" in node_data and isinstance(node_data["subgraph_session"], str):
-                    try:
-                        node_data["subgraph_session"] = json.loads(
-                            node_data["subgraph_session"])
-                    except json.JSONDecodeError:
-                        logging.warning(
-                            f"[Flow Serializer] Failed to parse 'subgraph_session' for node {node_id}")
-                        node_data["subgraph_session"] = {}
+    graph_data = data.get("graph")
+    if not isinstance(graph_data, dict):
+        data["graph"] = {}
+    else:
+        for key in ("accept_connection_types", "reject_connection_types"):
+            if not isinstance(graph_data.get(key), dict):
+                graph_data[key] = {}
 
-                # Ensure 'subgraph_session' is a dict if it doesn't exist
-                if "subgraph_session" not in node_data:
-                    node_data["subgraph_session"] = {}
+    if not isinstance(data.get("connections"), list):
+        data["connections"] = []
 
     return data
+
+
+def validate_flow_structure(data: Any) -> list[str]:
+    """Return validation errors for a Flow Studio session payload."""
+    errors: list[str] = []
+
+    if not isinstance(data, dict):
+        return ["Top-level flow payload must be a JSON object."]
+
+    graph = data.get("graph")
+    if not isinstance(graph, dict):
+        errors.append("'graph' must be an object.")
+
+    nodes = data.get("nodes")
+    if not isinstance(nodes, dict) or not nodes:
+        errors.append("'nodes' must be a non-empty object.")
+        nodes = {}
+
+    for node_id, node_data in nodes.items():
+        if not isinstance(node_id, str) or not node_id:
+            errors.append("Node ids must be non-empty strings.")
+            continue
+        if not isinstance(node_data, dict):
+            errors.append(f"Node '{node_id}' must be an object.")
+            continue
+        type_name = node_data.get("type_")
+        if not isinstance(type_name, str) or not type_name.strip():
+            errors.append(f"Node '{node_id}' is missing a valid 'type_'.")
+        if not isinstance(node_data.get("custom", {}), dict):
+            errors.append(f"Node '{node_id}' has non-object 'custom'.")
+        if not isinstance(node_data.get("subgraph_session", {}), dict):
+            errors.append(
+                f"Node '{node_id}' has non-object 'subgraph_session'.")
+
+    connections = data.get("connections")
+    if not isinstance(connections, list):
+        errors.append("'connections' must be a list.")
+        connections = []
+
+    for index, connection in enumerate(connections):
+        if not isinstance(connection, dict):
+            errors.append(f"Connection #{index + 1} must be an object.")
+            continue
+        for side in ("out", "in"):
+            endpoint = connection.get(side)
+            if not isinstance(endpoint, list) or len(endpoint) != 2:
+                errors.append(
+                    f"Connection #{index + 1} field '{side}' must be a 2-item array.")
+                continue
+            node_id, port_name = endpoint
+            if node_id not in nodes:
+                errors.append(
+                    f"Connection #{index + 1} references missing node '{node_id}'.")
+            if not isinstance(port_name, str) or not port_name.strip():
+                errors.append(
+                    f"Connection #{index + 1} field '{side}' has an invalid port name.")
+
+    return errors
 
 
 def load_session(graph: NodeGraph, file_path: str) -> bool:
@@ -139,6 +211,15 @@ def load_session(graph: NodeGraph, file_path: str) -> bool:
 
             # Normalize the data to ensure proper format
             data = _normalize_node_data(data)
+
+            validation_errors = validate_flow_structure(data)
+            if validation_errors:
+                logging.error(
+                    "[Flow Serializer] Invalid flow structure in %s: %s",
+                    file_path,
+                    "; ".join(validation_errors),
+                )
+                return False
 
             # Write normalized data to a temp file for NodeGraphQt to load
             import tempfile

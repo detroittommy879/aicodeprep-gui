@@ -109,7 +109,8 @@ class StreamingChatDisplay(ChatMessageDisplay):
         self._streaming_content += chunk
 
         # Escape HTML but preserve line breaks
-        escaped = chunk.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+        escaped = chunk.replace('&', '&amp;').replace(
+            '<', '&lt;').replace('>', '&gt;')
 
         # Get the last block and update its content div
         cursor = self.textCursor()
@@ -139,8 +140,11 @@ class ChatTabWidget(QtWidgets.QWidget):
         self._endpoint_id = None
         self._selected_model = None
         self._endpoint_config = {}
-        self._chat_history = []  # List of {"role": "user" | "assistant", "content": str}
+        # List of {"role": "user" | "assistant", "content": str}
+        self._chat_history = []
         self._is_streaming = False
+        self._request_serial = 0
+        self._active_request_token = ""
         self._all_endpoints = {}  # Store all endpoints for per-tab selection
 
         self._setup_ui()
@@ -167,14 +171,17 @@ class ChatTabWidget(QtWidgets.QWidget):
         # Endpoint dropdown - NEW: per-tab endpoint selection
         self.endpoint_combo = QtWidgets.QComboBox()
         self.endpoint_combo.setMinimumWidth(120)
-        self.endpoint_combo.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        self.endpoint_combo.currentIndexChanged.connect(self._on_endpoint_changed)
+        self.endpoint_combo.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.endpoint_combo.currentIndexChanged.connect(
+            self._on_endpoint_changed)
         top_bar.addWidget(self.endpoint_combo)
 
         # Searchable Model dropdown
         self.model_combo = SearchableComboBox()
         self.model_combo.setMinimumWidth(150)
-        self.model_combo.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.model_combo.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.model_combo.currentIndexChanged.connect(self._on_model_changed)
         top_bar.addWidget(self.model_combo)
 
@@ -192,20 +199,23 @@ class ChatTabWidget(QtWidgets.QWidget):
 
         self.random_free_btn = QtWidgets.QPushButton("Free")
         self.random_free_btn.setFixedWidth(40)
-        self.random_free_btn.setToolTip("Pick a random free model (OpenRouter)")
+        self.random_free_btn.setToolTip(
+            "Pick a random free model (OpenRouter)")
         self.random_free_btn.clicked.connect(self._pick_random_free_model)
         top_bar.addWidget(self.random_free_btn)
 
         # Include context checkbox
         self.include_context_checkbox = QtWidgets.QCheckBox("Include context")
         self.include_context_checkbox.setChecked(True)
-        self.include_context_checkbox.setToolTip("Include the current context block in messages to AI")
+        self.include_context_checkbox.setToolTip(
+            "Include the current context block in messages to AI")
         top_bar.addWidget(self.include_context_checkbox)
 
         # Tab checkbox (for multi-select when sending context to AI)
         self.tab_checkbox = QtWidgets.QCheckBox()
         self.tab_checkbox.setChecked(True)
-        self.tab_checkbox.setToolTip("Select this tab when sending context to multiple tabs")
+        self.tab_checkbox.setToolTip(
+            "Select this tab when sending context to multiple tabs")
         top_bar.addWidget(self.tab_checkbox)
 
         # Refresh models button
@@ -219,7 +229,8 @@ class ChatTabWidget(QtWidgets.QWidget):
 
         # Chat history display - with size policy to prevent giant windows
         self.chat_display = ChatMessageDisplay()
-        self.chat_display.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.chat_display.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         # Set minimum and maximum heights to prevent extreme sizing
         self.chat_display.setMinimumHeight(100)
         self.chat_display.setMaximumHeight(2000)
@@ -245,9 +256,11 @@ class ChatTabWidget(QtWidgets.QWidget):
         # Status label - limit height to prevent giant windows
         self.status_label = QtWidgets.QLabel()
         self.status_label.setAlignment(QtCore.Qt.AlignCenter)
-        self.status_label.setStyleSheet("color: #FF4444; background: #3a1a1a; padding: 5px; border-radius: 3px;")
+        self.status_label.setStyleSheet(
+            "color: #FF4444; background: #3a1a1a; padding: 5px; border-radius: 3px;")
         self.status_label.setWordWrap(True)
-        self.status_label.setMaximumHeight(80)  # Limit height to prevent giant windows
+        # Limit height to prevent giant windows
+        self.status_label.setMaximumHeight(80)
         self.status_label.hide()  # Hidden by default
         layout.addWidget(self.status_label)
 
@@ -315,7 +328,8 @@ class ChatTabWidget(QtWidgets.QWidget):
         def fetch_and_update():
             try:
                 client = AIClient()
-                models = client.list_models(url, api_key=api_key, timeout=5, retries=1)
+                models = client.list_models(
+                    url, api_key=api_key, timeout=5, retries=1)
 
                 model_ids = []
                 for m in models:
@@ -331,11 +345,12 @@ class ChatTabWidget(QtWidgets.QWidget):
                     model_str = "ERROR"
 
                 QtCore.QMetaObject.invokeMethod(self, "_update_models_list",
-                    QtCore.Qt.QueuedConnection, QtCore.Q_ARG(str, model_str))
+                                                QtCore.Qt.QueuedConnection, QtCore.Q_ARG(str, model_str))
             except Exception as e:
-                logging.warning(f"Could not load models from {endpoint_id}: {e}")
+                logging.warning(
+                    f"Could not load models from {endpoint_id}: {e}")
                 QtCore.QMetaObject.invokeMethod(self, "_update_models_list",
-                    QtCore.Qt.QueuedConnection, QtCore.Q_ARG(str, "ERROR"))
+                                                QtCore.Qt.QueuedConnection, QtCore.Q_ARG(str, "ERROR"))
 
         # Fetch in background thread
         thread = threading.Thread(target=fetch_and_update, daemon=True)
@@ -349,7 +364,8 @@ class ChatTabWidget(QtWidgets.QWidget):
         def fetch_models():
             try:
                 client = AIClient()
-                models = client.list_models(url, api_key=api_key, timeout=5, retries=1)
+                models = client.list_models(
+                    url, api_key=api_key, timeout=5, retries=1)
 
                 # Store model IDs with endpoint prefix
                 model_ids = []
@@ -361,7 +377,8 @@ class ChatTabWidget(QtWidgets.QWidget):
                         model_ids.append(prefixed)
                 return model_ids
             except Exception as e:
-                logging.warning(f"Could not load models from {endpoint_id}: {e}")
+                logging.warning(
+                    f"Could not load models from {endpoint_id}: {e}")
                 return []
 
         # Fetch models in background and return immediately
@@ -386,7 +403,8 @@ class ChatTabWidget(QtWidgets.QWidget):
             for model_id in model_ids:
                 if model_id:
                     # Extract base model name for deduplication
-                    base_name = model_id.split(':', 1)[1] if ':' in model_id else model_id
+                    base_name = model_id.split(
+                        ':', 1)[1] if ':' in model_id else model_id
                     if base_name not in seen:
                         seen.add(base_name)
                         models_with_prefix.append(model_id)
@@ -396,7 +414,8 @@ class ChatTabWidget(QtWidgets.QWidget):
 
             for model_id in models_with_prefix:
                 self.model_combo.addItem(model_id, model_id)
-            logging.info(f"Loaded {len(models_with_prefix)} unique models (sorted A-Z)")
+            logging.info(
+                f"Loaded {len(models_with_prefix)} unique models (sorted A-Z)")
         else:
             logging.warning("No models returned from endpoint")
 
@@ -456,6 +475,9 @@ class ChatTabWidget(QtWidgets.QWidget):
 
     def _send_message(self):
         """Send message to the AI."""
+        if self._is_streaming:
+            return
+
         content = self.input_text.toPlainText().strip()
         if not content:
             return
@@ -463,29 +485,61 @@ class ChatTabWidget(QtWidgets.QWidget):
         # Clear input
         self.input_text.clear()
 
-        # Add user message to history
+        # Add user message to history and re-render display
         self._chat_history.append({"role": "user", "content": content})
-        self.chat_display.append_message("user", content)
+        self.chat_display.set_messages(self._chat_history)
 
-        # Disable UI during request
+        self._dispatch_ai_request()
+
+    def _dispatch_ai_request(self):
+        """Lock UI and start a streaming request using the current chat history."""
+        if self._is_streaming:
+            return False
+
+        self._request_serial += 1
+        request_token = str(self._request_serial)
+        self._active_request_token = request_token
         self._is_streaming = True
         self.send_button.setEnabled(False)
         self.input_text.setEnabled(False)
         self.model_combo.setEnabled(False)
         self.status_label.setText("Thinking...")
+        self.status_label.show()
+        self._emit_metric(
+            "ai_chat_request_started",
+            {
+                "feature": "ai_chat",
+                "endpoint_id": self._endpoint_id or "",
+                "model": self.get_selected_model(),
+                "message_count": len(self._chat_history),
+            },
+        )
+        self._streaming_response(self._build_messages(), request_token)
+        return True
 
-        # Build message content
-        messages = self._build_messages()
+    def _find_metrics_target(self):
+        widget = self.parentWidget()
+        while widget is not None:
+            if hasattr(widget, "_send_metric_event"):
+                return widget
+            widget = widget.parentWidget()
+        return None
 
-        # Start async streaming response
-        self._streaming_response(messages)
+    def _emit_metric(self, event_type: str, details: dict | None = None):
+        target = self._find_metrics_target()
+        if target is not None:
+            target._send_metric_event(event_type, details=details)
+
+    def get_selected_model(self) -> str:
+        return str(self._selected_model or "").strip()
 
     def _build_messages(self) -> list:
         """Build messages list with optional context."""
-        messages = [{"role": m["role"], "content": m["content"]} for m in self._chat_history]
+        messages = [{"role": m["role"], "content": m["content"]}
+                    for m in self._chat_history]
         return messages
 
-    def _streaming_response(self, messages: list):
+    def _streaming_response(self, messages: list, request_token: str):
         """Handle AI response with streaming."""
         # Use AIClient for API calls
         client = AIClient()
@@ -494,7 +548,8 @@ class ChatTabWidget(QtWidgets.QWidget):
         model = self._selected_model
 
         if not url or not model:
-            self._on_response_error("No endpoint URL or model selected")
+            self._on_response_error(
+                request_token, "No endpoint URL or model selected")
             return
 
         # Create streaming assistant message placeholder
@@ -506,7 +561,10 @@ class ChatTabWidget(QtWidgets.QWidget):
                 def on_chunk(chunk):
                     # Queue chunk to be added on main thread
                     QtCore.QMetaObject.invokeMethod(self, "_add_stream_chunk",
-                        QtCore.Qt.QueuedConnection, QtCore.Q_ARG(str, chunk))
+                                                    QtCore.Qt.QueuedConnection,
+                                                    QtCore.Q_ARG(
+                                                        str, request_token),
+                                                    QtCore.Q_ARG(str, chunk))
 
                 response = client.chat_stream(
                     model=model,
@@ -516,22 +574,29 @@ class ChatTabWidget(QtWidgets.QWidget):
                     timeout=120,
                     on_chunk=on_chunk
                 )
-                self._on_response_complete(response)
+                self._on_response_complete(request_token, response)
             except Exception as e:
-                self._on_response_error(str(e))
+                self._on_response_error(request_token, str(e))
 
         thread = threading.Thread(target=run_stream, daemon=True)
         thread.start()
 
-    @QtCore.Slot(str)
-    def _add_stream_chunk(self, chunk: str):
+    @QtCore.Slot(str, str)
+    def _add_stream_chunk(self, request_token: str, chunk: str):
         """Add a streaming chunk to the display (called on main thread)."""
+        if request_token != self._active_request_token:
+            return
+
         self._streaming_response_text += chunk
         self.chat_display.append_stream_chunk(chunk)
 
-    @QtCore.Slot(str)
-    def _finish_response(self, response: str):
+    @QtCore.Slot(str, str)
+    def _finish_response(self, request_token: str, response: str):
         """Finish response and update UI (called on main thread)."""
+        if request_token != self._active_request_token:
+            return
+
+        self._active_request_token = ""
         self._is_streaming = False
         self.send_button.setEnabled(True)
         self.input_text.setEnabled(True)
@@ -543,21 +608,45 @@ class ChatTabWidget(QtWidgets.QWidget):
             error_msg = response[6:].strip()
             self.status_label.setText(f"Error: {error_msg}")
             self.status_label.show()  # Show error in constrained label
+            self._emit_metric(
+                "ai_chat_request_failed",
+                {
+                    "feature": "ai_chat",
+                    "endpoint_id": self._endpoint_id or "",
+                    "model": self.get_selected_model(),
+                    "error": error_msg,
+                },
+            )
             return
 
-        # Add assistant message to history
+        # Add assistant message to history then re-render the whole conversation
+        # with proper markdown (streaming produced plain escaped text).
         self._chat_history.append({"role": "assistant", "content": response})
-        # Streaming content is already added via append_stream_chunk
+        self.chat_display.finish_streaming()
+        self.chat_display.set_messages(self._chat_history)
+        self._emit_metric(
+            "ai_chat_request_completed",
+            {
+                "feature": "ai_chat",
+                "endpoint_id": self._endpoint_id or "",
+                "model": self.get_selected_model(),
+                "response_length": len(response),
+            },
+        )
 
-    def _on_response_complete(self, response: str):
+    def _on_response_complete(self, request_token: str, response: str):
         """Handle successful response."""
         QtCore.QMetaObject.invokeMethod(self, "_finish_response",
-            QtCore.Qt.QueuedConnection, QtCore.Q_ARG(str, response))
+                                        QtCore.Qt.QueuedConnection,
+                                        QtCore.Q_ARG(str, request_token),
+                                        QtCore.Q_ARG(str, response))
 
-    def _on_response_error(self, error: str):
+    def _on_response_error(self, request_token: str, error: str):
         """Handle response error."""
         QtCore.QMetaObject.invokeMethod(self, "_finish_response",
-            QtCore.Qt.QueuedConnection, QtCore.Q_ARG(str, f"Error: {error}"))
+                                        QtCore.Qt.QueuedConnection,
+                                        QtCore.Q_ARG(str, request_token),
+                                        QtCore.Q_ARG(str, f"Error: {error}"))
 
     def send_context(self, context_text: str, auto_send: bool = True):
         """
@@ -568,26 +657,22 @@ class ChatTabWidget(QtWidgets.QWidget):
             context_text: The context content to send
             auto_send: If True, immediately send to AI after adding context
         """
-        if not context_text:
+        if not context_text or self._is_streaming:
             return
 
-        # Create a user message with context
         message = f"Context:\n{context_text}\n\nPlease analyze this context and be ready to answer questions about it."
-
-        # Add to history
         self._chat_history.append({"role": "user", "content": message})
-        self.chat_display.append_message("user", message)
+        self.chat_display.set_messages(self._chat_history)
 
-        # Auto-send if enabled
         if auto_send:
-            self._send_message()
+            self._dispatch_ai_request()
 
     def send_context_and_question(self, context_text: str, question: str):
         """
         Send context text with a follow-up question to this chat.
         Appends context and question as a user message.
         """
-        if not context_text:
+        if not context_text or self._is_streaming:
             return
 
         if question:
@@ -595,12 +680,9 @@ class ChatTabWidget(QtWidgets.QWidget):
         else:
             message = f"Context:\n{context_text}\n\nPlease analyze this context and be ready to answer questions about it."
 
-        # Add to history
         self._chat_history.append({"role": "user", "content": message})
-        self.chat_display.append_message("user", message)
-
-        # Auto-send
-        self._send_message()
+        self.chat_display.set_messages(self._chat_history)
+        self._dispatch_ai_request()
 
     def clear_chat(self):
         """Clear chat history."""

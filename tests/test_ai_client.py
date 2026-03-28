@@ -115,6 +115,37 @@ class TestAIClient(unittest.TestCase):
         _, kwargs = mock_request.call_args
         self.assertNotIn("Authorization", kwargs["headers"])
 
+    @patch("requests.Session.request")
+    def test_ai_client_chat_stream_preserves_post_across_redirect(self, mock_request):
+        redirect_response = MagicMock()
+        redirect_response.status_code = 301
+        redirect_response.headers = {
+            "Location": "https://api.example.com/v1/chat/completions"}
+
+        stream_response = MagicMock()
+        stream_response.status_code = 200
+        stream_response.headers = {}
+        stream_response.iter_lines.return_value = iter([
+            'data: {"choices":[{"delta":{"content":"Hi"}}]}',
+            'data: [DONE]',
+        ])
+        stream_response.raise_for_status.return_value = None
+
+        mock_request.side_effect = [redirect_response, stream_response]
+
+        result = self.client.chat_stream(
+            self.model, self.messages, self.base_url, self.api_key)
+
+        self.assertEqual(result, "Hi")
+        self.assertEqual(mock_request.call_args_list[0].args[:2], (
+            "POST",
+            "http://api.example.com/v1/chat/completions",
+        ))
+        self.assertEqual(mock_request.call_args_list[1].args[:2], (
+            "POST",
+            "https://api.example.com/v1/chat/completions",
+        ))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,36 +1,32 @@
 """Premium plugin loader."""
 import os
 import sys
-from aicodeprep_gui.user_settings import get_section
+
+from .license_state import is_pro_enabled
+
+
+class _DynamicEnabledFlag:
+    """Bool-like proxy so legacy `pro.enabled` checks stay up to date."""
+
+    def __bool__(self):
+        return _check_pro_enabled()
+
+    def __repr__(self):
+        return repr(bool(self))
+
+
+def is_enabled() -> bool:
+    """Return the current Pro availability state."""
+    return _check_pro_enabled()
 
 
 def _check_pro_enabled():
     """Check if pro mode is enabled via license key validation."""
-    # Command-line override to temporarily disable Pro features
-    import sys
-    if "--notpro" in sys.argv:
-        import logging
-        logging.info(
-            "Pro features temporarily disabled via command-line (--notpro flag).")
-        return False
-
-    # Check global settings for license key and pro status
-    try:
-        data = get_section("pro_license")
-        pro_enabled = bool(data.get("pro_enabled", False))
-        if not pro_enabled:
-            return False
-        license_key = data.get("license_key", "")
-        license_verified = bool(data.get("license_verified", False))
-        return bool(pro_enabled and license_key and license_verified)
-    except Exception as e:
-        import logging
-        logging.error(f"Settings error in _check_pro_enabled: {e}")
-        return False
+    return is_pro_enabled(list(sys.argv))
 
 
-# Check if pro mode is enabled
-enabled = _check_pro_enabled()
+# Dynamic legacy-compatible proxy for existing `if pro.enabled` checks.
+enabled = _DynamicEnabledFlag()
 
 # Preview window instance
 _preview_window = None

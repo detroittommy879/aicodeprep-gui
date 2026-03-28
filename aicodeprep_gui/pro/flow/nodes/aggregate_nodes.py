@@ -5,7 +5,12 @@ from typing import Any, Dict, Optional
 import logging
 
 from .base import BaseExecNode
-from aicodeprep_gui.pro.llm.litellm_client import LLMClient, LLMError
+from aicodeprep_gui.pro.llm.llm_client import LLMClient, LLMError
+from aicodeprep_gui.pro.ai_assist.endpoint_config import get_active_endpoint
+from aicodeprep_gui.pro.flow.model_picker import (
+    choose_random_model_ids,
+    list_compatible_model_ids,
+)
 
 # Import NodeGraphQt constants for property widget types
 try:
@@ -99,9 +104,6 @@ class BestOfNNode(BaseExecNode):
                 v = (inputs.get(key) or "").strip()
                 if v:
                     candidates.append(v)
-            else:
-                # Stop at first unconnected slot
-                break
 
         logging.info(
             f"[{self.NODE_NAME}] Auto-detected {len(candidates)} connected candidate(s), context length: {len(context)}")
@@ -128,21 +130,41 @@ class BestOfNNode(BaseExecNode):
                     or "openrouter").strip().lower()
         api_key = self.get_property("api_key") or ""
         base_url = self.get_property("base_url") or ""
-        model = self.get_property("model") or ""
+        model = (self.get_property("model") or "").strip()
         mode = (self.get_property("model_mode")
                 or "random_free").strip().lower()
         extra_prompt = self.get_property(
             "extra_prompt") or BEST_OF_DEFAULT_PROMPT
+        random_requested = model.lower() == "random"
+
+        endpoint = get_active_endpoint() or {}
+        if provider == "compatible":
+            if not api_key:
+                api_key = (endpoint.get("api_key") or "").strip()
+            if not base_url:
+                base_url = (endpoint.get("url") or "").strip()
+            if not model:
+                model = (endpoint.get("selected_model") or "").strip()
 
         # Resolve API key from config if missing
         if not api_key:
             try:
                 from aicodeprep_gui.config import get_api_key
-                api_key = get_api_key(provider)
+                resolved_api_key = get_api_key(provider)
+                if resolved_api_key:
+                    api_key = resolved_api_key
             except Exception:
                 pass
 
-        if not api_key:
+        if provider == "compatible" and not base_url:
+            from aicodeprep_gui.pro.ai_assist.endpoint_config import get_endpoints_file
+            self._warn(
+                "OpenAI-compatible provider requires a base_url.\n\n"
+                f"Please edit: {get_endpoints_file()}"
+            )
+            return {}
+
+        if not api_key and provider != "compatible":
             from aicodeprep_gui.config import get_config_dir
             config_dir = get_config_dir()
             self._warn(
@@ -159,7 +181,7 @@ class BestOfNNode(BaseExecNode):
                     self._warn(
                         "Could not pick a model from OpenRouter for synthesis.")
                     return {}
-                # LiteLLM requires 'openrouter/' prefix
+                # Flow nodes store OpenRouter models with a provider prefix.
                 model = f"openrouter/{pick}"
             elif model:
                 # User provided a model - ensure proper prefix
@@ -173,6 +195,18 @@ class BestOfNNode(BaseExecNode):
                     model = f"openrouter/{model}"
                     logging.info(
                         f"[{self.NODE_NAME}] Added openrouter prefix: {model}")
+        elif provider == "compatible" and base_url:
+            model_ids = list_compatible_model_ids(base_url, api_key)
+            if mode in ("random", "random_free") or random_requested:
+                picks = choose_random_model_ids(model_ids, 1)
+                model = picks[0] if picks else ""
+            elif not model and model_ids:
+                model = model_ids[0]
+
+        if not model:
+            self._warn(
+                f"No model specified for provider '{provider}'. Please choose a model or configure one in the active endpoint.")
+            return {}
 
         # Build synthesis prompt
         # We'll pass in everything as user content; system message left empty
@@ -191,7 +225,8 @@ class BestOfNNode(BaseExecNode):
                     "openrouter", "compatible") else None),
                 extra_headers={
                     "Accept": "application/json"} if provider == "openrouter" else None,
-                system_content=None
+                system_content=None,
+                provider=provider,
             )
             return {"text": out}
         except LLMError as e:

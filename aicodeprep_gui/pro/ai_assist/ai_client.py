@@ -3,6 +3,7 @@ import time
 import json
 import logging
 from typing import List, Dict, Any, Optional, Callable
+from urllib.parse import urljoin
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +37,7 @@ class AIClient:
         last_exception = None
         for attempt in range(retries):
             try:
-                response = self.session.request(
+                response = self._request_following_redirects(
                     method, url, timeout=timeout, **kwargs)
 
                 # Retry on 5xx errors
@@ -59,6 +60,53 @@ class AIClient:
 
         raise AIClientError(
             f"Request failed after {retries} attempts: {last_exception}")
+
+    def _request_following_redirects(
+        self,
+        method: str,
+        url: str,
+        timeout: int,
+        max_redirects: int = 5,
+        **kwargs,
+    ) -> requests.Response:
+        request_method = method.upper()
+        request_url = url
+        request_kwargs = dict(kwargs)
+        request_kwargs["allow_redirects"] = False
+
+        for redirect_index in range(max_redirects + 1):
+            response = self.session.request(
+                request_method,
+                request_url,
+                timeout=timeout,
+                **request_kwargs,
+            )
+
+            location = response.headers.get("Location", "")
+            if response.status_code not in {301, 302, 303, 307, 308} or not location:
+                return response
+
+            if redirect_index >= max_redirects:
+                raise AIClientError(
+                    f"Too many redirects while requesting {url}")
+
+            next_url = urljoin(request_url, location)
+            logging.info(
+                "AIClient redirect preserved method %s: %s -> %s (%s)",
+                request_method,
+                request_url,
+                next_url,
+                response.status_code,
+            )
+
+            if response.status_code == 303 and request_method not in {"GET", "HEAD"}:
+                request_method = "GET"
+                request_kwargs.pop("json", None)
+                request_kwargs.pop("data", None)
+
+            request_url = next_url
+
+        return response
 
     def chat(
         self,

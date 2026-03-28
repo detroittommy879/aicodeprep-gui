@@ -5,7 +5,7 @@ Lean implementation using Pygments for code blocks, custom QTextEdit for text.
 from PySide6 import QtWidgets, QtGui, QtCore
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
-from pygments.lexers import get_lexer_by_name
+from pygments.lexers import get_lexer_by_name, TextLexer
 from pygments.util import ClassNotFound
 import re
 from aicodeprep_gui.apptheme import system_pref_is_dark
@@ -54,12 +54,33 @@ class MarkdownRenderer:
         if not markdown_text:
             return ''
 
-        # Escape HTML but preserve markdown syntax
-        html = self._escape_html(markdown_text)
+        # Step 1: Extract fenced code blocks and inline code BEFORE HTML-escaping.
+        # This prevents double-escaping of <, >, & characters in code content,
+        # and ensures Pygments receives raw source code (not HTML entities).
+        placeholders: dict[str, tuple] = {}
+        counter = [0]
 
-        # Parse and convert markdown elements
-        html = self._parse_code_blocks(html)
-        html = self._parse_inline_code(html)
+        def save_fenced_block(match):
+            key = f'\x01F{counter[0]}\x01'
+            counter[0] += 1
+            lang = (match.group(1) or 'text').lower().strip()
+            placeholders[key] = ('block', lang, match.group(2))
+            return key
+
+        def save_inline_code(match):
+            key = f'\x01I{counter[0]}\x01'
+            counter[0] += 1
+            placeholders[key] = ('inline', '', match.group(1))
+            return key
+
+        text = re.sub(r'```(\w*)\n([\s\S]*?)```',
+                      save_fenced_block, markdown_text)
+        text = re.sub(r'`([^`\n]+)`', save_inline_code, text)
+
+        # Step 2: HTML-escape the non-code text
+        html = self._escape_html(text)
+
+        # Step 3: Apply markdown transforms on the escaped text
         html = self._parse_headings(html)
         html = self._parse_bold(html)
         html = self._parse_italic(html)
@@ -68,7 +89,47 @@ class MarkdownRenderer:
         html = self._parse_horizontal_rules(html)
         html = self._parse_lists(html)
 
+        # Step 4: Convert newlines to <br> so Qt renders line breaks.
+        # Then clean up spurious <br> tags that were injected inside list HTML.
+        html = html.replace('\n', '<br>')
+        html = re.sub(r'<br>(<(?:ul|ol|li)[^>]*>)', r'\1', html)
+        html = re.sub(r'(</(?:ul|ol|li)>)<br>', r'\1', html)
+
+        # Step 5: Restore placeholders with properly rendered code
+        colors = self._colors
+        for key, data in placeholders.items():
+            kind = data[0]
+            if kind == 'inline':
+                escaped = self._escape_html(data[2])
+                replacement = (
+                    f'<code style="background:{colors["code_bg"]}; color:#FF6B6B;'
+                    f' padding:1px 4px; border-radius:3px; font-family:monospace;">'
+                    f'{escaped}</code>'
+                )
+            else:
+                replacement = self._render_code_block(data[1], data[2])
+            html = html.replace(key, replacement, 1)
+
         return html
+
+    def _render_code_block(self, language: str, code: str) -> str:
+        """Render a fenced code block with Pygments syntax highlighting."""
+        colors = self._colors
+        try:
+            lexer = get_lexer_by_name(language or 'text')
+        except ClassNotFound:
+            lexer = TextLexer()
+        formatter = HtmlFormatter(
+            style='monokai' if self._is_dark_mode else 'default',
+            noclasses=True,
+            nobackground=True,
+            prestyles=(
+                f"background:{colors['code_bg']}; padding:10px; border-radius:5px;"
+                f" white-space:pre-wrap; word-wrap:break-word;"
+                f" font-family:monospace; font-size:12px; display:block;"
+            ),
+        )
+        return highlight(code, lexer, formatter)
 
     def _escape_html(self, text: str) -> str:
         """Escape HTML special characters."""
@@ -97,7 +158,8 @@ class MarkdownRenderer:
             return f'<span style="{heading_style}; font-size:{font_size}px;">{text}</span>'
 
         # Handle ##, ###, #### headings
-        html = re.sub(r'^(#{1,4})\s+(.+?)$', replace_heading, html, flags=re.MULTILINE)
+        html = re.sub(r'^(#{1,4})\s+(.+?)$',
+                      replace_heading, html, flags=re.MULTILINE)
 
         # Handle underline-style headings (=== and ---)
         lines = html.split('\n')
@@ -110,12 +172,14 @@ class MarkdownRenderer:
                 next_line = lines[i + 1].strip()
                 if next_line.startswith('==='):
                     # H1
-                    result.append(f'<span style="{heading_style}; font-size:18px;">{line}</span>')
+                    result.append(
+                        f'<span style="{heading_style}; font-size:18px;">{line}</span>')
                     i += 2
                     continue
                 elif next_line.startswith('---'):
                     # H2
-                    result.append(f'<span style="{heading_style}; font-size:16px;">{line}</span>')
+                    result.append(
+                        f'<span style="{heading_style}; font-size:16px;">{line}</span>')
                     i += 2
                     continue
             result.append(line)
@@ -136,48 +200,6 @@ class MarkdownRenderer:
         # *italic* (but not already bold)
         pattern = r'(?<!\*)\*(?!\*)(.+?)\*(?!\*)'
         return re.sub(pattern, f'<span style="color:{colors["italic"]}; font-style:italic;">\\1</span>', html)
-
-    def _parse_inline_code(self, html: str) -> str:
-        """Convert `code` to styled spans."""
-        colors = self._colors
-        # `code`
-        pattern = r'`(.+?)`'
-        return re.sub(pattern, f'<code style="background:{colors["code_bg"]}; color:#FF6B6B; padding:1px 4px; border-radius:3px; font-family:monospace;">\\1</code>', html)
-
-    def _parse_code_blocks(self, html: str) -> str:
-        """Convert ```code blocks``` to syntax-highlighted HTML."""
-        colors = self._colors
-
-        # Pattern for code blocks with optional language
-        pattern = r'```(\w*)\n([\s\S]*?)```'
-
-        def replace_code_block(match):
-            language = match.group(1).lower() if match.group(1) else 'text'
-            code = match.group(2).rstrip('\n')
-
-            # Escape for HTML
-            code = self._escape_html(code)
-
-            # Try to get lexer
-            try:
-                lexer = get_lexer_by_name(language)
-            except ClassNotFound:
-                try:
-                    lexer = get_lexer_by_name('text')
-                except ClassNotFound:
-                    lexer = get_lexer_by_name('text')
-
-            # Format with Pygments
-            formatter = HtmlFormatter(
-                style='monokai' if self._is_dark_mode else 'default',
-                noclasses=True,
-                nobackground=True,
-                prestyles=f"background:{colors['code_bg']}; padding:10px; border-radius:5px; overflow-x:auto;",
-            )
-            highlighted = highlight(code, lexer, formatter)
-            return highlighted
-
-        return re.sub(pattern, replace_code_block, html)
 
     def _parse_links(self, html: str) -> str:
         """Convert [text](url) to anchor tags."""
@@ -258,7 +280,8 @@ class MarkdownRenderer:
                 if not in_ul:
                     in_ul = True
                     in_ol = False
-                    result.append('<ul style="margin:10px 0; padding-left:25px;">')
+                    result.append(
+                        '<ul style="margin:10px 0; padding-left:25px;">')
                 item_text = stripped[2:]
                 result.append(f'<li style="margin:3px 0;">{item_text}</li>')
             # Ordered list
@@ -266,10 +289,12 @@ class MarkdownRenderer:
                 if not in_ol:
                     in_ol = True
                     in_ul = False
-                    result.append(f'<ol style="margin:10px 0; padding-left:25px;">')
+                    result.append(
+                        f'<ol style="margin:10px 0; padding-left:25px;">')
                 match = re.match(r'^(\d+)\.\s(.+)$', stripped)
                 if match:
-                    result.append(f'<li style="margin:3px 0;">{match.group(2)}</li>')
+                    result.append(
+                        f'<li style="margin:3px 0;">{match.group(2)}</li>')
             else:
                 if in_ul:
                     result.append('</ul>')
@@ -334,48 +359,93 @@ class ChatMessageDisplay(QtWidgets.QTextEdit):
         """)
         self._renderer.set_dark_mode(is_dark)
 
+    def set_messages(self, messages: list):
+        """
+        Re-render the full conversation from a list of {'role', 'content'} dicts.
+        Uses setHtml() for correct layout — QTextEdit.append() wraps content in
+        <p> tags which breaks <div> block elements, making everything shift inline.
+        """
+        colors = self._renderer._colors
+        is_dark = self._renderer._is_dark_mode
+        body_bg = '#1E1E1E' if is_dark else '#FFFFFF'
+
+        rows = []
+        for msg in messages:
+            role = msg.get('role', 'user')
+            content = msg.get('content', '')
+            content_html = self._renderer.render(content)
+
+            if role == 'user':
+                header_label = 'You'
+                header_color = colors['heading']
+                cell_bg = colors['code_bg']
+            else:
+                header_label = 'AI'
+                header_color = '#4CAF50'
+                cell_bg = body_bg
+
+            rows.append(
+                f'<table width="100%" cellpadding="10" cellspacing="0" border="0">'
+                f'<tr><td bgcolor="{cell_bg}">'
+                f'<b style="color:{header_color};">{header_label}</b><br><br>'
+                f'<span style="color:{colors["text"]};">{content_html}</span>'
+                f'</td></tr></table><br>'
+            )
+
+        full_html = (
+            f'<html><body style="background-color:{body_bg}; margin:4px;">'
+            + ''.join(rows)
+            + '</body></html>'
+        )
+
+        sb = self.verticalScrollBar()
+        was_at_bottom = sb.value() >= sb.maximum() - 10
+        self.setHtml(full_html)
+        if was_at_bottom:
+            QtCore.QTimer.singleShot(0, lambda: self.verticalScrollBar().setValue(
+                self.verticalScrollBar().maximum()))
+
     def append_message(self, role: str, content: str):
         """
-        Append a chat message with role styling.
-        role: 'user' or 'assistant'
+        Append a single message. Delegates to set_messages() via a one-item list
+        so the layout is always correct (uses setHtml, not append).
+        NOTE: callers that already have the full history should call set_messages()
+        directly instead of looping over append_message().
         """
-        # Style based on role
+        # Build a minimal messages list and reuse set_messages for correct layout
+        # We don't track internal state here; callers own the history list.
         colors = self._renderer._colors
-        if role == 'user':
-            header = f'<div style="color:{colors["heading"]}; font-weight:bold; margin-bottom:8px;">User</div>'
-            bg_style = f'background:{colors["code_bg"]};'
-        else:
-            header = f'<div style="color:#4CAF50; font-weight:bold; margin-bottom:8px;">AI</div>'
-            bg_style = ''
+        is_dark = self._renderer._is_dark_mode
+        body_bg = '#1E1E1E' if is_dark else '#FFFFFF'
 
-        # Render markdown content with proper spacing
         content_html = self._renderer.render(content)
+        if role == 'user':
+            header_label = 'You'
+            header_color = colors['heading']
+            cell_bg = colors['code_bg']
+        else:
+            header_label = 'AI'
+            header_color = '#4CAF50'
+            cell_bg = body_bg
 
-        # Add line breaks between HTML elements for better rendering
-        content_html = content_html.replace('</div>', '</div><br>')
-        content_html = content_html.replace('<br><br>', '<br>')
-        content_html = content_html.rstrip('<br>')
+        new_row = (
+            f'<table width="100%" cellpadding="10" cellspacing="0" border="0">'
+            f'<tr><td bgcolor="{cell_bg}">'
+            f'<b style="color:{header_color};">{header_label}</b><br><br>'
+            f'<span style="color:{colors["text"]};">{content_html}</span>'
+            f'</td></tr></table><br>'
+        )
 
-        # Combine
-        message_html = f'''
-        <div style="{bg_style} padding:10px; margin:8px 0; border-radius:5px; line-height:1.6;">
-            {header}
-            <div style="color:{colors["text"]};">
-                {content_html}
-            </div>
-        </div>
-        '''
-
-        # Store cursor position
+        # Insert at end of existing document without append()'s <p> wrapping
+        sb = self.verticalScrollBar()
+        was_at_bottom = sb.value() >= sb.maximum() - 10
         cursor = self.textCursor()
-        at_bottom = cursor.atEnd()
-
-        # Append HTML
-        self.append(message_html)
-
-        # Scroll to bottom if was at bottom
-        if at_bottom:
-            self.verticalScrollBar().setValue(self.verticalScrollBar().maximum())
+        cursor.movePosition(QtGui.QTextCursor.End)
+        self.setTextCursor(cursor)
+        self.insertHtml(new_row)
+        if was_at_bottom:
+            QtCore.QTimer.singleShot(0, lambda: self.verticalScrollBar().setValue(
+                self.verticalScrollBar().maximum()))
 
     def start_streaming(self, role: str):
         """
@@ -401,7 +471,8 @@ class ChatMessageDisplay(QtWidgets.QTextEdit):
         self._streaming_content = ""
 
         # Store scroll position
-        self._was_at_bottom = self.verticalScrollBar().value() >= self.verticalScrollBar().maximum() - 10
+        self._was_at_bottom = self.verticalScrollBar(
+        ).value() >= self.verticalScrollBar().maximum() - 10
 
         # Append the placeholder
         self.append(self._streaming_message_html)
@@ -414,7 +485,8 @@ class ChatMessageDisplay(QtWidgets.QTextEdit):
         self._streaming_content += chunk
 
         # Escape HTML for proper display
-        escaped_chunk = chunk.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+        escaped_chunk = chunk.replace('&', '&amp;').replace(
+            '<', '&lt;').replace('>', '&gt;')
 
         # Insert with automatic wrapping - use a space to trigger word wrap
         cursor = self.textCursor()
@@ -435,16 +507,10 @@ class ChatMessageDisplay(QtWidgets.QTextEdit):
 
     def finish_streaming(self):
         """
-        Finish streaming and render the complete markdown.
-        The streaming content is already in the document, so we just re-render it.
+        Called when streaming is complete. Clears accumulated streaming state.
+        The caller (ChatTabWidget) is responsible for re-rendering the full
+        conversation with proper markdown now that the complete text is available.
         """
-        if not self._streaming_content:
-            return
-
-        # For simplicity, the streaming content is already visible.
-        # We could re-render with proper markdown here if needed.
-        # For now, just keep the plain text that was streamed.
-
         self._streaming_message_html = None
         self._streaming_content = ""
 

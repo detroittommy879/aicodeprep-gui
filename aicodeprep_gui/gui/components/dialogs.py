@@ -90,19 +90,30 @@ class VoteDialog(QtWidgets.QDialog):
         # Collect votes for all features (if not voted, skip)
         details = {idea: self.votes.get(idea, None)
                    for idea in self.FEATURE_IDEAS}
-        payload = {
-            "user_id": self.user_uuid,
-            "event_type": "feature_vote",
-            "local_time": datetime.now().isoformat(),
-            "details": details
-        }
         try:
-            endpoint_url = "https://wuu73.org/idea/aicp-metrics/event"
-            request = QtNetwork.QNetworkRequest(QtCore.QUrl(endpoint_url))
-            request.setHeader(
-                QtNetwork.QNetworkRequest.ContentTypeHeader, "application/json")
-            json_data = QtCore.QByteArray(json.dumps(payload).encode('utf-8'))
-            self.network_manager.post(request, json_data)
+            parent_window = self.parent()
+            if parent_window is not None and hasattr(parent_window, "_send_metric_event"):
+                parent_window._send_metric_event(
+                    "feature_vote",
+                    details={"votes": details},
+                )
+            else:
+                endpoint_url = "https://wuu73.org/idea/aicp-metrics/event"
+                request = QtNetwork.QNetworkRequest(QtCore.QUrl(endpoint_url))
+                request.setHeader(
+                    QtNetwork.QNetworkRequest.ContentTypeHeader, "application/json")
+                payload = {
+                    "user_id": self.user_uuid,
+                    "event_type": "feature_vote",
+                    "local_time": datetime.now().isoformat(),
+                    "plan_status": "unknown",
+                    "ui_language": "en",
+                    "app_version": __version__,
+                    "details": {"votes": details},
+                }
+                json_data = QtCore.QByteArray(
+                    json.dumps(payload).encode('utf-8'))
+                self.network_manager.post(request, json_data)
         except Exception as e:
             QtWidgets.QMessageBox.warning(
                 self, "Error", f"Failed to submit votes: {e}")
@@ -338,77 +349,62 @@ class DialogManager:
             reply.deleteLater()
 
     def open_complain_dialog(self):
-        """Open the feedback/complain dialog."""
-        class FeedbackDialog(QtWidgets.QDialog):
-            def __init__(self, parent=None):
-                super().__init__(parent)
-                self.setWindowTitle("Send Ideas, bugs, thoughts!")
-                self.setMinimumWidth(400)
-                layout = QtWidgets.QVBoxLayout(self)
-
-                layout.addWidget(QtWidgets.QLabel("Your Email (required):"))
-                self.email_input = QtWidgets.QLineEdit()
-                self.email_input.setPlaceholderText(
-                    "you@example.com (required)")
-                layout.addWidget(self.email_input)
-
-                layout.addWidget(QtWidgets.QLabel("Message (required):"))
-                self.msg_input = QtWidgets.QPlainTextEdit()
-                self.msg_input.setPlaceholderText(
-                    "Describe your idea, bug, or thought here... (required)")
-                layout.addWidget(self.msg_input)
-
-                self.status_label = QtWidgets.QLabel("")
-                self.status_label.setStyleSheet("color: #d43c2c;")
-                layout.addWidget(self.status_label)
-
-                btns = QtWidgets.QDialogButtonBox(
-                    QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
-                btns.accepted.connect(self.accept)
-                btns.rejected.connect(self.reject)
-                layout.addWidget(btns)
-
-            def get_data(self):
-                return self.email_input.text().strip(), self.msg_input.toPlainText().strip()
-
-        dlg = FeedbackDialog(self.parent)
-        if dlg.exec() != QtWidgets.QDialog.Accepted:
-            return
-
-        email, message = dlg.get_data()
-        if not email or not message:
-            QtWidgets.QMessageBox.warning(
-                self.parent, "Error", "Email and message are both required.")
-            return
-
+        """Open a simple email-help dialog for bugs and suggestions."""
         try:
-            # Submit bug report
-            user_uuid = get_setting("user_identity", "user_uuid", "")
-            payload = {
-                "email": email,
-                "data": {
-                    "summary": message.splitlines()[0][:80] if message else "No summary",
-                    "details": message
-                },
-                "source_identifier": "aicodeprep-gui"
-            }
-            endpoint_url = "https://wuu73.org/idea/collect/bug-report"
-            request = QtNetwork.QNetworkRequest(QtCore.QUrl(endpoint_url))
-            request.setHeader(
-                QtNetwork.QNetworkRequest.ContentTypeHeader, "application/json")
-            if user_uuid:
-                request.setRawHeader(
-                    b"X-Client-ID", user_uuid.encode('utf-8'))
+            if hasattr(self.parent, "_send_metric_event"):
+                self.parent._send_metric_event(
+                    "help_email_dialog_opened",
+                    details={"feature": "help_email_dialog"},
+                    once_key="help_email_dialog_opened",
+                )
+        except Exception:
+            pass
 
-            json_data = QtCore.QByteArray(
-                json.dumps(payload).encode('utf-8'))
-            reply = self.parent.network_manager.post(request, json_data)
-            reply.finished.connect(
-                lambda: self._handle_bug_report_reply(reply))
+        dialog = QtWidgets.QDialog(self.parent)
+        dialog.setWindowTitle("Send Ideas, bugs, thoughts!")
+        dialog.setMinimumWidth(460)
 
-        except Exception as e:
-            QtWidgets.QMessageBox.critical(
-                self.parent, "Error", f"Could not submit feedback: {e}")
+        layout = QtWidgets.QVBoxLayout(dialog)
+        layout.setSpacing(12)
+
+        title = QtWidgets.QLabel("Email feedback")
+        title_font = QtGui.QFont()
+        title_font.setBold(True)
+        title_font.setPointSize(self.parent.default_font.pointSize() + 2)
+        title.setFont(title_font)
+        layout.addWidget(title)
+
+        instructions = QtWidgets.QLabel(
+            "If you hit a bug, have a problem, or want to suggest something, please email me directly. "
+            "Put something like 'Bug: ...', 'Problem with ...', or 'Suggestion: ...' in the subject line so I can sort it quickly."
+        )
+        instructions.setWordWrap(True)
+        layout.addWidget(instructions)
+
+        mailto_url = QtCore.QUrl(
+            "mailto:tom@wuu73.org?subject=Bug%20or%20Suggestion"
+        )
+
+        link_label = QtWidgets.QLabel(
+            '<a href="mailto:tom@wuu73.org?subject=Bug%20or%20Suggestion">tom@wuu73.org</a>'
+        )
+        link_label.setOpenExternalLinks(True)
+        link_label.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
+        layout.addWidget(link_label)
+
+        open_email_button = QtWidgets.QPushButton("Open Email App")
+        open_email_button.clicked.connect(
+            lambda: QtGui.QDesktopServices.openUrl(mailto_url)
+        )
+        layout.addWidget(open_email_button)
+
+        button_box = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.Close)
+        button_box.rejected.connect(dialog.reject)
+        button_box.accepted.connect(dialog.accept)
+        layout.addWidget(button_box)
+
+        dialog.exec()
 
     def open_about_dialog(self):
         """Show About dialog with version, install age, and links."""
@@ -573,7 +569,8 @@ class DialogManager:
 
 class ActivateProDialog(QtWidgets.QDialog):
     # ms - extended retry sequence
-    RETRY_DELAYS = [1000, 2000, 4000, 8000, 16000]
+    RETRY_DELAYS = [2000, 4000, 8000, 15000, 30000, 45000]
+    REQUEST_TIMEOUT_MS = 30000
 
     def __init__(self, product_id: str, network_manager: QtNetwork.QNetworkAccessManager, parent=None):
         super().__init__(parent)
@@ -581,6 +578,10 @@ class ActivateProDialog(QtWidgets.QDialog):
         self.product_ids = [product_id]
         self.network_manager = network_manager
         self.attempt = 0
+        self.reply = None
+        self.reply_timeout_timer = QtCore.QTimer(self)
+        self.reply_timeout_timer.setSingleShot(True)
+        self.reply_timeout_timer.timeout.connect(self.on_request_timeout)
         self.setup_ui()
 
     def setup_ui(self):
@@ -636,18 +637,37 @@ class ActivateProDialog(QtWidgets.QDialog):
             data = urllib.parse.urlencode({
                 "product_id": product_id,
                 "license_key": key,
-                "increment_uses_count": "true"
+                "increment_uses_count": "false"
             }).encode("utf-8")
             req = QtNetwork.QNetworkRequest(url)
             req.setHeader(QtNetwork.QNetworkRequest.ContentTypeHeader,
                           "application/x-www-form-urlencoded")
+            try:
+                req.setTransferTimeout(self.REQUEST_TIMEOUT_MS)
+            except Exception:
+                pass
             self.reply = self.network_manager.post(req, data)
             self.reply.finished.connect(self.on_reply)
+            self.reply_timeout_timer.start(self.REQUEST_TIMEOUT_MS + 1000)
         else:
             # All attempts exhausted
             self.status_label.setText(
                 "Invalid license key for all product IDs.")
             self.activate_button.setEnabled(True)
+
+    def on_request_timeout(self):
+        if self.reply is None:
+            return
+        try:
+            if hasattr(self.reply, "isRunning") and self.reply.isRunning():
+                logging.warning(
+                    "License verification request timed out after %sms; aborting and retrying.",
+                    self.REQUEST_TIMEOUT_MS,
+                )
+                self.reply.abort()
+        except Exception as exc:
+            logging.debug(
+                "Failed to abort timed out license verification request: %s", exc)
 
     def _get_error_description(self, error_code, error_string, http_status):
         """Convert Qt network error codes to human-readable descriptions."""
@@ -659,6 +679,7 @@ class ActivateProDialog(QtWidgets.QDialog):
             QtNetwork.QNetworkReply.NetworkError.SslHandshakeFailedError: "SSL/TLS certificate validation failed",
             QtNetwork.QNetworkReply.NetworkError.TemporaryNetworkFailureError: "Temporary network failure",
             QtNetwork.QNetworkReply.NetworkError.NetworkSessionFailedError: "Network session failed",
+            QtNetwork.QNetworkReply.NetworkError.OperationCanceledError: "Request timed out or was cancelled",
             QtNetwork.QNetworkReply.NetworkError.BackgroundRequestNotAllowedError: "Background request not allowed",
             QtNetwork.QNetworkReply.NetworkError.TooManyRedirectsError: "Too many redirects",
             QtNetwork.QNetworkReply.NetworkError.InsecureRedirectError: "Insecure redirect detected",
@@ -720,9 +741,11 @@ class ActivateProDialog(QtWidgets.QDialog):
         return f"Network error (code: {error_code})"
 
     def on_reply(self):
+        self.reply_timeout_timer.stop()
         err = self.reply.error()
         body = bytes(self.reply.readAll()).decode("utf-8", errors="ignore")
         self.reply.deleteLater()
+        self.reply = None
         if err == QtNetwork.QNetworkReply.NetworkError.NoError:
             try:
                 resp = json.loads(body)
