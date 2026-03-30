@@ -25,6 +25,72 @@ except ImportError:
         QLINE_EDIT = 3
         QCOMBO_BOX = 5
 
+_cached_model_options = [
+    "gpt-4o", "gpt-4o-mini", "claude-3-5-sonnet-20241022",
+    "gemini-1.5-pro", "gemini-1.5-flash", "o1-mini", "o3-mini",
+    "random", "random_free"
+]
+_fetching_models = False
+
+def trigger_bg_model_fetch():
+    global _fetching_models
+    if not _fetching_models:
+        _fetching_models = True
+        import threading
+        def _fetch():
+            try:
+                from aicodeprep_gui.pro.ai_assist.endpoint_config import get_active_endpoint
+                endpoint = get_active_endpoint() or {}
+                if endpoint.get("selected_model") and endpoint["selected_model"] not in _cached_model_options:
+                    _cached_model_options.insert(0, endpoint["selected_model"])
+                url, api_key = endpoint.get("url", ""), endpoint.get("api_key", "")
+                if url:
+                    from aicodeprep_gui.pro.flow.model_picker import list_compatible_model_ids
+                    models = list_compatible_model_ids(url, api_key)
+                    for m in reversed(models):
+                        if m not in _cached_model_options:
+                            _cached_model_options.insert(0, m)
+            except Exception as e:
+                logging.debug(f"Failed to bg fetch models: {e}")
+        threading.Thread(target=_fetch, daemon=True).start()
+
+trigger_bg_model_fetch()
+
+def _patch_prop_combobox():
+    try:
+        from NodeGraphQt.custom_widgets.properties_bin.prop_widgets_base import PropComboBox
+        if hasattr(PropComboBox, "_patched_for_editable"): return
+        orig_init = PropComboBox.__init__
+        def patched_init(self, parent=None):
+            orig_init(self, parent)
+            self.setEditable(True)
+            self.currentTextChanged.connect(lambda t: self.value_changed.emit(self.get_name(), self.currentText()) if hasattr(self, 'value_changed') else None)
+        def patched_set_value(self, value):
+            val_str = str(value) if value is not None else ""
+            if val_str != self.currentText():
+                from PySide6 import QtCore
+                idx = self.findText(val_str, QtCore.Qt.MatchExactly)
+                self.blockSignals(True)
+                if idx >= 0:
+                    self.setCurrentIndex(idx)
+                else:
+                    self.setCurrentText(val_str)
+                self.blockSignals(False)
+        PropComboBox.__init__ = patched_init
+        PropComboBox.set_value = patched_set_value
+        PropComboBox._patched_for_editable = True
+    except Exception:
+        pass
+_patch_prop_combobox()
+
+def _get_compat_provider_label() -> str:
+    try:
+        from aicodeprep_gui.pro.ai_assist.endpoint_config import get_active_endpoint
+        ep_name = (get_active_endpoint() or {}).get("name", "").strip()
+        return f"compatible ({ep_name})" if ep_name else "compatible"
+    except Exception:
+        return "compatible"
+
 
 class LLMBaseNode(BaseExecNode):
     """
@@ -41,11 +107,11 @@ class LLMBaseNode(BaseExecNode):
 
         # UI properties with proper widget types for better editing
         self.create_property("provider", "generic", widget_type=NodePropWidgetEnum.QCOMBO_BOX.value,
-                             items=["openai", "openrouter", "gemini", "compatible", "generic"])
+                             items=["openai", "openrouter", "gemini", _get_compat_provider_label(), "generic"])
         self.create_property("model_mode", "choose", widget_type=NodePropWidgetEnum.QCOMBO_BOX.value,
                              items=["choose", "random", "random_free"])
         self.create_property(
-            "model", "", widget_type=NodePropWidgetEnum.QTEXT_EDIT.value)
+            "model", "", widget_type=NodePropWidgetEnum.QCOMBO_BOX.value, items=list(_cached_model_options))
         self.create_property(
             "api_key", "", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
         self.create_property(
@@ -185,7 +251,18 @@ class LLMBaseNode(BaseExecNode):
         self._update_node_label()
 
     # Child classes can override to set sensible defaults
+    def get_resolved_provider(self) -> str:
+        try:
+            from NodeGraphQt import BaseNode as NGBaseNode
+            val = (NGBaseNode.get_property(self, "provider") or self.default_provider()).strip().lower()
+            if val.startswith("compatible"):
+                return "compatible"
+            return val
+        except Exception:
+            return self.default_provider()
+
     def default_provider(self) -> str:
+
         return "generic"
 
     def default_base_url(self) -> str:
@@ -205,8 +282,7 @@ class LLMBaseNode(BaseExecNode):
             return ak
 
         try:
-            provider = (self.get_property("provider")
-                        or self.default_provider()).strip().lower()
+            provider = self.get_resolved_provider()
         except Exception:
             provider = self.default_provider()
 
@@ -233,8 +309,7 @@ class LLMBaseNode(BaseExecNode):
             if bu:
                 return bu
 
-            provider = (self.get_property("provider")
-                        or self.default_provider()).strip().lower()
+            provider = self.get_resolved_provider()
             if provider == "compatible":
                 endpoint = get_active_endpoint() or {}
                 endpoint_url = (endpoint.get("url") or "").strip()
@@ -262,8 +337,7 @@ class LLMBaseNode(BaseExecNode):
             mode = (self.get_property("model_mode")
                     or "choose").strip().lower()
             model = (self.get_property("model") or "").strip()
-            provider = (self.get_property("provider")
-                        or self.default_provider()).strip().lower()
+            provider = self.get_resolved_provider()
         except Exception:
             mode, model, provider = "choose", "", self.default_provider()
 
@@ -303,8 +377,7 @@ class LLMBaseNode(BaseExecNode):
                 self._warn("No input 'text' provided.")
                 return {}
 
-            provider = (self.get_property("provider")
-                        or self.default_provider()).strip().lower()
+            provider = self.get_resolved_provider()
             base_url = self.resolve_base_url()
             api_key = self.resolve_api_key()
 

@@ -815,8 +815,17 @@ class LLMClient:
     def list_models_openai_compatible(base_url: str, api_key: str) -> List[Dict[str, Any]]:
         tried = []
         headers = LLMClient._build_openai_headers(api_key)
-        for suffix in ("/v1/models", "/models"):
-            url = base_url.rstrip("/") + suffix
+
+        # If base_url already ends with /v1, appending /v1/models creates /v1/v1/models.
+        # We handle this by checking if it already has /v1 and adjusting the suffixes to try.
+        clean_base = base_url.rstrip("/")
+        if clean_base.endswith("/v1"):
+            suffixes = ("/models", )
+        else:
+            suffixes = ("/v1/models", "/models")
+
+        for suffix in suffixes:
+            url = clean_base + suffix
             tried.append(url)
             try:
                 response = LLMClient._request_with_retry(

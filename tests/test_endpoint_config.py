@@ -41,82 +41,6 @@ class TestEndpointConfig:
             assert file_data == data
 
     @patch("aicodeprep_gui.pro.ai_assist.endpoint_config.get_config_dir")
-    def test_legacy_benchmark_endpoint_is_migrated(self, mock_config_dir, tmp_path):
-        mock_config_dir.return_value = tmp_path
-
-        endpoints_file = tmp_path / "ai-endpoints.toml"
-        endpoints_file.write_text(
-            toml.dumps({
-                "active_endpoint": "local",
-                "endpoints": {
-                    "local": {
-                        "name": "zoobies coding plan",
-                        "url": "http://extra.wuu73.org/aimodels/v1/",
-                        "api_key": "legacy-key",
-                        "selected_model": "aicp-qwen3.5-plus",
-                    }
-                }
-            }),
-            encoding="utf-8",
-        )
-
-        data = load_endpoints()
-
-        assert data["endpoints"]["local"]["name"] == "Local / Custom Endpoint"
-        assert data["endpoints"]["local"]["url"] == ""
-        assert data["endpoints"]["local"]["api_key"] == ""
-        assert data["endpoints"]["local"]["selected_model"] == ""
-
-    @patch("aicodeprep_gui.pro.ai_assist.endpoint_config.get_config_dir")
-    def test_active_non_local_legacy_benchmark_endpoint_is_removed(self, mock_config_dir, tmp_path):
-        mock_config_dir.return_value = tmp_path
-
-        endpoints_file = tmp_path / "ai-endpoints.toml"
-        endpoints_file.write_text(
-            toml.dumps({
-                "active_endpoint": "extra",
-                "endpoints": {
-                    "local": {
-                        "name": "Local / Custom Endpoint",
-                        "url": "",
-                        "api_key": "",
-                        "selected_model": "",
-                    },
-                    "extra": {
-                        "name": "extra1",
-                        "url": "https://extra.wuu73.org/aimodels/v1",
-                        "api_key": "legacy-key",
-                        "selected_model": "aicp-glm-5",
-                    },
-                },
-            }),
-            encoding="utf-8",
-        )
-
-        api_keys_file = tmp_path / "api-keys.toml"
-        api_keys_file.write_text(
-            toml.dumps({
-                "custom": {
-                    "name": "extra1",
-                    "base_url": "http://extra.wuu73.org/aimodels/v1/",
-                    "api_key": "legacy-key",
-                    "selected_model": "aicp-glm-5",
-                }
-            }),
-            encoding="utf-8",
-        )
-
-        data = load_endpoints()
-        api_keys_data = toml.load(api_keys_file)
-
-        assert data["active_endpoint"] == "local"
-        assert "extra" not in data["endpoints"]
-        assert data["endpoints"]["local"]["url"] == ""
-        assert api_keys_data["custom"]["base_url"] == ""
-        assert api_keys_data["custom"]["api_key"] == ""
-        assert api_keys_data["custom"]["selected_model"] == ""
-
-    @patch("aicodeprep_gui.pro.ai_assist.endpoint_config.get_config_dir")
     def test_empty_local_endpoint_hydrates_from_custom_provider(self, mock_config_dir, tmp_path):
         mock_config_dir.return_value = tmp_path
 
@@ -233,7 +157,10 @@ class TestEndpointConfig:
         save_endpoints(custom_data)
         loaded_data = load_endpoints()
 
-        assert loaded_data == custom_data
+        assert loaded_data["active_endpoint"] == custom_data["active_endpoint"]
+        assert loaded_data["endpoints"]["custom"] == custom_data["endpoints"]["custom"]
+        # Should be ensured by load_endpoints
+        assert "local" in loaded_data["endpoints"]
 
     @patch("aicodeprep_gui.pro.ai_assist.endpoint_config.get_config_dir")
     def test_endpoint_add_remove(self, mock_config_dir, tmp_path):

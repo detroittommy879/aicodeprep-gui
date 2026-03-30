@@ -5,6 +5,7 @@ from typing import Any, Dict, Optional
 import logging
 
 from .base import BaseExecNode
+from aicodeprep_gui.pro.flow.nodes.llm_nodes import _get_compat_provider_label, _cached_model_options
 from aicodeprep_gui.pro.llm.llm_client import LLMClient, LLMError
 from aicodeprep_gui.pro.ai_assist.endpoint_config import get_active_endpoint
 from aicodeprep_gui.pro.flow.model_picker import (
@@ -62,14 +63,14 @@ class BestOfNNode(BaseExecNode):
         # Properties for the LLM used for synthesis
         # openrouter | openai | gemini | compatible
         self.create_property("provider", "openrouter", widget_type=NodePropWidgetEnum.QCOMBO_BOX.value,
-                             items=["openrouter", "openai", "gemini", "compatible"])
+                             items=["openrouter", "openai", "gemini", _get_compat_provider_label()])
         self.create_property(
             "api_key", "", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
         self.create_property(
             "base_url", "https://openrouter.ai/api/v1", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
         # if provider=openrouter, supports 'random'/'random_free' via model_mode
         self.create_property(
-            "model", "", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
+            "model", "", widget_type=NodePropWidgetEnum.QCOMBO_BOX.value, items=list(_cached_model_options))
         # choose | random | random_free
         self.create_property("model_mode", "random_free", widget_type=NodePropWidgetEnum.QCOMBO_BOX.value,
                              items=["choose", "random", "random_free"])
@@ -128,6 +129,10 @@ class BestOfNNode(BaseExecNode):
 
         provider = (self.get_property("provider")
                     or "openrouter").strip().lower()
+        if provider.startswith("compatible"):
+            provider = "compatible"
+        if provider.startswith("compatible"):
+            provider = "compatible"
         api_key = self.get_property("api_key") or ""
         base_url = self.get_property("base_url") or ""
         model = (self.get_property("model") or "").strip()

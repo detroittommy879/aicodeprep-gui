@@ -1,7 +1,9 @@
+import re
+
 from PySide6 import QtWidgets, QtCore, QtGui
 from aicodeprep_gui.pro.ai_assist.endpoint_config import (
-    load_endpoints, save_endpoints, add_endpoint, remove_endpoint,
-    set_active_endpoint, set_active_model, get_all_endpoint_ids, get_active_endpoint
+    load_endpoints,
+    save_endpoints,
 )
 from aicodeprep_gui.pro.ai_assist.ai_client import AIClient
 import logging
@@ -116,6 +118,30 @@ class AIEndpointSettingsDialog(QtWidgets.QDialog):
         # Load Data
         self._refresh_list()
 
+    @staticmethod
+    def _slugify_endpoint_id(label: str) -> str:
+        cleaned = re.sub(r"[^a-z0-9]+", "-", (label or "").strip().lower())
+        return cleaned.strip("-") or "endpoint"
+
+    def _generate_unique_endpoint_id(self, label: str = "New Endpoint") -> str:
+        endpoints = self.config_data.get("endpoints", {})
+        base_id = self._slugify_endpoint_id(label)
+        candidate = base_id
+        suffix = 2
+        while candidate in endpoints:
+            candidate = f"{base_id}-{suffix}"
+            suffix += 1
+        return candidate
+
+    @staticmethod
+    def _new_endpoint_data(name: str = "New Endpoint") -> dict:
+        return {
+            "name": name,
+            "url": "",
+            "api_key": "",
+            "selected_model": "",
+        }
+
     def _refresh_list(self):
         """Reloads list from self.config_data."""
         self.ignore_changes = True
@@ -192,6 +218,9 @@ class AIEndpointSettingsDialog(QtWidgets.QDialog):
             self._update_list_item_display(eid)
 
     def _get_selected_endpoint_id(self):
+        if self.current_endpoint_id:
+            return self.current_endpoint_id
+
         item = self.endpoint_list.currentItem()
         if item is not None:
             endpoint_id = item.data(QtCore.Qt.UserRole)
@@ -281,31 +310,13 @@ class AIEndpointSettingsDialog(QtWidgets.QDialog):
         save_endpoints(self.config_data)
 
     def _on_add_endpoint(self):
-        # 1. Save current state
         self._save_current_selection()
-        self._persist_memory_to_disk()
 
-        # 2. Get ID
-        eid, ok = QtWidgets.QInputDialog.getText(self, self.tr(
-            "Add Endpoint"), self.tr("Endpoint ID (no spaces):"))
-        if not ok or not eid:
-            return
-
-        eid = eid.strip()
-        if not eid:
-            return
-
-        if eid in self.config_data.get("endpoints", {}):
-            QtWidgets.QMessageBox.warning(self, self.tr(
-                "Error"), self.tr("Endpoint ID already exists."))
-            return
-
-        # 3. Call config function
-        add_endpoint(eid, "New Endpoint", "")
-
-        # 4. Reload
-        self.config_data = load_endpoints()
-        self.current_endpoint_id = eid  # Select new
+        eid = self._generate_unique_endpoint_id(self.tr("New Endpoint"))
+        self.config_data.setdefault("endpoints", {})[eid] = self._new_endpoint_data(
+            self.tr("New Endpoint")
+        )
+        self.current_endpoint_id = eid
         self._refresh_list()
 
         # Focus name edit
@@ -333,15 +344,17 @@ class AIEndpointSettingsDialog(QtWidgets.QDialog):
         if confirm != QtWidgets.QMessageBox.Yes:
             return
 
-        # 1. Save current state
         self._save_current_selection()
-        self._persist_memory_to_disk()
 
-        # 2. Call config function
-        remove_endpoint(eid)
+        endpoints = self.config_data.get("endpoints", {})
+        if eid not in endpoints:
+            return
 
-        # 3. Reload
-        self.config_data = load_endpoints()
+        del endpoints[eid]
+
+        if self.config_data.get("active_endpoint") == eid:
+            self.config_data["active_endpoint"] = next(iter(endpoints), "")
+
         self.current_endpoint_id = None  # Let refresh logic decide
         self._refresh_list()
 
@@ -357,10 +370,9 @@ class AIEndpointSettingsDialog(QtWidgets.QDialog):
         # migrations) because that round-trip can overwrite freshly typed data.
         self._save_current_selection()
         self.config_data["active_endpoint"] = eid
-        self._persist_memory_to_disk()
         logger.info("AI endpoint set active: %s", eid)
 
-        # Refresh the list from the in-memory state (no disk re-read needed).
+        # Refresh the list from the in-memory state.
         self._refresh_list()
 
     def _on_test_connection(self):

@@ -14,9 +14,7 @@ app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
 class TestAISettingsDialog(unittest.TestCase):
 
     @patch("aicodeprep_gui.gui.components.ai_settings_dialog.load_endpoints")
-    @patch("aicodeprep_gui.gui.components.ai_settings_dialog.get_all_endpoint_ids")
-    @patch("aicodeprep_gui.gui.components.ai_settings_dialog.get_active_endpoint")
-    def test_ai_settings_dialog_opens(self, mock_active, mock_ids, mock_load):
+    def test_ai_settings_dialog_opens(self, mock_load):
         """Dialog can be instantiated and shows endpoint list."""
         mock_load.return_value = {
             "active_endpoint": "local",
@@ -29,9 +27,6 @@ class TestAISettingsDialog(unittest.TestCase):
                 }
             }
         }
-        mock_ids.return_value = ["local"]
-        mock_active.return_value = {
-            "id": "local", "name": "zoobies coding plan", "url": "...", "api_key": ""}
 
         from aicodeprep_gui.gui.components.ai_settings_dialog import AIEndpointSettingsDialog
         dialog = AIEndpointSettingsDialog()
@@ -40,10 +35,7 @@ class TestAISettingsDialog(unittest.TestCase):
         dialog.close()
 
     @patch("aicodeprep_gui.gui.components.ai_settings_dialog.load_endpoints")
-    @patch("aicodeprep_gui.gui.components.ai_settings_dialog.get_all_endpoint_ids")
-    @patch("aicodeprep_gui.gui.components.ai_settings_dialog.add_endpoint")
-    @patch("aicodeprep_gui.gui.components.ai_settings_dialog.get_active_endpoint")
-    def test_ai_settings_add_endpoint(self, mock_active, mock_add, mock_ids, mock_load):
+    def test_ai_settings_add_endpoint(self, mock_load):
         """Can add a new endpoint."""
         mock_load.return_value = {
             "active_endpoint": "local",
@@ -51,20 +43,19 @@ class TestAISettingsDialog(unittest.TestCase):
                 "local": {"name": "Local", "url": "https://extra.wuu73.org/aimodels/v1", "api_key": "", "selected_model": ""}
             }
         }
-        mock_ids.return_value = ["local"]
-        mock_active.return_value = {"id": "local", "name": "Local"}
 
         from aicodeprep_gui.gui.components.ai_settings_dialog import AIEndpointSettingsDialog
         dialog = AIEndpointSettingsDialog()
 
-        # Verify method exists
-        self.assertTrue(hasattr(dialog, '_on_add_endpoint'))
+        dialog._on_add_endpoint()
+
+        self.assertEqual(dialog.endpoint_list.count(), 2)
+        self.assertTrue(dialog.current_endpoint_id.startswith("new-endpoint"))
+        self.assertEqual(dialog.name_edit.text(), "New Endpoint")
         dialog.close()
 
     @patch("aicodeprep_gui.gui.components.ai_settings_dialog.load_endpoints")
-    @patch("aicodeprep_gui.gui.components.ai_settings_dialog.get_all_endpoint_ids")
-    @patch("aicodeprep_gui.gui.components.ai_settings_dialog.get_active_endpoint")
-    def test_ai_settings_has_required_widgets(self, mock_active, mock_ids, mock_load):
+    def test_ai_settings_has_required_widgets(self, mock_load):
         """Dialog has all required widgets."""
         mock_load.return_value = {
             "active_endpoint": "local",
@@ -72,8 +63,6 @@ class TestAISettingsDialog(unittest.TestCase):
                 "local": {"name": "Local", "url": "https://extra.wuu73.org/aimodels/v1", "api_key": "", "selected_model": ""}
             }
         }
-        mock_ids.return_value = ["local"]
-        mock_active.return_value = {"id": "local"}
 
         from aicodeprep_gui.gui.components.ai_settings_dialog import AIEndpointSettingsDialog
         dialog = AIEndpointSettingsDialog()
@@ -90,9 +79,7 @@ class TestAISettingsDialog(unittest.TestCase):
 
     @patch("aicodeprep_gui.gui.components.ai_settings_dialog.AIClient")
     @patch("aicodeprep_gui.gui.components.ai_settings_dialog.load_endpoints")
-    @patch("aicodeprep_gui.gui.components.ai_settings_dialog.get_all_endpoint_ids")
-    @patch("aicodeprep_gui.gui.components.ai_settings_dialog.get_active_endpoint")
-    def test_refresh_models(self, mock_active, mock_ids, mock_load, mock_client_cls):
+    def test_refresh_models(self, mock_load, mock_client_cls):
         """Test refreshing models populates the combo."""
         mock_load.return_value = {
             "active_endpoint": "local",
@@ -100,8 +87,6 @@ class TestAISettingsDialog(unittest.TestCase):
                 "local": {"name": "Local", "url": "https://extra.wuu73.org/aimodels/v1", "api_key": "", "selected_model": ""}
             }
         }
-        mock_ids.return_value = ["local"]
-        mock_active.return_value = {"id": "local"}
 
         # Mock client behavior
         mock_client = mock_client_cls.return_value
@@ -125,9 +110,7 @@ class TestAISettingsDialog(unittest.TestCase):
 
     @patch("aicodeprep_gui.gui.components.ai_settings_dialog.save_endpoints")
     @patch("aicodeprep_gui.gui.components.ai_settings_dialog.load_endpoints")
-    @patch("aicodeprep_gui.gui.components.ai_settings_dialog.get_all_endpoint_ids")
-    @patch("aicodeprep_gui.gui.components.ai_settings_dialog.get_active_endpoint")
-    def test_edit_url_persists_on_save(self, mock_active, mock_ids, mock_load, mock_save):
+    def test_edit_url_persists_on_save(self, mock_load, mock_save):
         """Regression: editing the URL field must be saved to config_data and disk."""
         mock_load.return_value = {
             "active_endpoint": "local",
@@ -140,8 +123,6 @@ class TestAISettingsDialog(unittest.TestCase):
                 }
             }
         }
-        mock_ids.return_value = ["local"]
-        mock_active.return_value = {"id": "local"}
 
         from aicodeprep_gui.gui.components.ai_settings_dialog import AIEndpointSettingsDialog
         dialog = AIEndpointSettingsDialog()
@@ -183,9 +164,7 @@ class TestAISettingsDialog(unittest.TestCase):
 
     @patch("aicodeprep_gui.gui.components.ai_settings_dialog.save_endpoints")
     @patch("aicodeprep_gui.gui.components.ai_settings_dialog.load_endpoints")
-    @patch("aicodeprep_gui.gui.components.ai_settings_dialog.get_all_endpoint_ids")
-    @patch("aicodeprep_gui.gui.components.ai_settings_dialog.get_active_endpoint")
-    def test_edit_port_not_reverted_by_test_connection(self, mock_active, mock_ids, mock_load, mock_save):
+    def test_edit_port_not_reverted_by_test_connection(self, mock_load, mock_save):
         """Regression: editing URL then clicking Test Connection must NOT revert the edit."""
         mock_load.return_value = {
             "active_endpoint": "local",
@@ -198,8 +177,6 @@ class TestAISettingsDialog(unittest.TestCase):
                 }
             }
         }
-        mock_ids.return_value = ["local"]
-        mock_active.return_value = {"id": "local"}
 
         from aicodeprep_gui.gui.components.ai_settings_dialog import AIEndpointSettingsDialog
         dialog = AIEndpointSettingsDialog()
@@ -231,9 +208,7 @@ class TestAISettingsDialog(unittest.TestCase):
         dialog.close()
 
     @patch("aicodeprep_gui.gui.components.ai_settings_dialog.load_endpoints")
-    @patch("aicodeprep_gui.gui.components.ai_settings_dialog.get_all_endpoint_ids")
-    @patch("aicodeprep_gui.gui.components.ai_settings_dialog.get_active_endpoint")
-    def test_name_edit_updates_endpoint_list_label(self, mock_active, mock_ids, mock_load):
+    def test_name_edit_updates_endpoint_list_label(self, mock_load):
         mock_load.return_value = {
             "active_endpoint": "local",
             "endpoints": {
@@ -245,8 +220,6 @@ class TestAISettingsDialog(unittest.TestCase):
                 }
             }
         }
-        mock_ids.return_value = ["local"]
-        mock_active.return_value = {"id": "local"}
 
         from aicodeprep_gui.gui.components.ai_settings_dialog import AIEndpointSettingsDialog
         dialog = AIEndpointSettingsDialog()
@@ -256,6 +229,49 @@ class TestAISettingsDialog(unittest.TestCase):
         dialog._marked_changed()
 
         self.assertEqual(dialog.endpoint_list.item(0).text(), "► Updated Name")
+        dialog.close()
+
+    @patch("aicodeprep_gui.gui.components.ai_settings_dialog.load_endpoints")
+    def test_switching_selection_does_not_overwrite_other_endpoint(self, mock_load):
+        mock_load.return_value = {
+            "active_endpoint": "local",
+            "endpoints": {
+                "local": {
+                    "name": "Local",
+                    "url": "https://local.example/v1",
+                    "api_key": "local-key",
+                    "selected_model": "local-model",
+                },
+                "openrouter": {
+                    "name": "OpenRouter",
+                    "url": "https://openrouter.ai/api/v1",
+                    "api_key": "openrouter-key",
+                    "selected_model": "openrouter-model",
+                },
+            },
+        }
+
+        from aicodeprep_gui.gui.components.ai_settings_dialog import AIEndpointSettingsDialog
+        dialog = AIEndpointSettingsDialog()
+
+        dialog.endpoint_list.setCurrentRow(0)
+        dialog.name_edit.setText("Changed Local")
+        dialog.url_edit.setText("https://changed-local.example/v1")
+        dialog._marked_changed()
+
+        dialog.endpoint_list.setCurrentRow(1)
+
+        self.assertEqual(
+            dialog.config_data["endpoints"]["local"]["name"], "Changed Local")
+        self.assertEqual(
+            dialog.config_data["endpoints"]["local"]["url"], "https://changed-local.example/v1")
+        self.assertEqual(
+            dialog.config_data["endpoints"]["openrouter"]["name"], "OpenRouter")
+        self.assertEqual(
+            dialog.config_data["endpoints"]["openrouter"]["url"], "https://openrouter.ai/api/v1")
+        self.assertEqual(dialog.name_edit.text(), "OpenRouter")
+        self.assertEqual(dialog.url_edit.text(),
+                         "https://openrouter.ai/api/v1")
         dialog.close()
 
     @patch("aicodeprep_gui.pro.ai_assist.endpoint_config.get_config_dir")

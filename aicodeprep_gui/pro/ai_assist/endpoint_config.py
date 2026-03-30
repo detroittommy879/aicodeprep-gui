@@ -239,7 +239,7 @@ def load_endpoints() -> dict:
         data["endpoints"] = {}
     if DEFAULT_ENDPOINT_ID not in data["endpoints"]:
         data["endpoints"][DEFAULT_ENDPOINT_ID] = _blank_local_endpoint()
-        
+
     synced_data, synced = _sync_local_endpoint_with_custom_provider(data)
 
     if synced:
