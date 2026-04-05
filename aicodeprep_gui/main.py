@@ -44,6 +44,21 @@ console_handler.setFormatter(formatter)
 # Add handler to root logger
 logger.addHandler(console_handler)
 
+LINUX_DESKTOP_APP_ID = "io.github.detroittommy879.aicodeprep_gui"
+
+
+def _configure_application_metadata(app: QtWidgets.QApplication) -> None:
+    """Apply stable application metadata for desktop integration."""
+    app.setApplicationName("aicodeprep-gui")
+    app.setOrganizationName("wuu73")
+    app.setOrganizationDomain("wuu73.org")
+
+    if hasattr(app, "setApplicationDisplayName"):
+        app.setApplicationDisplayName("AICodePrep GUI")
+
+    if platform.system() == "Linux" and hasattr(app, "setDesktopFileName"):
+        app.setDesktopFileName(LINUX_DESKTOP_APP_ID)
+
 
 def main():
     # Ensure configuration directories are created and copy built-in flows
@@ -96,6 +111,7 @@ def main():
         from aicodeprep_gui.i18n.translator import TranslationManager
         # Create minimal app just for TranslationManager
         app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
+        _configure_application_metadata(app)
         tm = TranslationManager(app)
         print("Available languages:")
         for code, name in sorted(tm.get_available_languages()):
@@ -159,6 +175,7 @@ def main():
         # We need a QApplication instance for clipboard access
         try:
             app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
+            _configure_application_metadata(app)
         except Exception as e:
             logger.error(f"Failed to create QApplication instance: {e}")
             sys.exit(1)
@@ -251,6 +268,7 @@ def main():
     app = QtWidgets.QApplication.instance()
     if app is None:
         app = QtWidgets.QApplication(sys.argv)
+    _configure_application_metadata(app)
     app.setStyle("Fusion")
 
     # Set application icon from package favicon.ico

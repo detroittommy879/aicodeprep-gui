@@ -86,6 +86,34 @@ class LLMClient:
     """Minimal HTTP wrapper for chat completions and model listing."""
 
     @staticmethod
+    def _normalize_text_output(text: str) -> str:
+        if not isinstance(text, str) or not text:
+            return ""
+
+        has_c1_controls = any(0x80 <= ord(char) <= 0x9F for char in text)
+        has_common_markers = any(
+            marker in text for marker in ("Ã", "Â", "â", "ð"))
+        if not has_c1_controls and not has_common_markers:
+            return text
+
+        try:
+            repaired = text.encode("latin-1").decode("utf-8")
+        except (UnicodeEncodeError, UnicodeDecodeError):
+            return text
+
+        if repaired == text:
+            return text
+
+        def marker_score(value: str) -> int:
+            return sum(value.count(marker) for marker in ("Ã", "Â", "â", "ð", "�")) + sum(
+                1 for char in value if 0x80 <= ord(char) <= 0x9F
+            )
+
+        if marker_score(repaired) < marker_score(text):
+            return repaired
+        return text
+
+    @staticmethod
     def _request_with_retry(
         method: str,
         url: str,
@@ -238,16 +266,16 @@ class LLMClient:
     @staticmethod
     def _coerce_content_to_text(content: Any) -> str:
         if isinstance(content, str):
-            return content
+            return LLMClient._normalize_text_output(content)
         if isinstance(content, list):
             parts = []
             for item in content:
                 if isinstance(item, str):
-                    parts.append(item)
+                    parts.append(LLMClient._normalize_text_output(item))
                 elif isinstance(item, dict):
                     text = item.get("text")
                     if isinstance(text, str):
-                        parts.append(text)
+                        parts.append(LLMClient._normalize_text_output(text))
             return "\n".join(part for part in parts if part)
         return ""
 
@@ -317,7 +345,7 @@ class LLMClient:
             reasoning = message.get(
                 "reasoning") or message.get("reasoning_content")
             if isinstance(reasoning, str) and reasoning.strip():
-                return reasoning
+                return LLMClient._normalize_text_output(reasoning)
 
             reasoning_details = message.get("reasoning_details") or []
             if isinstance(reasoning_details, list):
@@ -328,18 +356,19 @@ class LLMClient:
                     text = item.get("text") or item.get(
                         "content") or item.get("reasoning")
                     if isinstance(text, str) and text.strip():
-                        parts.append(text.strip())
+                        parts.append(
+                            LLMClient._normalize_text_output(text.strip()))
                 if parts:
                     return "\n\n".join(parts)
 
         content = getattr(message, "content", "")
         if isinstance(content, str) and content:
-            return content
+            return LLMClient._normalize_text_output(content)
 
         reasoning = getattr(message, "reasoning", "") or getattr(
             message, "reasoning_content", "")
         if isinstance(reasoning, str) and reasoning.strip():
-            return reasoning
+            return LLMClient._normalize_text_output(reasoning)
 
         reasoning_details = getattr(message, "reasoning_details", None) or []
         if isinstance(reasoning_details, list):
@@ -350,7 +379,8 @@ class LLMClient:
                 text = item.get("text") or item.get(
                     "content") or item.get("reasoning")
                 if isinstance(text, str) and text.strip():
-                    parts.append(text.strip())
+                    parts.append(
+                        LLMClient._normalize_text_output(text.strip()))
             if parts:
                 return "\n\n".join(parts)
 
@@ -372,7 +402,7 @@ class LLMClient:
         for part in parts:
             text = part.get("text")
             if isinstance(text, str) and text:
-                text_parts.append(text)
+                text_parts.append(LLMClient._normalize_text_output(text))
         return "\n".join(text_parts).strip()
 
     @staticmethod

@@ -73,6 +73,11 @@ coverage.xml
 # pyenv
 .python-version
 
+docs-flatpak-20260401/
+flatpak/
+flathub.json
+io.github.detroittommy879.aicodeprep_gui.yml
+
 # celery beat schedule file
 celerybeat-schedule
 

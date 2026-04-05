@@ -1257,6 +1257,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.generate_ai_button.clicked.connect(self.generate_context_to_ai)
         # Disabled until AI Chat is enabled
         self.generate_ai_button.setEnabled(False)
+        self._sync_generate_ai_button_state()
         button_layout1.addWidget(self.generate_ai_button)
 
         self.select_all_button = QtWidgets.QPushButton(self.tr("Select All"))
@@ -1405,12 +1406,6 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         banner_parts = []
 
         if free_for_all:
-            popup_parts.append(
-                "Everything is free for now, including the AI models built into Flow Studio.\n\n"
-                "Flow Studio is basically a Best Of N setup: it sends your prompt, problem, and files to several AI models at the same time, then sends all of those responses into another model with a larger context window to analyze them and generate a best-of version. This can give you a bit more intelligence and diversity on difficult bugs, plans, and hard technical problems.\n\n"
-                "You can mix models like GPT-5.4, Gemini 3.1, and Opus 4.6 for stronger and more varied responses.\n\n"
-                "Questions: tom@wuu73.org"
-            )
             banner_parts.append(
                 "Everything is free for now, including Flow Studio and its built-in multi-model Best Of N workflow. Questions: tom@wuu73.org"
             )
@@ -3080,6 +3075,18 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         if enabled and self.ai_chat_toggle.isEnabled():
             self.toggle_ai_chat(True)
 
+    def _sync_generate_ai_button_state(self):
+        """Keep the context-to-AI button aligned with AI Chat availability."""
+        if not hasattr(self, "generate_ai_button"):
+            return
+
+        ai_chat_enabled = bool(
+            hasattr(self, "ai_chat_toggle")
+            and self.ai_chat_toggle.isEnabled()
+            and self.ai_chat_toggle.isChecked()
+        )
+        self.generate_ai_button.setEnabled(ai_chat_enabled)
+
     def _to_qbytearray(self, data):
         if data is None:
             return None
@@ -3100,6 +3107,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             toggle.blockSignals(True)
             toggle.setChecked(bool(visible))
             toggle.blockSignals(False)
+            if toggle is getattr(self, "ai_chat_toggle", None):
+                self._sync_generate_ai_button_state()
 
         dock.visibilityChanged.connect(sync)
         dock.setProperty("_aicp_toggle_bound", True)
@@ -3134,6 +3143,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             if getattr(self, 'preview_window', None):
                 self._bind_dock_toggle(
                     self.preview_window, self.preview_toggle)
+
+            self._sync_generate_ai_button_state()
         except Exception as e:
             logging.error(f"Failed to restore project window state: {e}")
 
@@ -3307,9 +3318,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     self._bind_dock_toggle(
                         self.ai_chat_dock, self.ai_chat_toggle)
                     self.ai_chat_dock.show()
-                    # Enable the Generate Context to AI button
-                    if hasattr(self, "generate_ai_button"):
-                        self.generate_ai_button.setEnabled(True)
+                    self._sync_generate_ai_button_state()
                 else:
                     logging.error("AI Chat dock is None after creation.")
                     QtWidgets.QMessageBox.warning(
@@ -3319,11 +3328,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     )
                     # Disable the toggle
                     self.ai_chat_toggle.setChecked(False)
+                    self._sync_generate_ai_button_state()
             else:
                 if hasattr(self, "ai_chat_dock") and self.ai_chat_dock:
                     self.ai_chat_dock.hide()
-                if hasattr(self, "generate_ai_button"):
-                    self.generate_ai_button.setEnabled(False)
+                self._sync_generate_ai_button_state()
         except Exception as e:
             logging.error(f"toggle_ai_chat failed: {e}")
 

@@ -23,6 +23,18 @@ def test_extract_message_content_supports_object_messages():
     assert LLMClient._extract_message_content(message) == "object reasoning"
 
 
+def test_extract_message_content_repairs_common_mojibake():
+    message = {"content": "Hi there! ð\u009f\u0091\u008b"}
+
+    assert LLMClient._extract_message_content(message) == "Hi there! 👋"
+
+
+def test_extract_message_content_keeps_normal_unicode_text():
+    message = {"content": "olá mundo"}
+
+    assert LLMClient._extract_message_content(message) == "olá mundo"
+
+
 @patch("aicodeprep_gui.pro.llm.llm_client.requests.request")
 def test_chat_uses_direct_http_for_compatible_provider(mock_request):
     mock_response = mock_request.return_value
