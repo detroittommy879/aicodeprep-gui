@@ -12,51 +12,59 @@ class FileTreeManager:
 
     def populate_tree(self, files):
         """Populate the tree widget with the given files list."""
-        self.main_window.tree_widget.clear()
-        self.main_window.path_to_item = {}
-        root_node = self.main_window.tree_widget.invisibleRootItem()
-        import os
-        from aicodeprep_gui import smart_logic
+        tree_widget = self.main_window.tree_widget
+        tree_widget.blockSignals(True)
+        tree_widget.setUpdatesEnabled(False)
+        try:
+            tree_widget.clear()
+            self.main_window.path_to_item = {}
+            root_node = tree_widget.invisibleRootItem()
+            import os
+            from aicodeprep_gui import smart_logic
 
-        for abs_path, rel_path, is_checked in files:
-            parts = rel_path.split(os.sep)
-            parent_node = root_node
-            path_so_far = ""
-            for part in parts[:-1]:
-                path_so_far = os.path.join(
-                    path_so_far, part) if path_so_far else part
-                if path_so_far in self.main_window.path_to_item:
-                    parent_node = self.main_window.path_to_item[path_so_far]
+            for abs_path, rel_path, is_checked in files:
+                parts = rel_path.split(os.sep)
+                parent_node = root_node
+                path_so_far = ""
+                for part in parts[:-1]:
+                    path_so_far = os.path.join(
+                        path_so_far, part) if path_so_far else part
+                    if path_so_far in self.main_window.path_to_item:
+                        parent_node = self.main_window.path_to_item[path_so_far]
+                    else:
+                        new_parent = QtWidgets.QTreeWidgetItem(
+                            parent_node, [part, ""])
+                        new_parent.setIcon(0, self.main_window.folder_icon)
+                        new_parent.setFlags(new_parent.flags()
+                                            | QtCore.Qt.ItemIsUserCheckable)
+                        new_parent.setCheckState(0, QtCore.Qt.Unchecked)
+                        self.main_window.path_to_item[path_so_far] = new_parent
+                        parent_node = new_parent
+
+                item_text = parts[-1]
+                item = QtWidgets.QTreeWidgetItem(parent_node, [item_text, ""])
+                item.setData(0, QtCore.Qt.UserRole, abs_path)
+                self.main_window.path_to_item[rel_path] = item
+
+                if self.main_window.preferences_manager.prefs_loaded:
+                    is_checked = rel_path in self.main_window.preferences_manager.checked_files_from_prefs
+
+                if os.path.isdir(abs_path):
+                    item.setIcon(0, self.main_window.folder_icon)
+                    item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+                    item.setCheckState(0, QtCore.Qt.Unchecked)
                 else:
-                    new_parent = QtWidgets.QTreeWidgetItem(
-                        parent_node, [part, ""])
-                    new_parent.setIcon(0, self.main_window.folder_icon)
-                    new_parent.setFlags(new_parent.flags()
-                                        | QtCore.Qt.ItemIsUserCheckable)
-                    new_parent.setCheckState(0, QtCore.Qt.Unchecked)
-                    self.main_window.path_to_item[path_so_far] = new_parent
-                    parent_node = new_parent
+                    item.setIcon(0, self.main_window.file_icon)
+                    item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+                    if smart_logic.is_binary_file(abs_path):
+                        is_checked = False
 
-            item_text = parts[-1]
-            item = QtWidgets.QTreeWidgetItem(parent_node, [item_text, ""])
-            item.setData(0, QtCore.Qt.UserRole, abs_path)
-            self.main_window.path_to_item[rel_path] = item
-
-            if self.main_window.preferences_manager.prefs_loaded:
-                is_checked = rel_path in self.main_window.preferences_manager.checked_files_from_prefs
-
-            if os.path.isdir(abs_path):
-                item.setIcon(0, self.main_window.folder_icon)
-                item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-                item.setCheckState(0, QtCore.Qt.Unchecked)
-            else:
-                item.setIcon(0, self.main_window.file_icon)
-                item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-                if smart_logic.is_binary_file(abs_path):
-                    is_checked = False
-
-            item.setCheckState(
-                0, QtCore.Qt.Checked if is_checked else QtCore.Qt.Unchecked)
+                item.setCheckState(
+                    0, QtCore.Qt.Checked if is_checked else QtCore.Qt.Unchecked)
+        finally:
+            tree_widget.setUpdatesEnabled(True)
+            tree_widget.blockSignals(False)
+            tree_widget.viewport().update()
 
     def on_item_expanded(self, item):
         dir_path = item.data(0, QtCore.Qt.UserRole)

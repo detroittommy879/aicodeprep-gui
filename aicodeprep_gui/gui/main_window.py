@@ -93,6 +93,24 @@ class GitCloneWorker(QtCore.QThread):
             self.error.emit(str(e))
 
 
+class FolderScanWorker(QtCore.QThread):
+    """Worker thread for folder scans so large projects do not block the UI."""
+    finished = QtCore.Signal(str, object)
+    error = QtCore.Signal(str, str)
+
+    def __init__(self, folder_path, parent=None):
+        super().__init__(parent)
+        self.folder_path = os.path.abspath(folder_path)
+
+    def run(self):
+        try:
+            new_files = smart_logic.collect_all_files(self.folder_path)
+            self.finished.emit(self.folder_path, new_files)
+        except Exception as e:
+            logging.exception("Failed to scan folder %s", self.folder_path)
+            self.error.emit(self.folder_path, str(e))
+
+
 class LogoTreeWidget(QtWidgets.QTreeWidget):
     """Custom QTreeWidget with keyboard navigation support."""
 
@@ -2205,36 +2223,74 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
     def reload_folder(self, folder_path):
         """Reload the app with a new folder without creating a new window."""
-        import os
+        folder_path = os.path.abspath(folder_path)
+
+        if hasattr(self, '_folder_scan_worker') and self._folder_scan_worker and self._folder_scan_worker.isRunning():
+            logging.info(
+                "Folder scan already in progress; ignoring reload request for %s", folder_path)
+            self.statusBar().showMessage(self.tr("Folder scan already in progress"), 3000)
+            return
+
+        self._folder_scan_progress = QtWidgets.QProgressDialog(
+            self.tr("Scanning folder..."), "", 0, 0, self)
+        self._folder_scan_progress.setWindowTitle(self.tr("Open Folder"))
+        self._folder_scan_progress.setWindowModality(QtCore.Qt.WindowModal)
+        self._folder_scan_progress.setMinimumDuration(0)
+        self._folder_scan_progress.setAutoClose(False)
+        self._folder_scan_progress.setCancelButton(None)
+        self._folder_scan_progress.show()
+
+        self.statusBar().showMessage(
+            self.tr("Scanning {}...").format(os.path.basename(folder_path) or folder_path), 0)
+
+        self._folder_scan_worker = FolderScanWorker(folder_path, self)
+        self._folder_scan_worker.finished.connect(
+            self._on_folder_scan_finished)
+        self._folder_scan_worker.error.connect(self._on_folder_scan_error)
+        self._folder_scan_worker.start()
+
+    def _on_folder_scan_finished(self, folder_path, new_files):
+        if hasattr(self, '_folder_scan_progress') and self._folder_scan_progress:
+            self._folder_scan_progress.close()
+            self._folder_scan_progress = None
+        self._folder_scan_worker = None
+
         try:
             os.chdir(folder_path)
-            # Reset folder-specific preferences
             self.preferences_manager.prefs_loaded = False
             self.preferences_manager.load_prefs_if_exists()
 
-            from aicodeprep_gui.smart_logic import collect_all_files
-            new_files = collect_all_files()
             if not new_files:
                 logging.warning(f"No files found in {folder_path}")
-                # We still proceed but show empty tree
                 new_files = []
 
             self.files = new_files
-            # Re-populate the tree
             self.tree_manager.populate_tree(self.files)
-            # Update window title
             self.setWindowTitle(
                 f"aicodeprep-gui - {os.path.basename(folder_path)}")
-            # Clear status text
             self.text_label.setText("")
-            # Update token counter
             self.update_token_counter()
-
+            self.statusBar().showMessage(
+                self.tr("Loaded {} items from {}").format(
+                    len(new_files), os.path.basename(folder_path) or folder_path),
+                4000,
+            )
             logging.info(f"Reloaded folder: {folder_path}")
         except Exception as e:
-            logging.error(f"Failed to reload folder: {e}")
+            logging.error(f"Failed to apply scanned folder: {e}")
             QtWidgets.QMessageBox.warning(
                 self, "Error", f"Failed to open folder: {e}")
+
+    def _on_folder_scan_error(self, folder_path, error_msg):
+        if hasattr(self, '_folder_scan_progress') and self._folder_scan_progress:
+            self._folder_scan_progress.close()
+            self._folder_scan_progress = None
+        self._folder_scan_worker = None
+        logging.error(f"Failed to reload folder {folder_path}: {error_msg}")
+        self.statusBar().showMessage("", 0)
+        QtWidgets.QMessageBox.warning(
+            self, self.tr("Error"),
+            self.tr("Failed to open folder: {}").format(error_msg))
 
     def open_folder_dialog(self):
         """Open a folder picker and reload the app with the selected folder."""
