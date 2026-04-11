@@ -73,3 +73,45 @@ class TestAIAssistUI(unittest.TestCase):
         )
 
         self.assertEqual(popup_text, "")
+
+    @patch("aicodeprep_gui.gui.main_window.should_show_remote_pro_notice")
+    @patch("aicodeprep_gui.gui.main_window.get_remote_access_state")
+    def test_remote_notice_popup_shows_only_for_non_pro_users(self, mock_get_remote_access_state, mock_should_show_remote_pro_notice):
+        """Free-user-only remote announcement copy should only surface for users who are not currently Pro-enabled."""
+        from aicodeprep_gui.gui.main_window import FileSelectionGUI
+
+        mock_get_remote_access_state.return_value = {
+            "free_for_all": False,
+            "announcement_message": "",
+            "free_user_announcement_message": "Limited-time discount",
+        }
+
+        mock_should_show_remote_pro_notice.return_value = False
+        popup_text, _banner_text = FileSelectionGUI._build_remote_pro_notice_texts(
+            SimpleNamespace()
+        )
+        self.assertEqual(popup_text, "")
+
+        mock_should_show_remote_pro_notice.return_value = True
+        popup_text, _banner_text = FileSelectionGUI._build_remote_pro_notice_texts(
+            SimpleNamespace()
+        )
+        self.assertEqual(popup_text, "Limited-time discount")
+
+    @patch("aicodeprep_gui.gui.main_window.should_show_remote_pro_notice")
+    @patch("aicodeprep_gui.gui.main_window.get_remote_access_state")
+    def test_remote_notice_popup_shows_general_message_to_all_users(self, mock_get_remote_access_state, mock_should_show_remote_pro_notice):
+        """General remote announcement copy should still be available for all users."""
+        from aicodeprep_gui.gui.main_window import FileSelectionGUI
+
+        mock_get_remote_access_state.return_value = {
+            "free_for_all": False,
+            "announcement_message": "General announcement",
+            "free_user_announcement_message": "",
+        }
+
+        mock_should_show_remote_pro_notice.return_value = False
+        popup_text, _banner_text = FileSelectionGUI._build_remote_pro_notice_texts(
+            SimpleNamespace()
+        )
+        self.assertEqual(popup_text, "General announcement")

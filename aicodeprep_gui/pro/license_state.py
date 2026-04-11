@@ -62,18 +62,36 @@ def _parse_remote_free_flag(text: str) -> Optional[bool]:
     return None
 
 
-def _parse_remote_notice_message(text: str) -> str:
+def _parse_remote_notice_value(text: str, patterns: tuple[str, ...]) -> str:
     for raw_line in text.splitlines():
         line = raw_line.strip().strip('"').strip("'")
         if not line or line.startswith("#"):
             continue
-        match = re.match(r"(?:message|msg|notice)\s*=\s*(.+)",
+        match = re.match(rf"(?:{'|'.join(patterns)})\s*=\s*(.+)",
                          line, re.IGNORECASE)
         if not match:
             continue
         token = match.group(1).strip().strip('"').strip("'")
         return token.replace("\\n", "\n").strip()
     return ""
+
+
+def _parse_remote_notice_message(text: str) -> str:
+    return _parse_remote_notice_value(text, ("message", "msg", "notice"))
+
+
+def _parse_remote_free_user_notice_message(text: str) -> str:
+    return _parse_remote_notice_value(
+        text,
+        (
+            "free_user_message",
+            "free_user_msg",
+            "free_user_notice",
+            "free_message",
+            "free_msg",
+            "free_notice",
+        ),
+    )
 
 
 def _has_verified_paid_license(data: Optional[dict[str, Any]] = None) -> bool:
@@ -111,6 +129,7 @@ def _read_cached_remote_access_state(now: Optional[datetime] = None) -> Optional
     return {
         "free_for_all": bool(cache.get("free_for_all", False)),
         "announcement_message": str(cache.get("announcement_message", "") or "").strip(),
+        "free_user_announcement_message": str(cache.get("free_user_announcement_message", "") or "").strip(),
         "source_url": str(cache.get("source_url", FREE_ACCESS_URL) or FREE_ACCESS_URL),
         "last_checked": checked_at,
     }
@@ -123,6 +142,7 @@ def _write_cached_free_access(enabled: bool, checked_at: Optional[datetime] = No
         {
             "free_for_all": bool(enabled),
             "announcement_message": "",
+            "free_user_announcement_message": "",
             "last_checked": timestamp.isoformat(),
             "source_url": FREE_ACCESS_URL,
         },
@@ -132,6 +152,7 @@ def _write_cached_free_access(enabled: bool, checked_at: Optional[datetime] = No
 def _write_cached_remote_access_state(
     enabled: bool,
     announcement_message: str,
+    free_user_announcement_message: str,
     checked_at: Optional[datetime] = None,
 ) -> None:
     timestamp = checked_at or _now_utc()
@@ -140,6 +161,7 @@ def _write_cached_remote_access_state(
         {
             "free_for_all": bool(enabled),
             "announcement_message": announcement_message.strip(),
+            "free_user_announcement_message": free_user_announcement_message.strip(),
             "last_checked": timestamp.isoformat(),
             "source_url": FREE_ACCESS_URL,
         },
@@ -161,14 +183,18 @@ def get_remote_access_state(now: Optional[datetime] = None) -> dict[str, Any]:
         response.raise_for_status()
         free_enabled = bool(_parse_remote_free_flag(response.text))
         announcement_message = _parse_remote_notice_message(response.text)
+        free_user_announcement_message = _parse_remote_free_user_notice_message(
+            response.text)
         _write_cached_remote_access_state(
             free_enabled,
             announcement_message,
+            free_user_announcement_message,
             checked_at=checked_at,
         )
         return {
             "free_for_all": free_enabled,
             "announcement_message": announcement_message,
+            "free_user_announcement_message": free_user_announcement_message,
             "source_url": FREE_ACCESS_URL,
             "last_checked": checked_at,
         }
@@ -177,6 +203,7 @@ def get_remote_access_state(now: Optional[datetime] = None) -> dict[str, Any]:
         return {
             "free_for_all": False,
             "announcement_message": "",
+            "free_user_announcement_message": "",
             "source_url": FREE_ACCESS_URL,
             "last_checked": checked_at,
         }
@@ -213,3 +240,13 @@ def is_pro_enabled(argv: Optional[list[str]] = None) -> bool:
         logging.error("Settings error in is_pro_enabled: %s", exc)
 
     return False
+
+
+def should_show_remote_pro_notice(argv: Optional[list[str]] = None) -> bool:
+    """Return True when remote promotional notices should be shown to the current user."""
+    try:
+        return not is_pro_enabled(argv=argv)
+    except Exception as exc:
+        logging.error(
+            "Settings error in should_show_remote_pro_notice: %s", exc)
+        return not _has_verified_paid_license()

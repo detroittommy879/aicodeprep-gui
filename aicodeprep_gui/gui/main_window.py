@@ -50,7 +50,7 @@ from aicodeprep_gui.user_settings import (
     get_ads_disabled_setting,
     set_ads_disabled_setting,
 )
-from aicodeprep_gui.pro.license_state import get_remote_access_state
+from aicodeprep_gui.pro.license_state import get_remote_access_state, should_show_remote_pro_notice
 from aicodeprep_gui.gui.settings.preferences import _write_prefs_file, _prefs_path
 
 
@@ -1416,9 +1416,18 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             logging.error(f"Failed to load remote Pro notice state: {exc}")
             return "", ""
 
+        try:
+            should_show_notice = should_show_remote_pro_notice(list(sys.argv))
+        except Exception as exc:
+            logging.error(
+                f"Failed to evaluate remote Pro notice audience: {exc}")
+            should_show_notice = False
+
         free_for_all = bool(state.get("free_for_all", False))
         announcement_message = str(
             state.get("announcement_message", "") or "").strip()
+        free_user_announcement_message = str(
+            state.get("free_user_announcement_message", "") or "").strip()
 
         popup_parts = []
         banner_parts = []
@@ -1431,6 +1440,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         if announcement_message:
             popup_parts.append(announcement_message)
             banner_parts.append(announcement_message)
+
+        if free_user_announcement_message and should_show_notice:
+            popup_parts.append(free_user_announcement_message)
+            banner_parts.append(free_user_announcement_message)
 
         popup_text = "\n\n".join(part.strip()
                                  for part in popup_parts if part.strip())
