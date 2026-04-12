@@ -73,6 +73,11 @@ coverage.xml
 # pyenv
 .python-version
 
+docs-flatpak-20260401/
+flatpak/
+flathub.json
+io.github.detroittommy879.aicodeprep_gui.yml
+
 # celery beat schedule file
 celerybeat-schedule
 
@@ -112,4 +117,9 @@ venv.bak/
 .Spotlight-V100
 .Trashes
 ehthumbs.db
-Thumbs.db
+Thumbs.dbnul
+nul
+plans/
+pyside6_docs/
+old_random_scripts
+.local-root-clutter/

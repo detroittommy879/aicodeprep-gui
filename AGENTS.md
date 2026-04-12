@@ -17,6 +17,20 @@ This file is a durable handoff for any agent working in this repo.
 - Run app: `uv run aicodeprep-gui`
 - Run tests: `uv run pytest`
 
+### Licensing / Pro access
+
+- Remote free-for-all Pro override: `https://wuu73.org/aicp/aicp-free-now.md` with `free=1` or `free=0`; cached for 15 minutes in `~/.aicodeprep-gui/settings.toml` under `pro_free_access`.
+- The same remote Pro flag file also supports `message=` or `msg=` for a one-time startup popup and top banner announcement keyed to the exact message text.
+- Verified paid licenses still short-circuit Pro gating even when the remote free flag is off or unreachable.
+- Gumroad verification now uses `increment_uses_count=false` plus a 30s request timeout and longer retries so transient failures do not burn activations.
+
+### AI endpoints
+
+- Legacy `~/.aicodeprep-gui/ai-endpoints.toml` configs that point at `extra.wuu73.org/aimodels/v1` in either `http` or `https` form are benchmark/mock configs; that server returns canned non-stream and streaming responses.
+- `aicodeprep_gui/pro/ai_assist/endpoint_config.py` now migrates that old default to an empty `Local / Custom Endpoint` so Chat and Flow Studio do not silently talk to the mock server.
+- The shared compatible endpoint now lives in `~/.aicodeprep-gui/api-keys.toml` under `[custom]`; `endpoint_config.py` mirrors chat's `local` endpoint to/from that section so Flow Studio and AI Chat use the same URL/API key/model.
+- If a user reports `This is a mock response from the fake LLM server` or `This is chunk 1/2/3`, inspect `~/.aicodeprep-gui/ai-endpoints.toml` first.
+
 ### GUI automation for agents (screenshots, loops, no manual closing)
 
 This repo includes custom test infrastructure that allows agents to open the GUI, take screenshots, and reliably close windows during tests.
@@ -83,6 +97,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - Run tests: `uv run pytest`
   - Run one test: `uv run pytest tests/test_i18n.py -q`
 
+### Licensing / Pro access
+
+- Remote free-for-all Pro override: `https://wuu73.org/aicp/aicp-free-now.md` with `free=1` or `free=0`; cached for 15 minutes in `~/.aicodeprep-gui/settings.toml` under `pro_free_access`.
+- The same remote Pro flag file also supports `message=` or `msg=` for a one-time startup popup and top banner announcement keyed to the exact message text.
+- Verified paid licenses still short-circuit Pro gating even when the remote free flag is off or unreachable.
+- Gumroad verification now uses `increment_uses_count=false` plus a 30s request timeout and longer retries so transient failures do not burn activations.
+
 ### GUI Test Automation (No Manual Window Closing)
 
 This repo includes custom helpers so agents can open/close the GUI repeatedly, take screenshots, and verify i18n/a11y without needing a human to babysit windows.
@@ -124,11 +145,11 @@ This repository contains **aicodeprep-gui**, a smart GUI application for context
 
 **Technology Stack:**
 
-- Python 3.8+
+- Python 3.9+
 - PySide6 for cross-platform GUI (Windows, macOS, Linux)
 - TOML for configuration
 - NodeGraphQt for Flow Studio (Pro feature)
-- LiteLLM for LLM integration
+- Requests-based internal client for LLM integration
 
 **Key Components:**
 
@@ -357,6 +378,10 @@ aicp --pro --skipui "test prompt"
 # Test Flow Studio
 aicp --pro
 # Then use Flow Studio interface
+
+# Take screenshot of any app window using the title on Windows (if you need to see) - appsnap -h will show options
+appsnap -o screenshot.png "aicodeprep-gui"
+
 ```
 
 ## Important Documentation
@@ -376,8 +401,8 @@ aicp --pro
 
 ### Development Notes
 
-- `.clinerules` - PySide6 patterns and Pro feature development
-- Various `FLOW_*.md` files - Implementation notes and fixes
+- `.clinerules` - PySide6 patterns and Pro feature development but may be outdated we use agents.md typically
+- Various `FLOW_*.md` files - Implementation notes and fixes - buggy.. really just fails to load most of the time, needs fix
 
 ## Workflow Tips
 
@@ -415,11 +440,10 @@ aicp --pro
 - requests - Network operations
 - packaging - Version handling
 - Pygments>=2.18.0 - Syntax highlighting
-- litellm>=1.40.0 - LLM provider integration
+- requests - LLM HTTP transport and other network operations
 - setuptools>=65.0.0 - Python 3.12+ compatibility
 
 ### Development Dependencies
 
 - pytest>=7.0.0 - Testing
 - black, ruff, mypy - Linting and type checking
-- pyinstaller>=6.0.0 - Building executables

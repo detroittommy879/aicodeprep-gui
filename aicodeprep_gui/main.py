@@ -44,6 +44,21 @@ console_handler.setFormatter(formatter)
 # Add handler to root logger
 logger.addHandler(console_handler)
 
+LINUX_DESKTOP_APP_ID = "io.github.detroittommy879.aicodeprep_gui"
+
+
+def _configure_application_metadata(app: QtWidgets.QApplication) -> None:
+    """Apply stable application metadata for desktop integration."""
+    app.setApplicationName("aicodeprep-gui")
+    app.setOrganizationName("wuu73")
+    app.setOrganizationDomain("wuu73.org")
+
+    if hasattr(app, "setApplicationDisplayName"):
+        app.setApplicationDisplayName("AICodePrep GUI")
+
+    if platform.system() == "Linux" and hasattr(app, "setDesktopFileName"):
+        app.setDesktopFileName(LINUX_DESKTOP_APP_ID)
+
 
 def main():
     # Ensure configuration directories are created and copy built-in flows
@@ -62,12 +77,18 @@ def main():
                         help="Directory to process (default: current directory)")
     parser.add_argument("--force-update-check", action="store_true",
                         help="Force update check (ignore 24h limit)")
+    parser.add_argument("--notpro", action="store_true",
+                        help="Temporarily disable Pro features for this session")
+    parser.add_argument("--262144", action="store_true",
+                        help=argparse.SUPPRESS)
     parser.add_argument("-s", "--skipui", nargs='?', const='', default=None,
                         help="Pro: Skip UI and generate context immediately. Optionally provide a prompt string after the flag.")
     parser.add_argument("--list-languages", action="store_true",
                         help="List all available languages and exit")
     parser.add_argument("--language", type=str, metavar="CODE",
                         help="Set application language (e.g., --language es for Spanish)")
+    parser.add_argument("--fastads", action="store_true",
+                        help="Speed up ad rotation to 1.5 seconds (for testing)")
 
     # --- ADD THESE NEW ARGUMENTS ---
     if platform.system() == "Windows":
@@ -82,11 +103,15 @@ def main():
 
     args = parser.parse_args()
 
+    if args.fastads:
+        os.environ["AICODEPREP_FASTADS"] = "1"
+
     # Handle --list-languages
     if args.list_languages:
         from aicodeprep_gui.i18n.translator import TranslationManager
         # Create minimal app just for TranslationManager
         app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
+        _configure_application_metadata(app)
         tm = TranslationManager(app)
         print("Available languages:")
         for code, name in sorted(tm.get_available_languages()):
@@ -150,6 +175,7 @@ def main():
         # We need a QApplication instance for clipboard access
         try:
             app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
+            _configure_application_metadata(app)
         except Exception as e:
             logger.error(f"Failed to create QApplication instance: {e}")
             sys.exit(1)
@@ -242,6 +268,7 @@ def main():
     app = QtWidgets.QApplication.instance()
     if app is None:
         app = QtWidgets.QApplication(sys.argv)
+    _configure_application_metadata(app)
     app.setStyle("Fusion")
 
     # Set application icon from package favicon.ico

@@ -1,6 +1,7 @@
 import os
 import logging
 import base64
+import json
 from PySide6 import QtCore, QtWidgets
 
 AICODEPREP_GUI_VERSION = "1.0"
@@ -35,7 +36,16 @@ def _existing_prefs_path():
     return new_path, False
 
 
-def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None, output_format=None, pro_features=None, prefs_path=None):
+def _write_prefs_file(
+    checked_relpaths,
+    window_size=None,
+    splitter_state=None,
+    output_format=None,
+    pro_features=None,
+    prefs_path=None,
+    dock_state=None,
+    dock_widgets_state=None,
+):
     """Write preferences to .aicp/preferences.ini or a legacy path."""
     new_path = prefs_path or _prefs_path()
     try:
@@ -61,6 +71,14 @@ def _write_prefs_file(checked_relpaths, window_size=None, splitter_state=None, o
                     splitter_data = base64.b64encode(
                         splitter_state).decode('utf-8')
                     f.write(f"splitter_state={splitter_data}\n")
+                if dock_state is not None:
+                    dock_data = base64.b64encode(dock_state).decode('utf-8')
+                    f.write(f"dock_state={dock_data}\n")
+                if dock_widgets_state:
+                    widgets_payload = base64.b64encode(
+                        json.dumps(dock_widgets_state).encode("utf-8")
+                    ).decode("utf-8")
+                    f.write(f"dock_widgets_state={widgets_payload}\n")
                 f.write("\n")
             if output_format in ("xml", "markdown"):
                 f.write(f"[format]\noutput_format={output_format}\n\n")
@@ -83,6 +101,7 @@ def _read_prefs_file():
     prefs_path, prefs_is_legacy.
     """
     checked, window_size, splitter_state = set(), None, None
+    dock_state, dock_widgets_state = None, {}
     width_val, height_val = None, None
     output_format = "xml"
     pro_features = {}
@@ -121,6 +140,24 @@ def _read_prefs_file():
                         except Exception as e:
                             logging.warning(
                                 f"Failed to decode splitter state: {e}")
+                    elif line.startswith('dock_state='):
+                        try:
+                            dock_data = line.split('=', 1)[1]
+                            dock_state = base64.b64decode(
+                                dock_data.encode('utf-8'))
+                        except Exception as e:
+                            logging.warning(
+                                f"Failed to decode dock state: {e}")
+                    elif line.startswith('dock_widgets_state='):
+                        try:
+                            widgets_data = line.split('=', 1)[1]
+                            dock_widgets_state = json.loads(
+                                base64.b64decode(widgets_data.encode(
+                                    'utf-8')).decode('utf-8')
+                            )
+                        except Exception as e:
+                            logging.warning(
+                                f"Failed to decode dock widgets state: {e}")
                 elif section == "format":
                     if line.startswith("output_format="):
                         val = line.split("=", 1)[1].strip().lower()
@@ -146,7 +183,7 @@ def _read_prefs_file():
     except Exception as e:
         logging.error(f"Error reading preferences file: {e}")
 
-    return checked, window_size, splitter_state, output_format, pro_features, prefs_path, prefs_is_legacy
+    return checked, window_size, splitter_state, output_format, pro_features, prefs_path, prefs_is_legacy, dock_state, dock_widgets_state
 
 
 class PreferencesManager:
@@ -157,6 +194,8 @@ class PreferencesManager:
         self.splitter_state_from_prefs = None
         self.output_format_from_prefs = "xml"
         self.pro_features_from_prefs = {}
+        self.dock_state_from_prefs = None
+        self.dock_widgets_state_from_prefs = {}
         # True only if a prefs file actually exists on disk
         self.prefs_file_exists = False
         # Backward-compat flag; set true only when prefs file exists
@@ -166,18 +205,23 @@ class PreferencesManager:
         self.prefs_is_legacy = False
         # When legacy prefs are in use, keep writing to legacy until user migrates
         self.write_legacy_prefs = False
+        # Track fullcode.txt for migration
+        self.has_legacy_fullcode = os.path.exists("fullcode.txt")
 
     def load_prefs_if_exists(self):
         # Determine if a prefs file exists before reading so we don't override smart defaults when missing
         prefs_path, prefs_is_legacy = _existing_prefs_path()
         self.prefs_file_exists = os.path.exists(prefs_path)
+        self.has_legacy_fullcode = os.path.exists("fullcode.txt")
 
-        checked, window_size, splitter_state, output_format, pro_features, prefs_path, prefs_is_legacy = _read_prefs_file()
+        checked, window_size, splitter_state, output_format, pro_features, prefs_path, prefs_is_legacy, dock_state, dock_widgets_state = _read_prefs_file()
         self.checked_files_from_prefs = checked
         self.window_size_from_prefs = window_size
         self.splitter_state_from_prefs = splitter_state
         self.output_format_from_prefs = output_format
         self.pro_features_from_prefs = pro_features
+        self.dock_state_from_prefs = dock_state
+        self.dock_widgets_state_from_prefs = dock_widgets_state
         self.prefs_path = prefs_path
         self.prefs_is_legacy = prefs_is_legacy
         self.write_legacy_prefs = prefs_is_legacy and not os.path.exists(
@@ -200,10 +244,41 @@ class PreferencesManager:
         # Collect pro features state
         pro_features = {}
         if hasattr(self.main_window, 'preview_toggle'):
-            pro_features['preview_window_enabled'] = self.main_window.preview_toggle.isChecked(
-            )
+            preview_window = getattr(self.main_window, 'preview_window', None)
+            pro_features['preview_window_enabled'] = bool(
+                preview_window.isVisible()) if preview_window else self.main_window.preview_toggle.isChecked()
         if hasattr(self.main_window, 'syntax_highlight_toggle'):
             pro_features['syntax_highlight_enabled'] = self.main_window.syntax_highlight_toggle.isChecked()
+        if hasattr(self.main_window, 'flow_studio_toggle'):
+            flow_dock = getattr(self.main_window, 'flow_dock', None)
+            pro_features['flow_studio_enabled'] = bool(
+                flow_dock.isVisible()) if flow_dock else self.main_window.flow_studio_toggle.isChecked()
+        if hasattr(self.main_window, 'ai_chat_toggle'):
+            ai_chat_dock = getattr(self.main_window, 'ai_chat_dock', None)
+            pro_features['ai_chat_enabled'] = bool(
+                ai_chat_dock.isVisible()) if ai_chat_dock else self.main_window.ai_chat_toggle.isChecked()
+
+        dock_state = None
+        dock_widgets_state = {}
+        try:
+            dock_state = bytes(self.main_window.saveState())
+        except Exception as e:
+            logging.warning(f"Could not capture main dock state: {e}")
+
+        flow_dock = getattr(self.main_window, 'flow_dock', None)
+        if flow_dock and hasattr(flow_dock, 'get_layout_state'):
+            try:
+                dock_widgets_state['flow_studio'] = flow_dock.get_layout_state()
+            except Exception as e:
+                logging.warning(
+                    f"Could not capture Flow Studio layout state: {e}")
+
+        ai_chat_dock = getattr(self.main_window, 'ai_chat_dock', None)
+        if ai_chat_dock and hasattr(ai_chat_dock, 'get_layout_state'):
+            try:
+                dock_widgets_state['ai_chat'] = ai_chat_dock.get_layout_state()
+            except Exception as e:
+                logging.warning(f"Could not capture AI Chat layout state: {e}")
 
         _write_prefs_file(
             checked_relpaths,
@@ -212,6 +287,8 @@ class PreferencesManager:
             output_format=fmt,
             pro_features=pro_features,
             prefs_path=self._get_write_path(),
+            dock_state=dock_state,
+            dock_widgets_state=dock_widgets_state,
         )
         self.main_window._save_prompt_options()
 
@@ -252,6 +329,14 @@ class PreferencesManager:
             self.main_window.text_label.setText(
                 "Loaded selection from project preferences")
             self.main_window.update_token_counter()
+            if hasattr(self.main_window, "_send_metric_event"):
+                self.main_window._send_metric_event(
+                    "project_selection_loaded",
+                    details={
+                        "feature": "saved_project_selection",
+                        "selected_file_count": len(self.checked_files_from_prefs),
+                    },
+                )
         else:
             self.main_window.text_label.setText(
                 "No project preferences file found")

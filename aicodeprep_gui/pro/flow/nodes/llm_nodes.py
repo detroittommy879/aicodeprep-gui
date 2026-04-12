@@ -1,11 +1,16 @@
-"""LLM provider nodes for Flow Studio using LiteLLM."""
+"""LLM provider nodes for Flow Studio using the internal LLM client."""
 
 from __future__ import annotations
 import logging
 from typing import Any, Dict, Optional
 
 from .base import BaseExecNode
-from aicodeprep_gui.pro.llm.litellm_client import LLMClient, LLMError
+from aicodeprep_gui.pro.llm.llm_client import LLMClient, LLMError
+from aicodeprep_gui.pro.ai_assist.endpoint_config import get_active_endpoint
+from aicodeprep_gui.pro.flow.model_picker import (
+    choose_random_model_ids,
+    list_compatible_model_ids,
+)
 
 # Guard Qt import for popups
 try:
@@ -19,6 +24,72 @@ except ImportError:
     class NodePropWidgetEnum:
         QLINE_EDIT = 3
         QCOMBO_BOX = 5
+
+_cached_model_options = [
+    "gpt-4o", "gpt-4o-mini", "claude-3-5-sonnet-20241022",
+    "gemini-1.5-pro", "gemini-1.5-flash", "o1-mini", "o3-mini",
+    "random", "random_free"
+]
+_fetching_models = False
+
+def trigger_bg_model_fetch():
+    global _fetching_models
+    if not _fetching_models:
+        _fetching_models = True
+        import threading
+        def _fetch():
+            try:
+                from aicodeprep_gui.pro.ai_assist.endpoint_config import get_active_endpoint
+                endpoint = get_active_endpoint() or {}
+                if endpoint.get("selected_model") and endpoint["selected_model"] not in _cached_model_options:
+                    _cached_model_options.insert(0, endpoint["selected_model"])
+                url, api_key = endpoint.get("url", ""), endpoint.get("api_key", "")
+                if url:
+                    from aicodeprep_gui.pro.flow.model_picker import list_compatible_model_ids
+                    models = list_compatible_model_ids(url, api_key)
+                    for m in reversed(models):
+                        if m not in _cached_model_options:
+                            _cached_model_options.insert(0, m)
+            except Exception as e:
+                logging.debug(f"Failed to bg fetch models: {e}")
+        threading.Thread(target=_fetch, daemon=True).start()
+
+trigger_bg_model_fetch()
+
+def _patch_prop_combobox():
+    try:
+        from NodeGraphQt.custom_widgets.properties_bin.prop_widgets_base import PropComboBox
+        if hasattr(PropComboBox, "_patched_for_editable"): return
+        orig_init = PropComboBox.__init__
+        def patched_init(self, parent=None):
+            orig_init(self, parent)
+            self.setEditable(True)
+            self.currentTextChanged.connect(lambda t: self.value_changed.emit(self.get_name(), self.currentText()) if hasattr(self, 'value_changed') else None)
+        def patched_set_value(self, value):
+            val_str = str(value) if value is not None else ""
+            if val_str != self.currentText():
+                from PySide6 import QtCore
+                idx = self.findText(val_str, QtCore.Qt.MatchExactly)
+                self.blockSignals(True)
+                if idx >= 0:
+                    self.setCurrentIndex(idx)
+                else:
+                    self.setCurrentText(val_str)
+                self.blockSignals(False)
+        PropComboBox.__init__ = patched_init
+        PropComboBox.set_value = patched_set_value
+        PropComboBox._patched_for_editable = True
+    except Exception:
+        pass
+_patch_prop_combobox()
+
+def _get_compat_provider_label() -> str:
+    try:
+        from aicodeprep_gui.pro.ai_assist.endpoint_config import get_active_endpoint
+        ep_name = (get_active_endpoint() or {}).get("name", "").strip()
+        return f"compatible ({ep_name})" if ep_name else "compatible"
+    except Exception:
+        return "compatible"
 
 
 class LLMBaseNode(BaseExecNode):
@@ -36,11 +107,11 @@ class LLMBaseNode(BaseExecNode):
 
         # UI properties with proper widget types for better editing
         self.create_property("provider", "generic", widget_type=NodePropWidgetEnum.QCOMBO_BOX.value,
-                             items=["openai", "openrouter", "gemini", "generic"])
+                             items=["openai", "openrouter", "gemini", _get_compat_provider_label(), "generic"])
         self.create_property("model_mode", "choose", widget_type=NodePropWidgetEnum.QCOMBO_BOX.value,
                              items=["choose", "random", "random_free"])
         self.create_property(
-            "model", "", widget_type=NodePropWidgetEnum.QTEXT_EDIT.value)
+            "model", "", widget_type=NodePropWidgetEnum.QCOMBO_BOX.value, items=list(_cached_model_options))
         self.create_property(
             "api_key", "", widget_type=NodePropWidgetEnum.QLINE_EDIT.value)
         self.create_property(
@@ -180,7 +251,18 @@ class LLMBaseNode(BaseExecNode):
         self._update_node_label()
 
     # Child classes can override to set sensible defaults
+    def get_resolved_provider(self) -> str:
+        try:
+            from NodeGraphQt import BaseNode as NGBaseNode
+            val = (NGBaseNode.get_property(self, "provider") or self.default_provider()).strip().lower()
+            if val.startswith("compatible"):
+                return "compatible"
+            return val
+        except Exception:
+            return self.default_provider()
+
     def default_provider(self) -> str:
+
         return "generic"
 
     def default_base_url(self) -> str:
@@ -199,10 +281,20 @@ class LLMBaseNode(BaseExecNode):
         if ak:
             return ak
 
+        try:
+            provider = self.get_resolved_provider()
+        except Exception:
+            provider = self.default_provider()
+
+        if provider == "compatible":
+            endpoint = get_active_endpoint() or {}
+            endpoint_key = (endpoint.get("api_key") or "").strip()
+            if endpoint_key:
+                return endpoint_key
+
         # Config file fallback by provider name
         try:
             from aicodeprep_gui.config import get_api_key
-            provider = self.get_property("provider") or self.default_provider()
             ak = get_api_key(provider)
             if ak:
                 return ak
@@ -217,9 +309,15 @@ class LLMBaseNode(BaseExecNode):
             if bu:
                 return bu
 
+            provider = self.get_resolved_provider()
+            if provider == "compatible":
+                endpoint = get_active_endpoint() or {}
+                endpoint_url = (endpoint.get("url") or "").strip()
+                if endpoint_url:
+                    return endpoint_url
+
             # Config file fallback
             from aicodeprep_gui.config import get_provider_config
-            provider = self.get_property("provider") or self.default_provider()
             config = get_provider_config(provider)
             bu = config.get("base_url", "")
             if bu:
@@ -239,16 +337,38 @@ class LLMBaseNode(BaseExecNode):
             mode = (self.get_property("model_mode")
                     or "choose").strip().lower()
             model = (self.get_property("model") or "").strip()
+            provider = self.get_resolved_provider()
         except Exception:
-            mode, model = "choose", ""
+            mode, model, provider = "choose", "", self.default_provider()
+
+        random_requested = model.lower() == "random"
+
+        if provider == "compatible" and (mode in ("random", "random_free") or random_requested):
+            base_url = self.resolve_base_url()
+            model_ids = list_compatible_model_ids(base_url, api_key)
+            picks = choose_random_model_ids(model_ids, 1)
+            return picks[0] if picks else None
 
         if mode == "choose":
+            if model and not random_requested:
+                return model
+            if provider == "compatible":
+                endpoint = get_active_endpoint() or {}
+                selected_model = (endpoint.get("selected_model") or "").strip()
+                if selected_model:
+                    return selected_model
+                base_url = (endpoint.get("url") or "").strip(
+                ) or self.resolve_base_url()
+                if base_url:
+                    model_ids = list_compatible_model_ids(base_url, api_key)
+                    if model_ids:
+                        return model_ids[0]
             return model or None
         return None  # let child classes handle random modes
 
     def run(self, inputs: Dict[str, Any], settings: Optional[Dict] = None) -> Dict[str, Any]:
         """
-        Execute the LLM call using LiteLLM.
+        Execute the LLM call using the internal HTTP client.
         """
         try:
             text = inputs.get("text") or ""
@@ -257,17 +377,25 @@ class LLMBaseNode(BaseExecNode):
                 self._warn("No input 'text' provided.")
                 return {}
 
-            provider = (self.get_property("provider")
-                        or self.default_provider()).strip().lower()
+            provider = self.get_resolved_provider()
+            base_url = self.resolve_base_url()
             api_key = self.resolve_api_key()
-            if not api_key:
+
+            if provider == "compatible" and not base_url:
+                from aicodeprep_gui.pro.ai_assist.endpoint_config import get_endpoints_file
+                self._warn(
+                    "OpenAI-compatible provider requires a base_url.\n\n"
+                    f"Please edit: {get_endpoints_file()}"
+                )
+                return {}
+
+            if not api_key and provider != "compatible":
                 from aicodeprep_gui.config import get_config_dir
                 config_dir = get_config_dir()
                 self._warn(
                     f"Missing API key for provider '{provider}'.\n\nPlease edit: {config_dir / 'api-keys.toml'}\n\nAdd your API key under [{provider}] section.")
                 return {}
 
-            base_url = self.resolve_base_url()
             model = self.resolve_model(api_key)
 
             # Debug logging
@@ -296,7 +424,7 @@ class LLMBaseNode(BaseExecNode):
                             self._warn(
                                 "Could not pick a model from OpenRouter. Check API key or connectivity.")
                             return {}
-                        # LiteLLM requires 'openrouter/' prefix
+                        # Flow nodes store OpenRouter models with a provider prefix.
                         model = f"openrouter/{pick}"
                         logging.info(
                             f"[{self.NODE_NAME}] Selected model: {model}")
@@ -323,10 +451,6 @@ class LLMBaseNode(BaseExecNode):
                     else:
                         logging.info(
                             f"[{self.NODE_NAME}] Model already has correct prefix: {model}")
-
-            if provider == "compatible" and not base_url:
-                self._warn("OpenAI-compatible provider requires a base_url.")
-                return {}
 
             if not model:
                 self._warn(
@@ -366,7 +490,8 @@ class LLMBaseNode(BaseExecNode):
                     extra_headers=self._extra_headers_for_provider(provider),
                     system_content=system,
                     temperature=temperature,
-                    top_p=top_p
+                    top_p=top_p,
+                    provider=provider,
                 )
                 logging.info(
                     f"[{self.NODE_NAME}] LLM call successful, response length: {len(out) if out else 0}")
@@ -499,7 +624,7 @@ class GeminiNode(LLMBaseNode):
         super().__init__()
         try:
             self.set_property("provider", "gemini")
-            # LiteLLM handles model like "gemini/gemini-1.5-pro"
+            # Gemini models can be entered with or without a provider prefix.
             self.set_property("base_url", "")  # not needed for Gemini
         except Exception:
             pass

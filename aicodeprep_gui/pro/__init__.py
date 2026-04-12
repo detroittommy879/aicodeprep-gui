@@ -1,28 +1,32 @@
 """Premium plugin loader."""
 import os
 import sys
-from aicodeprep_gui.user_settings import get_section
+
+from .license_state import is_pro_enabled
+
+
+class _DynamicEnabledFlag:
+    """Bool-like proxy so legacy `pro.enabled` checks stay up to date."""
+
+    def __bool__(self):
+        return _check_pro_enabled()
+
+    def __repr__(self):
+        return repr(bool(self))
+
+
+def is_enabled() -> bool:
+    """Return the current Pro availability state."""
+    return _check_pro_enabled()
 
 
 def _check_pro_enabled():
     """Check if pro mode is enabled via license key validation."""
-    # Check global settings for license key and pro status
-    try:
-        data = get_section("pro_license")
-        pro_enabled = bool(data.get("pro_enabled", False))
-        if not pro_enabled:
-            return False
-        license_key = data.get("license_key", "")
-        license_verified = bool(data.get("license_verified", False))
-        return bool(pro_enabled and license_key and license_verified)
-    except Exception as e:
-        import logging
-        logging.error(f"Settings error in _check_pro_enabled: {e}")
-        return False
+    return is_pro_enabled(list(sys.argv))
 
 
-# Check if pro mode is enabled
-enabled = _check_pro_enabled()
+# Dynamic legacy-compatible proxy for existing `if pro.enabled` checks.
+enabled = _DynamicEnabledFlag()
 
 # Preview window instance
 _preview_window = None
@@ -52,6 +56,29 @@ def get_level_delegate(parent, is_dark_mode: bool = False):
         # Descriptive error for later debugging per .clinerules
         import logging
         logging.error(f"Failed to load Pro Level delegate: {e}")
+        return None
+
+
+# AI Chat singleton
+_ai_chat_dock = None
+
+
+def get_ai_chat_dock():
+    """
+    Create or return the AI Chat dock.
+
+    - If Pro is enabled: fully functional chat with model selection.
+    - If Pro is not enabled: dock is still visible but may have limited functionality.
+    """
+    global _ai_chat_dock
+    try:
+        if _ai_chat_dock is None:
+            from .ai_chat.chat_dock import AIChatDock
+            _ai_chat_dock = AIChatDock()
+        return _ai_chat_dock
+    except Exception as e:
+        import logging
+        logging.error(f"Failed to load AI Chat dock: {e}")
         return None
 
 
