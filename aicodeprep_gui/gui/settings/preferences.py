@@ -12,25 +12,34 @@ PREFS_FILE_NAME = "preferences.ini"
 LEGACY_PREFS_FILES = [".aicodeprep-gui", ".auicp"]
 
 
-def _prefs_dir():
-    return os.path.join(os.getcwd(), PREFS_DIR_NAME)
+def _normalize_project_root(project_root=None):
+    return os.path.abspath(project_root or os.getcwd())
 
 
-def _prefs_path():
+def _prefs_dir(project_root=None):
+    return os.path.join(_normalize_project_root(project_root), PREFS_DIR_NAME)
+
+
+def _prefs_path(project_root=None):
     """Get the path to the new preferences file."""
-    return os.path.join(_prefs_dir(), PREFS_FILE_NAME)
+    return os.path.join(_prefs_dir(project_root), PREFS_FILE_NAME)
 
 
-def _legacy_prefs_paths():
-    return [os.path.join(os.getcwd(), name) for name in LEGACY_PREFS_FILES]
+def _legacy_prefs_paths(project_root=None):
+    root = _normalize_project_root(project_root)
+    return [os.path.join(root, name) for name in LEGACY_PREFS_FILES]
 
 
-def _existing_prefs_path():
+def _legacy_fullcode_path(project_root=None):
+    return os.path.join(_normalize_project_root(project_root), "fullcode.txt")
+
+
+def _existing_prefs_path(project_root=None):
     """Return the first existing preferences path (new first, then legacy)."""
-    new_path = _prefs_path()
+    new_path = _prefs_path(project_root)
     if os.path.exists(new_path):
         return new_path, False
-    for path in _legacy_prefs_paths():
+    for path in _legacy_prefs_paths(project_root):
         if os.path.exists(path):
             return path, True
     return new_path, False
@@ -45,9 +54,10 @@ def _write_prefs_file(
     prefs_path=None,
     dock_state=None,
     dock_widgets_state=None,
+    project_root=None,
 ):
     """Write preferences to .aicp/preferences.ini or a legacy path."""
-    new_path = prefs_path or _prefs_path()
+    new_path = prefs_path or _prefs_path(project_root)
     try:
         parent_dir = os.path.dirname(new_path)
         if parent_dir:
@@ -94,7 +104,7 @@ def _write_prefs_file(
         logging.warning(f"Could not write project preferences: {e}")
 
 
-def _read_prefs_file():
+def _read_prefs_file(project_root=None):
     """Read preferences with backwards compatibility for legacy files.
 
     Returns checked, window_size, splitter_state, output_format, pro_features,
@@ -106,7 +116,7 @@ def _read_prefs_file():
     output_format = "xml"
     pro_features = {}
 
-    prefs_path, prefs_is_legacy = _existing_prefs_path()
+    prefs_path, prefs_is_legacy = _existing_prefs_path(project_root)
 
     try:
         with open(prefs_path, "r", encoding="utf-8") as f:
@@ -206,15 +216,22 @@ class PreferencesManager:
         # When legacy prefs are in use, keep writing to legacy until user migrates
         self.write_legacy_prefs = False
         # Track fullcode.txt for migration
-        self.has_legacy_fullcode = os.path.exists("fullcode.txt")
+        self.has_legacy_fullcode = os.path.exists(
+            _legacy_fullcode_path(self._project_root()))
+
+    def _project_root(self):
+        return getattr(self.main_window, 'project_root', os.getcwd())
 
     def load_prefs_if_exists(self):
         # Determine if a prefs file exists before reading so we don't override smart defaults when missing
-        prefs_path, prefs_is_legacy = _existing_prefs_path()
+        project_root = self._project_root()
+        prefs_path, prefs_is_legacy = _existing_prefs_path(project_root)
         self.prefs_file_exists = os.path.exists(prefs_path)
-        self.has_legacy_fullcode = os.path.exists("fullcode.txt")
+        self.has_legacy_fullcode = os.path.exists(
+            _legacy_fullcode_path(project_root))
 
-        checked, window_size, splitter_state, output_format, pro_features, prefs_path, prefs_is_legacy, dock_state, dock_widgets_state = _read_prefs_file()
+        checked, window_size, splitter_state, output_format, pro_features, prefs_path, prefs_is_legacy, dock_state, dock_widgets_state = _read_prefs_file(
+            project_root)
         self.checked_files_from_prefs = checked
         self.window_size_from_prefs = window_size
         self.splitter_state_from_prefs = splitter_state
@@ -225,7 +242,7 @@ class PreferencesManager:
         self.prefs_path = prefs_path
         self.prefs_is_legacy = prefs_is_legacy
         self.write_legacy_prefs = prefs_is_legacy and not os.path.exists(
-            _prefs_path())
+            _prefs_path(project_root))
 
         # Only mark as loaded when a prefs file actually exists
         self.prefs_loaded = self.prefs_file_exists
@@ -289,16 +306,17 @@ class PreferencesManager:
             prefs_path=self._get_write_path(),
             dock_state=dock_state,
             dock_widgets_state=dock_widgets_state,
+            project_root=self._project_root(),
         )
         self.main_window._save_prompt_options()
 
     def _get_write_path(self):
         if self.write_legacy_prefs and self.prefs_path:
             return self.prefs_path
-        return _prefs_path()
+        return _prefs_path(self._project_root())
 
     def load_from_prefs_button_clicked(self):
-        prefs_path, _ = _existing_prefs_path()
+        prefs_path, _ = _existing_prefs_path(self._project_root())
         if os.path.exists(prefs_path):
             self.load_prefs_if_exists()
             self.main_window.tree_widget.blockSignals(True)

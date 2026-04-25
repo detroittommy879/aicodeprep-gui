@@ -2,7 +2,7 @@ from importlib import resources
 import os
 import sys
 import logging
-from typing import List, Tuple, Optional
+from typing import Collection, List, Tuple, Optional
 import fnmatch
 
 # New imports for the refactoring
@@ -97,6 +97,115 @@ def refresh_runtime_config(root_dir: Optional[str] = None) -> dict:
     return config_dict
 
 
+def _normalize_saved_paths(checked_relpaths: Optional[Collection[str]]) -> set[str]:
+    return {
+        os.path.normpath(path)
+        for path in (checked_relpaths or set())
+        if path
+    }
+
+
+def _is_excluded_dir(rel_dir_path: str) -> bool:
+    return exclude_spec.match_file(rel_dir_path + '/')
+
+
+def _should_check_file(
+    abs_path: str,
+    rel_path: str,
+    name: str,
+    saved_checked_paths: Optional[set[str]] = None,
+    prefer_saved_selection: bool = False,
+) -> bool:
+    if prefer_saved_selection:
+        return rel_path in (saved_checked_paths or set())
+
+    if include_spec.match_file(rel_path):
+        is_checked = True
+    else:
+        is_checked = os.path.splitext(name)[1].lower() in CODE_EXTENSIONS
+
+    if is_checked:
+        try:
+            if is_binary_file(abs_path) or os.path.getsize(abs_path) > MAX_FILE_SIZE:
+                return False
+        except OSError:
+            return False
+
+    return is_checked
+
+
+def collect_seed_paths(
+    root_dir: Optional[str] = None,
+    checked_relpaths: Optional[Collection[str]] = None,
+) -> List[Tuple[str, str, bool]]:
+    """Build a sparse initial tree from top-level entries plus saved checked files."""
+    seed_paths = []
+    root_dir = os.path.abspath(root_dir or os.getcwd())
+    refresh_runtime_config(root_dir)
+    saved_checked_paths = _normalize_saved_paths(checked_relpaths)
+    seen_paths = set()
+
+    logging.info(
+        "Using saved project preferences to seed tree in: %s", root_dir)
+
+    try:
+        root_entries = sorted(os.listdir(root_dir))
+    except OSError as e:
+        logging.error("Failed to list project root %s: %s", root_dir, e)
+        return seed_paths
+
+    for name in root_entries:
+        abs_path = os.path.join(root_dir, name)
+        rel_path = name
+
+        if os.path.isdir(abs_path) and _is_excluded_dir(rel_path):
+            continue
+
+        is_checked = False
+        if os.path.isfile(abs_path):
+            is_checked = _should_check_file(
+                abs_path,
+                rel_path,
+                name,
+                saved_checked_paths=saved_checked_paths,
+                prefer_saved_selection=True,
+            )
+
+        seed_paths.append((abs_path, rel_path, is_checked))
+        seen_paths.add(abs_path)
+
+    missing_saved_paths = 0
+    for rel_path in sorted(saved_checked_paths):
+        abs_path = os.path.join(root_dir, rel_path)
+        if not os.path.isfile(abs_path):
+            missing_saved_paths += 1
+            continue
+
+        parts = rel_path.split(os.sep)
+        parent_rel_path = ""
+        for part in parts[:-1]:
+            parent_rel_path = os.path.join(
+                parent_rel_path, part) if parent_rel_path else part
+            parent_abs_path = os.path.join(root_dir, parent_rel_path)
+            if not os.path.isdir(parent_abs_path) or parent_abs_path in seen_paths:
+                continue
+            seed_paths.append((parent_abs_path, parent_rel_path, False))
+            seen_paths.add(parent_abs_path)
+
+        if abs_path not in seen_paths:
+            seed_paths.append((abs_path, rel_path, True))
+            seen_paths.add(abs_path)
+
+    seed_paths.sort(key=lambda item: (item[1].count(os.sep), item[1].lower()))
+    logging.info(
+        "Seeded tree with %d visible entries from %d saved selections (%d missing).",
+        len(seed_paths),
+        len(saved_checked_paths),
+        missing_saved_paths,
+    )
+    return seed_paths
+
+
 # --- CONFIG AND PATHSPEC LOADING ---
 config = {}
 CODE_EXTENSIONS = set()
@@ -164,8 +273,7 @@ def collect_all_files(root_dir: Optional[str] = None) -> List[Tuple[str, str, bo
 
             # Final filters for files
             if os.path.isfile(abs_path):
-                if is_binary_file(abs_path) or os.path.getsize(abs_path) > MAX_FILE_SIZE:
-                    is_checked = False
+                is_checked = _should_check_file(abs_path, rel_path, name)
 
             all_paths.append((abs_path, rel_path, is_checked))
             seen_paths.add(abs_path)

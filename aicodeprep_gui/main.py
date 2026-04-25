@@ -5,7 +5,7 @@ import ctypes
 from PySide6 import QtWidgets
 from aicodeprep_gui import pro
 from aicodeprep_gui.file_processor import process_files
-from aicodeprep_gui.gui.settings.preferences import _read_prefs_file
+from aicodeprep_gui.gui.settings.preferences import _existing_prefs_path, _read_prefs_file
 from aicodeprep_gui.config import get_flows_dir, copy_builtin_flows
 from aicodeprep_gui.user_settings import (
     delete_settings_file,
@@ -22,7 +22,7 @@ if "--delset" in sys.argv:
 import argparse
 import logging
 from typing import List
-from aicodeprep_gui.smart_logic import collect_all_files
+from aicodeprep_gui.smart_logic import collect_all_files, collect_seed_paths
 from aicodeprep_gui.gui import show_file_selection_gui
 from aicodeprep_gui.apptheme import load_custom_fonts
 
@@ -137,30 +137,30 @@ def main():
 
         logger.info("Running in headless (skip-UI) mode...")
 
-        # 1. Collect all potential files
-        all_files_with_flags = collect_all_files()
-        if not all_files_with_flags:
-            logger.warning("No files found to process!")
-            sys.exit(0)
-
-        logger.info(
-            f"Initial scan collected {len(all_files_with_flags)} items.")
-
-        # 2. Load preferences to determine which files to select
-        checked_from_prefs, _, _, output_format, _, prefs_path, _ = _read_prefs_file()
+        selected_files = []
+        output_format = "xml"
+        prefs_path, _ = _existing_prefs_path(target_dir_headless)
         prefs_file_exists = os.path.exists(prefs_path)
 
-        selected_files = []
-        rel_to_abs_map = {rel: abs for abs, rel,
-                          _ in all_files_with_flags if os.path.isfile(abs)}
-
-        if prefs_file_exists and checked_from_prefs:
+        if prefs_file_exists:
+            checked_from_prefs, _, _, output_format, _, _, _, _, _ = _read_prefs_file(
+                target_dir_headless)
             logger.info(
-                f"Loading selection from .aicodeprep-gui file. Found {len(checked_from_prefs)} files.")
+                "Found project preferences at %s. Using saved file selection for headless generation.",
+                prefs_path,
+            )
             for rel_path in checked_from_prefs:
-                if rel_path in rel_to_abs_map:
-                    selected_files.append(rel_to_abs_map[rel_path])
-        else:
+                abs_path = os.path.join(target_dir_headless, rel_path)
+                if os.path.isfile(abs_path):
+                    selected_files.append(abs_path)
+
+        if not selected_files:
+            logger.info(
+                "No usable saved project selection found. Performing a full recursive scan.")
+            all_files_with_flags = collect_all_files(target_dir_headless)
+            if not all_files_with_flags:
+                logger.warning("No files found to process!")
+                sys.exit(0)
             logger.info("Using smart default file selection.")
             for abs_path, _, is_checked in all_files_with_flags:
                 if is_checked and os.path.isfile(abs_path):
@@ -335,13 +335,34 @@ def main():
 
     logger.info("Starting code concatenation...")
 
-    all_files_with_flags = collect_all_files()
+    prefs_path, _ = _existing_prefs_path(target_dir)
+    if os.path.exists(prefs_path):
+        checked_from_prefs, _, _, _, _, _, _, _, _ = _read_prefs_file(
+            target_dir)
+        logger.info(
+            "Found project preferences at %s; seeding visible tree without a full recursive scan.",
+            prefs_path,
+        )
+        all_files_with_flags = collect_seed_paths(
+            target_dir, checked_from_prefs)
+        initial_tree_fully_loaded = False
+    else:
+        logger.info(
+            "No project preferences found for %s; performing a full recursive scan.",
+            target_dir,
+        )
+        all_files_with_flags = collect_all_files(target_dir)
+        initial_tree_fully_loaded = True
 
     if not all_files_with_flags:
         logger.warning("No files found to process!")
         return
 
-    action, _ = show_file_selection_gui(all_files_with_flags)
+    action, _ = show_file_selection_gui(
+        all_files_with_flags,
+        project_root=target_dir,
+        initial_tree_fully_loaded=initial_tree_fully_loaded,
+    )
 
     if action != 'quit':
         logger.info(
