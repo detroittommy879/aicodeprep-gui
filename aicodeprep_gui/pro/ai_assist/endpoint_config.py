@@ -6,6 +6,10 @@ from aicodeprep_gui.config import get_config_dir
 ENDPOINTS_FILENAME = "ai-endpoints.toml"
 DEFAULT_ENDPOINT_ID = "local"
 DEFAULT_ENDPOINT_NAME = "Local / Custom Endpoint"
+LEGACY_EXTRA_ENDPOINTS = {
+    "http://extra.wuu73.org/aimodels/v1",
+    "https://extra.wuu73.org/aimodels/v1",
+}
 
 logger = logging.getLogger(__name__)
 
@@ -112,6 +116,11 @@ def _has_endpoint_payload(endpoint: dict | None) -> bool:
         return True
     name = (endpoint.get("name") or "").strip()
     return bool(name) and name != DEFAULT_ENDPOINT_NAME
+
+
+def is_legacy_extra_endpoint(url: str | None) -> bool:
+    """Return True for the retired hosted test endpoint from older releases."""
+    return (url or "").strip().rstrip("/") in LEGACY_EXTRA_ENDPOINTS
 
 
 def _normalize_endpoint(endpoint: dict | None) -> dict:

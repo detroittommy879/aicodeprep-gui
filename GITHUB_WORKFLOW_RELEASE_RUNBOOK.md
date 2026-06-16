@@ -10,6 +10,8 @@ The safe path is:
 4. Let the tag workflow create the GitHub Release artifacts.
 5. Only publish to PyPI after inspecting those artifacts.
 
+If you already merged to `main`, skip the feature-branch dry run and run `Build and Package` manually on `main` with `publish_to_pypi: false`.
+
 ## What The Workflow Does
 
 `.github/workflows/build-release.yml` builds the Rust worker for:
@@ -86,6 +88,31 @@ This does not publish to PyPI and does not create a GitHub Release.
    ```
 
 If this dry run passes, the automation is doing the hard part correctly.
+
+## Safe Dry Run After Merging To Main
+
+If the branch is already merged, run the same package build on `main`. This still does not publish to PyPI and does not create a GitHub Release.
+
+```text
+Actions -> Build and Package -> Run workflow
+Branch: main
+publish_to_pypi: false
+```
+
+Wait for:
+
+```text
+Build Rust worker (windows-x86_64)
+Build Rust worker (linux-x86_64)
+Build Rust worker (linux-aarch64)
+Build Rust worker (darwin-x86_64)
+Build Rust worker (darwin-aarch64)
+Build Python package with workers
+```
+
+Then download the `python-package` artifact from that workflow run.
+
+Important: `Deploy Docs` is a separate workflow. A docs deploy failure does not mean the Rust worker build failed.
 
 ## Merge To Main
 
@@ -187,4 +214,3 @@ If a worker build fails, do not publish. Check the failed platform job first.
 If `Verify package includes worker binaries` fails, do not publish. That means the wheel did not contain every platform binary.
 
 If the GitHub Release exists but PyPI upload fails, do not reuse the same PyPI version after a partial upload. PyPI does not allow overwriting files for the same version. Bump the version before retrying if anything reached PyPI.
-

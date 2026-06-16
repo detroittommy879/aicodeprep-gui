@@ -121,25 +121,23 @@ class VoteDialog(QtWidgets.QDialog):
 
 
 class UpdateNoticeDialog(QtWidgets.QDialog):
-    """Dialog to notify users of v1.2.0 update changes."""
+    """Dialog to notify users of v1.5.0 update changes."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("v1.2.0 Update")
+        self.setWindowTitle("v1.5.0 Update")
         self.setMinimumWidth(420)
         layout = QtWidgets.QVBoxLayout(self)
-        title = QtWidgets.QLabel("v1.2.0 Update")
+        title = QtWidgets.QLabel("v1.5.0 Update")
         title.setAlignment(QtCore.Qt.AlignCenter)
         title.setStyleSheet(
             "font-size: 22px; font-weight: bold; color: #0078d4; margin-bottom: 8px;")
         layout.addWidget(title)
         msg = (
-            "I changed the app so that this version no longer quits as soon as you click GENERATE CONTEXT! button.<br><br>"
-            "The reason it used to be that way is because that was just the way worked when it was just a terminal command.<br><br>"
-            "Now, when you generate context, it just generates it, puts it onto the clipboard and writes to .aicp/context_block.md, and that's it. You can just keep it open if you want and keep generating or adjusting.<br><br>"
-            "<b>Note:</b> The file tree might not auto-update for new files (I'll add that soon) yet so if there are new files then you might have to restart the app.<br><br>"
-            "Also there is a Font Size adjustment for people who wanted to increase the Font size.<br><br>"
-            "Happy Coding!"
+            "AICodePrep 1.5.0 adds the Rust worker for much faster file scanning and context generation on large projects.<br><br>"
+            "The app now bundles Rust workers for Windows, Linux, and macOS, including Apple Silicon Macs. If the worker is available, AICodePrep uses it automatically and falls back to Python if needed.<br><br>"
+            "Generated context is still copied to your clipboard and written to <b>.aicp/context_block.md</b>.<br><br>"
+            "If a large project still feels slow, please send the folder type and platform so I can tune the scanner defaults."
         )
         label = QtWidgets.QLabel(msg)
         label.setWordWrap(True)
@@ -256,7 +254,7 @@ class DialogManager:
         self.parent = parent_window
 
     def open_update_notice_dialog(self):
-        """Show the v1.2.0 update notice dialog."""
+        """Show the v1.5.0 update notice dialog."""
         dlg = UpdateNoticeDialog(self.parent)
         dlg.exec()
 

@@ -192,6 +192,7 @@ def load_legacy_qsettings() -> Dict[str, Any]:
         ("install_date", str),
         ("has_voted_on_features_v2", bool),
         ("v1.2.0_update_seen", bool),
+        ("v1.5.0_update_seen", bool),
     ):
         if identity_settings.contains(key):
             identity[key] = identity_settings.value(key, type=cast)

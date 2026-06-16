@@ -97,16 +97,21 @@ def get_worker_path() -> Path:
     if configured:
         return Path(configured)
 
-    cached = default_worker_path()
-    if cached.exists():
-        return cached
-
     local_dev = local_dev_worker_path()
     if local_dev is not None:
         return local_dev
 
+    # Prefer the bundled worker over any older cached copy. This lets a package
+    # upgrade replace a stale worker binary in the user config directory.
     packaged = install_packaged_worker_binary()
-    return packaged or cached
+    if packaged is not None:
+        return packaged
+
+    cached = default_worker_path()
+    if cached.exists():
+        return cached
+
+    return cached
 
 
 def _sha256_file(path: Path) -> str:

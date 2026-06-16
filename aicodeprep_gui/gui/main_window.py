@@ -1401,13 +1401,13 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.deselect_all_button.setToolTip(
             self.tr(f"Deselect all files ({deselect_all_shortcut})"))
 
-        # --- Show v1.2.0 update notice on first run of this version ---
+        # --- Show v1.5.0 update notice on first run of this version ---
         try:
-            if not get_setting("user_identity", "v1.2.0_update_seen", False):
+            if not get_setting("user_identity", "v1.5.0_update_seen", False):
                 self.dialog_manager.open_update_notice_dialog()
-                set_setting("user_identity", "v1.2.0_update_seen", True)
+                set_setting("user_identity", "v1.5.0_update_seen", True)
         except Exception as e:
-            logging.error(f"Failed to show v1.2.0 update notice: {e}")
+            logging.error(f"Failed to show v1.5.0 update notice: {e}")
 
         try:
             self._refresh_remote_pro_notice_banner()
@@ -1484,10 +1484,19 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         """Populate the AI model dropdown from the active endpoint."""
         try:
             from aicodeprep_gui.pro.ai_assist.ai_client import AIClient
-            from aicodeprep_gui.pro.ai_assist.endpoint_config import get_active_endpoint
+            from aicodeprep_gui.pro.ai_assist.endpoint_config import (
+                get_active_endpoint,
+                is_legacy_extra_endpoint,
+            )
 
             endpoint = get_active_endpoint()
             if not endpoint or not endpoint.get("url"):
+                return
+            if is_legacy_extra_endpoint(endpoint.get("url")):
+                logging.info(
+                    "Skipping retired default AI endpoint during startup model load: %s",
+                    endpoint.get("url"),
+                )
                 return
 
             client = AIClient()

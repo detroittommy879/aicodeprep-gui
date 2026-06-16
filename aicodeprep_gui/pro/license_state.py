@@ -19,6 +19,7 @@ FREE_ACCESS_TIMEOUT_SECONDS = 4
 
 _TRUTHY_VALUES = {"1", "true", "yes", "on"}
 _FALSY_VALUES = {"0", "false", "no", "off"}
+_LOGGED_REMOTE_FREE_ACCESS = False
 
 
 def _now_utc() -> datetime:
@@ -217,6 +218,7 @@ def is_free_access_enabled(now: Optional[datetime] = None) -> bool:
 
 
 def is_pro_enabled(argv: Optional[list[str]] = None) -> bool:
+    global _LOGGED_REMOTE_FREE_ACCESS
     args = argv if argv is not None else []
 
     if "--notpro" in args:
@@ -233,8 +235,10 @@ def is_pro_enabled(argv: Optional[list[str]] = None) -> bool:
         if _has_verified_paid_license(paid_license):
             return True
         if is_free_access_enabled():
-            logging.info(
-                "Pro features temporarily enabled for everyone via remote flag.")
+            if not _LOGGED_REMOTE_FREE_ACCESS:
+                logging.info(
+                    "Pro features temporarily enabled for everyone via remote flag.")
+                _LOGGED_REMOTE_FREE_ACCESS = True
             return True
     except Exception as exc:
         logging.error("Settings error in is_pro_enabled: %s", exc)
