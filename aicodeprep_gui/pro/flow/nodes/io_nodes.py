@@ -245,6 +245,11 @@ class FileWriteNode(BaseExecNode):
         text = inputs.get("text") or ""
         path = self.get_property("path") or "output.txt"
 
+        if not text:
+            logging.warning(
+                "[FileWriteNode] No input text provided; skipping write to %s", path)
+            return {}
+
         # Expand ~ and make absolute
         if path.startswith("~"):
             abspath = Path(path).expanduser()
@@ -257,7 +262,7 @@ class FileWriteNode(BaseExecNode):
             abspath.write_text(text, encoding="utf-8")
 
             # Log the full path so user can find it
-            logging.info(f"✅ File saved: {abspath}")
+            logging.info(f"File saved: {abspath}")
 
         except Exception as e:
             logging.error(f"Failed writing file: {e}")

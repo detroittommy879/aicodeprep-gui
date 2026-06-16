@@ -19,6 +19,7 @@ from aicodeprep_gui.apptheme import (
 from typing import List, Tuple
 from aicodeprep_gui import smart_logic
 from aicodeprep_gui.file_processor import process_files
+from aicodeprep_gui.rust_backend import process_with_rust_worker, RustProcessResult
 # from aicodeprep_gui import __version__ # Duplicate import, removed
 from aicodeprep_gui import pro  # Keep one of these, remove duplicate
 
@@ -46,8 +47,74 @@ from aicodeprep_gui.user_settings import (
     migrate_legacy_qsettings,
     clear_legacy_qsettings,
     get_settings_file,
+    get_ads_disabled_setting,
+    set_ads_disabled_setting,
 )
-from aicodeprep_gui.gui.settings.preferences import _write_prefs_file, _prefs_path
+from aicodeprep_gui.pro.license_state import get_remote_access_state, should_show_remote_pro_notice
+from aicodeprep_gui.gui.settings.preferences import (
+    _existing_prefs_path,
+    _read_prefs_file,
+    _write_prefs_file,
+    _prefs_path,
+)
+
+
+class GitCloneWorker(QtCore.QThread):
+    """Worker thread for cloning a git repository without blocking the UI."""
+    progress = QtCore.Signal(str)
+    finished = QtCore.Signal(str)  # emits the tmp_dir path on success
+    error = QtCore.Signal(str)
+
+    def __init__(self, url, tmp_dir, parent=None):
+        super().__init__(parent)
+        self.url = url
+        self.tmp_dir = tmp_dir
+
+    def run(self):
+        import subprocess
+        try:
+            proc = subprocess.Popen(
+                ["git", "clone", "--depth", "1",
+                    "--progress", self.url, self.tmp_dir],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            # git clone writes progress to stderr
+            for line in proc.stderr:
+                stripped = line.rstrip()
+                if stripped:
+                    self.progress.emit(stripped)
+            proc.wait()
+            if proc.returncode != 0:
+                self.error.emit(
+                    "git clone failed (exit code {})".format(proc.returncode))
+            else:
+                self.finished.emit(self.tmp_dir)
+        except FileNotFoundError:
+            self.error.emit(
+                "git is not installed or not in PATH. Please install git first.")
+        except Exception as e:
+            self.error.emit(str(e))
+
+
+class FolderScanWorker(QtCore.QThread):
+    """Worker thread for folder scans so large projects do not block the UI."""
+    finished = QtCore.Signal(str, object, str)
+    error = QtCore.Signal(str, str)
+
+    def __init__(self, folder_path, parent=None):
+        super().__init__(parent)
+        self.folder_path = os.path.abspath(folder_path)
+
+    def run(self):
+        try:
+            new_files = smart_logic.collect_all_files(self.folder_path)
+            self.finished.emit(
+                self.folder_path, new_files, smart_logic.get_last_scan_backend())
+        except Exception as e:
+            logging.exception("Failed to scan folder %s", self.folder_path)
+            self.error.emit(self.folder_path, str(e))
 
 
 class LogoTreeWidget(QtWidgets.QTreeWidget):
@@ -183,8 +250,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
     GUMROAD_PRODUCT_ID = "KpjO4PdY2mQNCZC1k_ZkPQ=="  # set your Gumroad product_id
     GUMROAD_PRODUCT_ID_2 = "O1LkPokDSKDZdhSitEvvrA=="  # set your Gumroad product_id
 
-    def __init__(self, files):
+    def __init__(self, files, project_root=None, initial_tree_fully_loaded=True):
         super().__init__()
+        self.files = files
+        self.project_root = self._resolve_project_root(project_root, files)
+        self.initial_tree_fully_loaded = initial_tree_fully_loaded
         self.dialog_manager = DialogManager(self)
         self.preferences_manager = PreferencesManager(self)
         self.ui_settings_manager = UISettingsManager(self)
@@ -229,7 +299,6 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         self.presets = []
         self.setAcceptDrops(True)
-        self.files = files
         self.latest_pypi_version = None
         self.network_manager = QtNetwork.QNetworkAccessManager(self)
 
@@ -279,11 +348,13 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.app = QtWidgets.QApplication([])
         self.action = 'quit'
 
-        self.prefs_filename = os.path.join(".aicp", "preferences.ini")
+        self.prefs_filename = os.path.join(
+            self.project_root, ".aicp", "preferences.ini")
         self.remember_checkbox = None
         self.preferences_manager.load_prefs_if_exists()
         self._maybe_prompt_project_prefs_migration()
         self._maybe_prompt_user_settings_migration()
+        self.ads_disabled_preference = self._load_ads_disabled_preference()
 
         if platform.system() == 'Windows':
             scale_factor = self.app.primaryScreen().logicalDotsPerInch() / 96.0
@@ -418,6 +489,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.tr("&Language / Idioma / 语言…"), self)
         self.language_act.triggered.connect(self.open_language_dialog)
         self.edit_menu.addAction(self.language_act)
+
+        self.more_settings_act = QtGui.QAction(
+            self.tr("&More Settings…"), self)
+        self.more_settings_act.triggered.connect(self._open_more_settings)
+        self.edit_menu.addAction(self.more_settings_act)
 
         # Flow menu (Phase 2)
         self.flow_menu = mb.addMenu(self.tr("&Flow"))
@@ -746,14 +822,17 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         prompt_layout = QtWidgets.QVBoxLayout(prompt_widget)
         prompt_layout.setContentsMargins(0, 0, 0, 0)
 
-        # Ads system (Free version only)
-        if not pro.enabled:
-            self.ad_manager = AdManager(self)
-            self.ad_widget = AdWidget()
-            self.ad_widget.update_theme(self.is_dark_mode)
-            self.ad_widget.update_base_font_size(self.default_font.pointSize())
-            self._attach_ad_widget_to_tree()
-            self.ad_manager.ad_changed.connect(self.ad_widget.set_ad)
+        # Ads system (all users; disable state is stored globally per user)
+        self.ad_manager = AdManager(self)
+        self.ad_widget = AdWidget()
+        self.ad_widget.update_theme(self.is_dark_mode)
+        self.ad_widget.update_base_font_size(self.default_font.pointSize())
+        self._attach_ad_widget_to_tree()
+        self.ad_manager.ad_changed.connect(self.ad_widget.set_ad)
+        if self.ads_disabled_preference:
+            self.ad_widget.set_ads_disabled(True)
+            self.ad_widget.setVisible(False)
+            self.ad_manager.rotation_timer.stop()
 
         self.prompt_label = QtWidgets.QLabel(
             self.tr("Optional prompt/question for LLM (will be appended to the end):"))
@@ -783,9 +862,10 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             ai_rewrite_tooltip += " " + \
                 self.tr("(Pro feature - upgrade to unlock)")
         self.ai_rewrite_btn.setToolTip(ai_rewrite_tooltip)
-        self.ai_rewrite_btn.setEnabled(pro.enabled)
+        self.ai_rewrite_btn.setEnabled(bool(pro.enabled))
         self.ai_rewrite_btn.clicked.connect(self._on_ai_rewrite_clicked)
         ai_assist_layout.addWidget(self.ai_rewrite_btn)
+        self.ai_rewrite_btn.hide()
 
         # (AI Smart Select button removed)
 
@@ -794,12 +874,14 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.ai_model_combo.currentIndexChanged.connect(
             self._on_ai_model_changed)
         ai_assist_layout.addWidget(self.ai_model_combo, 1)
+        self.ai_model_combo.hide()
 
         self.ai_settings_btn = QtWidgets.QPushButton("⚙")
         self.ai_settings_btn.setFixedWidth(30)
         self.ai_settings_btn.setToolTip(self.tr("AI endpoint settings"))
         self.ai_settings_btn.clicked.connect(self._open_ai_settings)
         ai_assist_layout.addWidget(self.ai_settings_btn)
+        self.ai_settings_btn.hide()
 
         prompt_layout.addLayout(ai_assist_layout)
 
@@ -809,50 +891,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         main_layout.addWidget(self.splitter)
 
         # Build tree from files
-        self.path_to_item = {}
-        root_node = self.tree_widget.invisibleRootItem()
-        for abs_path, rel_path, is_checked in files:
-            parts = rel_path.split(os.sep)
-            parent_node = root_node
-            path_so_far = ""
-            for part in parts[:-1]:
-                # Ensure Level column default state for intermediate folders if created
-                path_so_far = os.path.join(
-                    path_so_far, part) if path_so_far else part
-                if path_so_far in self.path_to_item:
-                    parent_node = self.path_to_item[path_so_far]
-                else:
-                    # Always create with two columns since tree widget always has two columns
-                    new_parent = QtWidgets.QTreeWidgetItem(
-                        parent_node, [part, ""])
-                    new_parent.setIcon(0, self.folder_icon)
-                    new_parent.setFlags(new_parent.flags()
-                                        | QtCore.Qt.ItemIsUserCheckable)
-                    new_parent.setCheckState(0, QtCore.Qt.Unchecked)
-                    self.path_to_item[path_so_far] = new_parent
-                    parent_node = new_parent
-
-            item_text = parts[-1]
-            # Always create with two columns since tree widget always has two columns
-            item = QtWidgets.QTreeWidgetItem(parent_node, [item_text, ""])
-            item.setData(0, QtCore.Qt.UserRole, abs_path)
-            self.path_to_item[rel_path] = item
-
-            if self.preferences_manager.prefs_loaded:
-                is_checked = rel_path in self.preferences_manager.checked_files_from_prefs
-
-            if os.path.isdir(abs_path):
-                item.setIcon(0, self.folder_icon)
-                item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-                item.setCheckState(0, QtCore.Qt.Unchecked)
-            else:
-                item.setIcon(0, self.file_icon)
-                item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-                if smart_logic.is_binary_file(abs_path):
-                    is_checked = False
-
-            item.setCheckState(
-                0, QtCore.Qt.Checked if is_checked else QtCore.Qt.Unchecked)
+        self.tree_manager.populate_tree(
+            self.files, fully_loaded=self.initial_tree_fully_loaded)
 
         # Do not attach Level delegate by default; installed via Pro toggle
         self.level_delegate = None
@@ -997,23 +1037,6 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         premium_content_layout.addLayout(preview_layout)
 
-        # Add Syntax Highlighting toggle to premium features
-        self.syntax_highlight_toggle = QtWidgets.QCheckBox(
-            self.tr("Enable syntax highlighting in preview"))
-        syntax_highlight_help = QtWidgets.QLabel(
-            "<b style='color:#0098D4; font-size:14px; cursor:help;'>?</b>")
-        syntax_highlight_help.setToolTip(
-            self.tr("Apply syntax highlighting to code in the preview window"))
-        syntax_highlight_help.setAlignment(QtCore.Qt.AlignVCenter)
-
-        syntax_highlight_layout = QtWidgets.QHBoxLayout()
-        syntax_highlight_layout.setContentsMargins(0, 0, 0, 0)
-        syntax_highlight_layout.addWidget(self.syntax_highlight_toggle)
-        syntax_highlight_layout.addWidget(syntax_highlight_help)
-        syntax_highlight_layout.addStretch()
-
-        premium_content_layout.addLayout(syntax_highlight_layout)
-
         # Flow Studio toggle (Phase 1: visible for Free as read-only; editable for Pro)
         self.flow_studio_toggle = QtWidgets.QCheckBox(
             self.tr("Enable Flow Studio (currently testing alpha version - might be glitchy!)"))
@@ -1040,7 +1063,35 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.flow_studio_toggle.setEnabled(True)
             self.flow_studio_toggle.setToolTip(
                 "Show the Flow Studio dock (read-only in Free mode).")
-        self.flow_studio_toggle.toggled.connect(self.toggle_flow_studio)
+        self.flow_studio_toggle.toggled.connect(
+            self._on_flow_studio_toggle_changed)
+
+        # AI Chat toggle (Pro feature)
+        self.ai_chat_toggle = QtWidgets.QCheckBox(
+            self.tr("Enable AI Chat (Pro feature)"))
+        ai_chat_help = QtWidgets.QLabel(
+            "<b style='color:#0098D4; font-size:14px; cursor:help;'>?</b>")
+        ai_chat_help.setToolTip(
+            self.tr("Show the AI Chat dock with multi-tab chat interface."))
+        ai_chat_help.setAlignment(QtCore.Qt.AlignVCenter)
+
+        ai_chat_layout = QtWidgets.QHBoxLayout()
+        ai_chat_layout.setContentsMargins(0, 0, 0, 0)
+        ai_chat_layout.addWidget(self.ai_chat_toggle)
+        ai_chat_layout.addWidget(ai_chat_help)
+        ai_chat_layout.addStretch()
+        premium_content_layout.addLayout(ai_chat_layout)
+
+        # Configure AI Chat toggle
+        if pro.enabled:
+            self.ai_chat_toggle.setEnabled(True)
+            self.ai_chat_toggle.setToolTip(
+                "Show the AI Chat dock with full functionality.")
+        else:
+            self.ai_chat_toggle.setEnabled(False)
+            self.ai_chat_toggle.setToolTip(
+                "AI Chat requires Pro license. Upgrade to enable.")
+        self.ai_chat_toggle.toggled.connect(self._on_ai_chat_toggle_changed)
 
         # # Add Font selection dropdown to premium features
         # font_layout = QtWidgets.QHBoxLayout()
@@ -1150,31 +1201,22 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             if self.preview_window:
                 self.addDockWidget(
                     QtCore.Qt.RightDockWidgetArea, self.preview_window)
-                self.preview_toggle.toggled.connect(self.toggle_preview_window)
-                # Connect syntax highlighting toggle
-                self.syntax_highlight_toggle.toggled.connect(
-                    self.toggle_syntax_highlighting)
+                self.preview_toggle.toggled.connect(
+                    self._on_preview_toggle_changed)
+                self.toggle_syntax_highlighting(True)
+                self._bind_dock_toggle(
+                    self.preview_window, self.preview_toggle)
 
             # Load saved preview window state from preferences
             self._load_preview_window_state()
-            # Load saved syntax highlighting state from preferences
-            self._load_syntax_highlight_state()
-
-            # For pro users, enable syntax highlighting and set default to checked
-            self.syntax_highlight_toggle.setEnabled(True)
-            self.syntax_highlight_toggle.setToolTip(
-                "Apply syntax highlighting to code in the preview window")
-            self.syntax_highlight_toggle.setChecked(
-                True)  # Default to enabled for pro users
         else:
             self.preview_toggle.setEnabled(False)
             self.preview_toggle.setToolTip(
                 "Enable file preview window (Pro Feature)")
 
-            # Disable syntax highlighting for non-pro users
-            self.syntax_highlight_toggle.setEnabled(False)
-            self.syntax_highlight_toggle.setToolTip(
-                "Enable syntax highlighting (Pro Feature)")
+        self._load_flow_studio_state()
+        self._load_ai_chat_state()
+        QtCore.QTimer.singleShot(0, self._restore_project_window_state)
 
         # The main layout for the QGroupBox itself. It will contain the collapsible widget.
         premium_group_box_main_layout = QtWidgets.QVBoxLayout(
@@ -1184,30 +1226,28 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         premium_group_box.toggled.connect(premium_container.setVisible)
         premium_group_box.toggled.connect(self._save_panel_visibility)
 
-        # Pro: Enable Skeleton Level column toggle
-        level_layout = QtWidgets.QHBoxLayout()
-        level_layout.setContentsMargins(0, 0, 0, 0)
+        # Ads box toggle
+        ads_layout = QtWidgets.QHBoxLayout()
+        ads_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.pro_level_toggle = QtWidgets.QCheckBox(
-            self.tr("Enable Context Compression Modes - does not work yet, still experimenting!"))
-        level_help = QtWidgets.QLabel(
-            "<b style='color:#0078D4; font-size:14px; cursor:help;'>?</b>")
-        level_help.setToolTip(
-            self.tr("Show a second column that marks skeleton level per item"))
-        level_help.setAlignment(QtCore.Qt.AlignVCenter)
-        level_layout.addWidget(self.pro_level_toggle)
-        level_layout.addWidget(level_help)
-        level_layout.addStretch()
-        premium_content_layout.addLayout(level_layout)
+        self.disable_ads_toggle = QtWidgets.QCheckBox(
+            self.tr("Show cheap coding plan ad box"))
+        ads_help = QtWidgets.QLabel(
+            "<b style='color:#0098D4; font-size:14px; cursor:help;'>?</b>")
+        ads_help.setToolTip(
+            self.tr("Show a small coding plan advertisement box in the file tree area"))
+        ads_help.setAlignment(QtCore.Qt.AlignVCenter)
+        ads_layout.addWidget(self.disable_ads_toggle)
+        ads_layout.addWidget(ads_help)
+        ads_layout.addStretch()
+        premium_content_layout.addLayout(ads_layout)
 
-        if pro.enabled:
-            self.pro_level_toggle.setEnabled(True)
-            self.pro_level_toggle.setToolTip(
-                self.tr("Show a second column that marks skeleton level per item"))
-            self.pro_level_toggle.toggled.connect(self.toggle_pro_level_column)
-        else:
-            self.pro_level_toggle.setEnabled(False)
-            self.pro_level_toggle.setToolTip(self.tr("Pro Feature"))
+        self.disable_ads_toggle.setEnabled(True)
+        self.disable_ads_toggle.setToolTip(
+            self.tr("Show a small coding plan advertisement box"))
+        self.disable_ads_toggle.setChecked(
+            not bool(self.ads_disabled_preference))
+        self.disable_ads_toggle.toggled.connect(self._toggle_ads)
 
         # Add the new green clickable link
         # buy_pro_label is now placed in the pro_features_row above the group box
@@ -1235,6 +1275,19 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.process_button.clicked.connect(self.process_selected)
         button_layout1.addWidget(self.process_button)
 
+        # Generate Context to AI button (Pro feature)
+        self.generate_ai_button = QtWidgets.QPushButton(
+            self.tr("GENERATE CONTEXT TO AI!"))
+        self.generate_ai_button.setAccessibleName(
+            self.tr("Generate Context to AI Button"))
+        self.generate_ai_button.setAccessibleDescription(
+            self.tr("Generate context and send to selected AI chat tabs"))
+        self.generate_ai_button.clicked.connect(self.generate_context_to_ai)
+        # Disabled until AI Chat is enabled
+        self.generate_ai_button.setEnabled(False)
+        self._sync_generate_ai_button_state()
+        button_layout1.addWidget(self.generate_ai_button)
+
         self.select_all_button = QtWidgets.QPushButton(self.tr("Select All"))
         self.select_all_button.setAccessibleName(self.tr("Select All Button"))
         self.select_all_button.setAccessibleDescription(
@@ -1252,6 +1305,20 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         button_layout1.addWidget(self.deselect_all_button)
 
         button_layout2.addStretch()
+        self.open_folder_btn = QtWidgets.QPushButton(self.tr("Open Folder"))
+        self.open_folder_btn.clicked.connect(self.open_folder_dialog)
+        button_layout2.addWidget(self.open_folder_btn)
+
+        self.open_repo_btn = QtWidgets.QPushButton(self.tr("Open Repo"))
+        self.open_repo_btn.clicked.connect(self.open_repo_dialog)
+        button_layout2.addWidget(self.open_repo_btn)
+
+        self.retry_auto_btn = QtWidgets.QPushButton(self.tr("Retry Auto"))
+        self.retry_auto_btn.setToolTip(self.tr(
+            "Delete saved file selections and re-scan the folder, auto-checking likely code files"))
+        self.retry_auto_btn.clicked.connect(self.retry_auto_check)
+        button_layout2.addWidget(self.retry_auto_btn)
+
         self.load_prefs_button = QtWidgets.QPushButton(
             self.tr("Load preferences"))
         self.load_prefs_button.clicked.connect(
@@ -1334,25 +1401,102 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self.deselect_all_button.setToolTip(
             self.tr(f"Deselect all files ({deselect_all_shortcut})"))
 
-        # --- Show v1.2.0 update notice on first run of this version ---
+        # --- Show v1.5.0 update notice on first run of this version ---
         try:
-            if not get_setting("user_identity", "v1.2.0_update_seen", False):
+            if not get_setting("user_identity", "v1.5.0_update_seen", False):
                 self.dialog_manager.open_update_notice_dialog()
-                set_setting("user_identity", "v1.2.0_update_seen", True)
+                set_setting("user_identity", "v1.5.0_update_seen", True)
         except Exception as e:
-            logging.error(f"Failed to show v1.2.0 update notice: {e}")
+            logging.error(f"Failed to show v1.5.0 update notice: {e}")
+
+        try:
+            self._refresh_remote_pro_notice_banner()
+            QtCore.QTimer.singleShot(
+                200, self._show_remote_pro_notice_if_needed)
+        except Exception as e:
+            logging.error(f"Failed to initialize remote Pro notice: {e}")
 
         # AI Assist setup
         QtCore.QTimer.singleShot(1000, self._setup_ai_models)
+
+    def _build_remote_pro_notice_texts(self) -> tuple[str, str]:
+        try:
+            state = get_remote_access_state()
+        except Exception as exc:
+            logging.error(f"Failed to load remote Pro notice state: {exc}")
+            return "", ""
+
+        try:
+            should_show_notice = should_show_remote_pro_notice(list(sys.argv))
+        except Exception as exc:
+            logging.error(
+                f"Failed to evaluate remote Pro notice audience: {exc}")
+            should_show_notice = False
+
+        free_for_all = bool(state.get("free_for_all", False))
+        announcement_message = str(
+            state.get("announcement_message", "") or "").strip()
+        free_user_announcement_message = str(
+            state.get("free_user_announcement_message", "") or "").strip()
+
+        popup_parts = []
+        banner_parts = []
+
+        if free_for_all:
+            banner_parts.append(
+                "Everything is free for now, including Flow Studio and its built-in multi-model Best Of N workflow. Questions: tom@wuu73.org"
+            )
+
+        if announcement_message:
+            popup_parts.append(announcement_message)
+            banner_parts.append(announcement_message)
+
+        if free_user_announcement_message and should_show_notice:
+            popup_parts.append(free_user_announcement_message)
+            banner_parts.append(free_user_announcement_message)
+
+        popup_text = "\n\n".join(part.strip()
+                                 for part in popup_parts if part.strip())
+        return popup_text, ""
+
+    def _refresh_remote_pro_notice_banner(self):
+        return
+
+    def _show_remote_pro_notice_if_needed(self):
+        popup_text, _banner_text = self._build_remote_pro_notice_texts()
+        if not popup_text:
+            return
+
+        last_seen_text = str(
+            get_setting("pro_options", "last_seen_remote_pro_notice", "") or ""
+        )
+        if popup_text == last_seen_text:
+            return
+
+        QtWidgets.QMessageBox.information(
+            self,
+            "AICodePrep Pro Notice",
+            popup_text,
+        )
+        set_setting("pro_options", "last_seen_remote_pro_notice", popup_text)
 
     def _setup_ai_models(self):
         """Populate the AI model dropdown from the active endpoint."""
         try:
             from aicodeprep_gui.pro.ai_assist.ai_client import AIClient
-            from aicodeprep_gui.pro.ai_assist.endpoint_config import get_active_endpoint
+            from aicodeprep_gui.pro.ai_assist.endpoint_config import (
+                get_active_endpoint,
+                is_legacy_extra_endpoint,
+            )
 
             endpoint = get_active_endpoint()
-            if not endpoint:
+            if not endpoint or not endpoint.get("url"):
+                return
+            if is_legacy_extra_endpoint(endpoint.get("url")):
+                logging.info(
+                    "Skipping retired default AI endpoint during startup model load: %s",
+                    endpoint.get("url"),
+                )
                 return
 
             client = AIClient()
@@ -1557,6 +1701,17 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             logging.error(f"Failed to open AI settings: {e}")
             QtWidgets.QMessageBox.warning(
                 self, "Error", f"Could not open AI settings:\n{e}")
+
+    def _open_more_settings(self):
+        """Open the More Settings dialog for experimental options."""
+        try:
+            from aicodeprep_gui.gui.components.more_settings_dialog import MoreSettingsDialog
+            dialog = MoreSettingsDialog(self)
+            dialog.exec()
+        except Exception as e:
+            logging.error(f"Failed to open More Settings dialog: {e}")
+            QtWidgets.QMessageBox.warning(
+                self, "Error", f"Could not open More Settings:\n{e}")
 
     def update_font_size(self, index):
         """Update all fonts in the application based on the font size multiplier."""
@@ -1918,6 +2073,13 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 except Exception as e:
                     logging.error(f"Preview window theme update failed: {e}")
 
+            # Update AI Chat dock theme
+            if hasattr(self, 'ai_chat_dock') and self.ai_chat_dock:
+                try:
+                    self.ai_chat_dock.set_dark_mode(self.is_dark_mode)
+                except Exception as e:
+                    logging.error(f"AI Chat dock theme update failed: {e}")
+
             # Update other UI elements
             for child in self.findChildren(QtWidgets.QLabel):
                 if getattr(child, "objectName", lambda: "")() == "preset_explanation":
@@ -1997,6 +2159,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         return self.tree_manager.on_item_expanded(item)
 
     def handle_item_changed(self, item, column):
+        self._send_metric_event(
+            "feature_used",
+            details={"feature": "file_selection_ui"},
+            once_key="feature_used:file_selection_ui",
+        )
         return self.tree_manager.handle_item_changed(item, column)
 
     def get_selected_files(self):
@@ -2023,8 +2190,59 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
     def delete_preset_dialog(self):
         return self.dialog_manager.delete_preset_dialog()
 
-    def _send_metric_event(self, event_type, token_count=None):
-        return self.metrics_manager._send_metric_event(event_type, token_count)
+    def _send_metric_event(self, event_type, token_count=None, details=None, once_key=None):
+        return self.metrics_manager._send_metric_event(
+            event_type,
+            token_count=token_count,
+            details=details,
+            once_key=once_key,
+        )
+
+    def _build_generation_metrics_details(self, selected_files, prompt, chosen_fmt, extra=None):
+        prompt_to_top = bool(self.prompt_top_checkbox.isChecked())
+        prompt_to_bottom = bool(self.prompt_bottom_checkbox.isChecked())
+        details = {
+            "selected_file_count": len(selected_files),
+            "output_format": str(chosen_fmt or ""),
+            "has_prompt": bool(prompt),
+            "prompt_length": len(prompt or ""),
+            "prompt_to_top": prompt_to_top,
+            "prompt_to_bottom": prompt_to_bottom,
+            "duplicate_prompt": bool(prompt and prompt_to_top and prompt_to_bottom),
+            "preview_enabled": bool(hasattr(self, "preview_toggle") and self.preview_toggle.isChecked()),
+            "flow_studio_enabled": bool(hasattr(self, "flow_studio_toggle") and self.flow_studio_toggle.isChecked()),
+            "ai_chat_enabled": bool(hasattr(self, "ai_chat_toggle") and self.ai_chat_toggle.isChecked()),
+        }
+        if extra:
+            details.update(extra)
+        return details
+
+    def _on_preview_toggle_changed(self, enabled):
+        self._send_metric_event(
+            "feature_toggle",
+            details={"feature": "file_preview_window",
+                     "enabled": bool(enabled)},
+        )
+        self.toggle_preview_window(enabled)
+
+    def _on_flow_studio_toggle_changed(self, enabled):
+        self._send_metric_event(
+            "feature_toggle",
+            details={"feature": "flow_studio", "enabled": bool(enabled)},
+        )
+        self.toggle_flow_studio(enabled)
+
+    def _on_ai_chat_toggle_changed(self, enabled):
+        self._send_metric_event(
+            "feature_toggle",
+            details={"feature": "ai_chat", "enabled": bool(enabled)},
+        )
+        self.toggle_ai_chat(enabled)
+
+    def _collect_selected_ai_models(self):
+        if hasattr(self, "ai_chat_dock") and self.ai_chat_dock and hasattr(self.ai_chat_dock, "get_selected_models"):
+            return self.ai_chat_dock.get_selected_models()
+        return []
 
     def open_settings_folder(self):
         return self.window_helpers.open_settings_folder()
@@ -2034,6 +2252,278 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         from .components.language_dialog import LanguageSelectionDialog
         dialog = LanguageSelectionDialog(self)
         dialog.exec()
+
+    @staticmethod
+    def _resolve_project_root(project_root, files):
+        if project_root:
+            return os.path.abspath(project_root)
+        if files:
+            abs_paths = [os.path.abspath(abs_path) for abs_path, _, _ in files]
+            try:
+                return os.path.commonpath(abs_paths)
+            except ValueError:
+                pass
+        return os.getcwd()
+
+    def reload_folder(self, folder_path):
+        """Reload the app with a new folder without creating a new window."""
+        folder_path = os.path.abspath(folder_path)
+
+        if hasattr(self, '_folder_scan_worker') and self._folder_scan_worker and self._folder_scan_worker.isRunning():
+            logging.info(
+                "Folder scan already in progress; ignoring reload request for %s", folder_path)
+            self.statusBar().showMessage(self.tr("Folder scan already in progress"), 3000)
+            return
+
+        prefs_path, _ = _existing_prefs_path(folder_path)
+        if os.path.exists(prefs_path):
+            logging.info(
+                "Found project preferences at %s; seeding visible tree for %s without a full recursive scan.",
+                prefs_path,
+                folder_path,
+            )
+            self.statusBar().showMessage(
+                self.tr("Loading saved project view for {}...").format(
+                    os.path.basename(folder_path) or folder_path),
+                0,
+            )
+            checked_files_from_prefs, *_ = _read_prefs_file(folder_path)
+            new_files = smart_logic.collect_seed_paths(
+                folder_path, checked_files_from_prefs)
+            self._apply_loaded_folder(
+                folder_path,
+                new_files,
+                fully_loaded=False,
+                source_label="saved project preferences",
+            )
+            return
+
+        logging.info(
+            "No project preferences found for %s; performing a full recursive scan.",
+            folder_path,
+        )
+
+        self._folder_scan_progress = QtWidgets.QProgressDialog(
+            self.tr("Scanning folder..."), "", 0, 0, self)
+        self._folder_scan_progress.setWindowTitle(self.tr("Open Folder"))
+        self._folder_scan_progress.setWindowModality(QtCore.Qt.WindowModal)
+        self._folder_scan_progress.setMinimumDuration(0)
+        self._folder_scan_progress.setAutoClose(False)
+        self._folder_scan_progress.setCancelButton(None)
+        self._folder_scan_progress.show()
+
+        self.statusBar().showMessage(
+            self.tr("Scanning {}...").format(os.path.basename(folder_path) or folder_path), 0)
+
+        self._folder_scan_worker = FolderScanWorker(folder_path, self)
+        self._folder_scan_worker.finished.connect(
+            self._on_folder_scan_finished)
+        self._folder_scan_worker.error.connect(self._on_folder_scan_error)
+        self._folder_scan_worker.start()
+
+    def _apply_loaded_folder(self, folder_path, new_files, fully_loaded, source_label):
+        try:
+            os.chdir(folder_path)
+            self.project_root = folder_path
+            self.prefs_filename = os.path.join(
+                self.project_root, ".aicp", "preferences.ini")
+            self.preferences_manager.prefs_loaded = False
+            self.preferences_manager.load_prefs_if_exists()
+
+            if not new_files:
+                logging.warning(f"No files found in {folder_path}")
+                new_files = []
+
+            self.files = new_files
+            self.tree_manager.populate_tree(
+                self.files, fully_loaded=fully_loaded)
+            if self.preferences_manager.prefs_loaded and self.preferences_manager.checked_files_from_prefs:
+                self._expand_folders_for_paths(
+                    self.preferences_manager.checked_files_from_prefs)
+
+            self.setWindowTitle(
+                f"aicodeprep-gui - {os.path.basename(folder_path)}")
+            self.text_label.setText("")
+            self.update_token_counter()
+            self.statusBar().showMessage(
+                self.tr("Loaded {} items from {} using {}").format(
+                    len(new_files),
+                    os.path.basename(folder_path) or folder_path,
+                    source_label,
+                ),
+                4000,
+            )
+            logging.info(
+                "Reloaded folder: %s using %s",
+                folder_path,
+                source_label,
+            )
+        except Exception as e:
+            logging.error(f"Failed to apply scanned folder: {e}")
+            QtWidgets.QMessageBox.warning(
+                self, "Error", f"Failed to open folder: {e}")
+
+    def _on_folder_scan_finished(self, folder_path, new_files, scan_backend):
+        if hasattr(self, '_folder_scan_progress') and self._folder_scan_progress:
+            self._folder_scan_progress.close()
+            self._folder_scan_progress = None
+        self._folder_scan_worker = None
+        self._apply_loaded_folder(
+            folder_path,
+            new_files,
+            fully_loaded=True,
+            source_label=f"full recursive scan ({scan_backend})",
+        )
+
+    def _on_folder_scan_error(self, folder_path, error_msg):
+        if hasattr(self, '_folder_scan_progress') and self._folder_scan_progress:
+            self._folder_scan_progress.close()
+            self._folder_scan_progress = None
+        self._folder_scan_worker = None
+        logging.error(f"Failed to reload folder {folder_path}: {error_msg}")
+        self.statusBar().showMessage("", 0)
+        QtWidgets.QMessageBox.warning(
+            self, self.tr("Error"),
+            self.tr("Failed to open folder: {}").format(error_msg))
+
+    def open_folder_dialog(self):
+        """Open a folder picker and reload the app with the selected folder."""
+        folder = QtWidgets.QFileDialog.getExistingDirectory(
+            self, self.tr("Open Folder"), os.path.expanduser("~"))
+        if folder:
+            self.reload_folder(folder)
+
+    def open_repo_dialog(self):
+        """Prompt for a git repo URL, clone to temp dir in a background thread."""
+        url, ok = QtWidgets.QInputDialog.getText(
+            self, self.tr("Open Repository"),
+            self.tr("Enter git repository URL:"),
+            QtWidgets.QLineEdit.Normal, "")
+        if ok and url.strip():
+            url = url.strip()
+            self._send_metric_event(
+                "open_repo_started",
+                details={"feature": "open_repo"},
+            )
+            import tempfile
+            tmp_dir = tempfile.mkdtemp(prefix="aicodeprep_repo_")
+
+            # Create a progress dialog
+            self._clone_progress = QtWidgets.QProgressDialog(
+                self.tr("Cloning repository..."), self.tr("Cancel"), 0, 0, self)
+            self._clone_progress.setWindowTitle(self.tr("Open Repository"))
+            self._clone_progress.setWindowModality(QtCore.Qt.WindowModal)
+            self._clone_progress.setMinimumDuration(0)
+            self._clone_progress.setValue(0)
+            self._clone_progress.setAutoClose(False)
+            self._clone_progress.show()
+
+            # Start the worker thread
+            self._clone_worker = GitCloneWorker(url, tmp_dir, self)
+            self._clone_worker.progress.connect(self._on_clone_progress)
+            self._clone_worker.finished.connect(self._on_clone_finished)
+            self._clone_worker.error.connect(self._on_clone_error)
+            self._clone_progress.canceled.connect(self._on_clone_canceled)
+            self._clone_worker.start()
+
+    def _on_clone_progress(self, message):
+        """Update the progress dialog with git clone output."""
+        if hasattr(self, '_clone_progress') and self._clone_progress:
+            self._clone_progress.setLabelText(message)
+
+    def _on_clone_finished(self, tmp_dir):
+        """Handle successful clone completion."""
+        if hasattr(self, '_clone_progress') and self._clone_progress:
+            self._clone_progress.close()
+            self._clone_progress = None
+        self._clone_worker = None
+        self._send_metric_event(
+            "open_repo_completed",
+            details={"feature": "open_repo"},
+        )
+        self.statusBar().showMessage(
+            self.tr("Repository cloned successfully"), 3000)
+        self.reload_folder(tmp_dir)
+
+    def _on_clone_error(self, error_msg):
+        """Handle clone failure."""
+        if hasattr(self, '_clone_progress') and self._clone_progress:
+            self._clone_progress.close()
+            self._clone_progress = None
+        self._clone_worker = None
+        self._send_metric_event(
+            "open_repo_failed",
+            details={"feature": "open_repo", "error": str(error_msg)},
+        )
+        QtWidgets.QMessageBox.warning(
+            self, self.tr("Clone Failed"),
+            self.tr("Failed to clone repository: {}").format(error_msg))
+        self.statusBar().showMessage("", 0)
+
+    def _on_clone_canceled(self):
+        """Handle user canceling the clone."""
+        if hasattr(self, '_clone_worker') and self._clone_worker and self._clone_worker.isRunning():
+            self._clone_worker.terminate()
+            self._clone_worker.wait(2000)
+        self._clone_worker = None
+        if hasattr(self, '_clone_progress') and self._clone_progress:
+            self._clone_progress.close()
+            self._clone_progress = None
+        self._send_metric_event(
+            "open_repo_canceled",
+            details={"feature": "open_repo"},
+        )
+        self.statusBar().showMessage(self.tr("Clone canceled"), 3000)
+
+    def retry_auto_check(self):
+        """Delete saved preferences and re-scan the folder with auto-check."""
+        from aicodeprep_gui.gui.settings.preferences import (
+            _prefs_path, _legacy_prefs_paths, PREFS_DIR_NAME,
+        )
+        # Delete new-style prefs file
+        new_prefs = _prefs_path(self.project_root)
+        if os.path.exists(new_prefs):
+            try:
+                os.remove(new_prefs)
+                logging.info(f"Deleted preferences file: {new_prefs}")
+            except OSError as e:
+                logging.warning(f"Could not delete {new_prefs}: {e}")
+
+        # Delete context_block.md if present in .aicp/
+        context_block = os.path.join(
+            self.project_root, PREFS_DIR_NAME, "context_block.md")
+        if os.path.exists(context_block):
+            try:
+                os.remove(context_block)
+                logging.info(f"Deleted context block: {context_block}")
+            except OSError as e:
+                logging.warning(f"Could not delete {context_block}: {e}")
+
+        # Delete legacy prefs files (.aicodeprep-gui, .auicp)
+        for legacy_path in _legacy_prefs_paths(self.project_root):
+            if os.path.exists(legacy_path):
+                try:
+                    os.remove(legacy_path)
+                    logging.info(f"Deleted legacy prefs: {legacy_path}")
+                except OSError as e:
+                    logging.warning(f"Could not delete {legacy_path}: {e}")
+
+        # Delete legacy fullcode.txt
+        fullcode = os.path.join(self.project_root, "fullcode.txt")
+        if os.path.exists(fullcode):
+            try:
+                os.remove(fullcode)
+                logging.info(f"Deleted legacy fullcode.txt")
+            except OSError as e:
+                logging.warning(f"Could not delete {fullcode}: {e}")
+
+        # Reset preferences state so the tree uses auto-check from TOML config
+        self.preferences_manager.prefs_loaded = False
+        self.preferences_manager.prefs_file_exists = False
+        self.preferences_manager.checked_files_from_prefs = set()
+
+        # Re-scan and repopulate with auto-check defaults
+        self.reload_folder(os.getcwd())
 
     def dragEnterEvent(self, event):
         return self.window_helpers.dragEnterEvent(event)
@@ -2075,6 +2565,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 self.tr("Open Settings Folder…"))
         if hasattr(self, "language_act"):
             self.language_act.setText(self.tr("&Language / Idioma / 语言…"))
+        if hasattr(self, "more_settings_act"):
+            self.more_settings_act.setText(self.tr("&More Settings…"))
 
         if hasattr(self, "flow_menu"):
             self.flow_menu.setTitle(self.tr("&Flow"))
@@ -2092,7 +2584,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         if hasattr(self, "about_act"):
             self.about_act.setText(self.tr("&About"))
         if hasattr(self, "complain_act"):
-            self.complain_act.setText(self.tr("Send Ideas, bugs, thoughts!"))
+            self.complain_act.setText(self.tr("&Send Ideas, bugs, thoughts!"))
         if hasattr(self, "activate_pro_act"):
             self.activate_pro_act.setText(self.tr("Activate Pro…"))
 
@@ -2161,6 +2653,12 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.select_all_button.setText(self.tr("Select All"))
         if hasattr(self, "deselect_all_button"):
             self.deselect_all_button.setText(self.tr("Deselect All"))
+        if hasattr(self, "open_folder_btn"):
+            self.open_folder_btn.setText(self.tr("Open Folder"))
+        if hasattr(self, "open_repo_btn"):
+            self.open_repo_btn.setText(self.tr("Open Repo"))
+        if hasattr(self, "retry_auto_btn"):
+            self.retry_auto_btn.setText(self.tr("Retry Auto"))
         if hasattr(self, "load_prefs_button"):
             self.load_prefs_button.setText(self.tr("Load preferences"))
         if hasattr(self, "scan_button"):
@@ -2180,12 +2678,12 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.pro_features_label.setText(self.tr("Pro Features"))
         if hasattr(self, "preview_toggle"):
             self.preview_toggle.setText(self.tr("Enable file preview window"))
-        if hasattr(self, "syntax_highlight_toggle"):
-            self.syntax_highlight_toggle.setText(
-                self.tr("Enable syntax highlighting in preview"))
         if hasattr(self, "flow_studio_toggle"):
             self.flow_studio_toggle.setText(self.tr(
                 "Enable Flow Studio (currently testing alpha version - might be glitchy!)"))
+        if hasattr(self, "ai_chat_toggle"):
+            self.ai_chat_toggle.setText(
+                self.tr("Enable AI Chat (Pro feature)"))
         if hasattr(self, "font_weight_label"):
             self.font_weight_label.setText(self.tr("Font Weight:"))
         if hasattr(self, "prompt_top_checkbox"):
@@ -2194,9 +2692,6 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         if hasattr(self, "prompt_bottom_checkbox"):
             self.prompt_bottom_checkbox.setText(self.tr(
                 "Add prompt/question to bottom - Adding to top AND bottom often gets better responses from AI models"))
-        if hasattr(self, "pro_level_toggle"):
-            self.pro_level_toggle.setText(self.tr(
-                "Enable Context Compression Modes - does not work yet, still experimenting!"))
 
     def showEvent(self, event):
         return self.window_helpers.showEvent(event)
@@ -2388,22 +2883,32 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.update_label.setVisible(False)
 
     def process_selected(self):
-        self._send_metric_event(
-            "generate_start", token_count=self.total_tokens)
         self.action = 'process'
         selected_files = self.get_selected_files()
         chosen_fmt = self.format_combo.currentData()
         prompt = self.prompt_textbox.toPlainText().strip()
+        metrics_details = self._build_generation_metrics_details(
+            selected_files,
+            prompt,
+            chosen_fmt,
+            extra={"destination": "clipboard_and_file"},
+        )
+        self._send_metric_event(
+            "generate_start",
+            token_count=self.total_tokens,
+            details=metrics_details,
+        )
 
         output_filename = os.path.join(".aicp", "context_block.md")
-        if process_files(
+        files_processed = self._process_files_with_selected_backend(
             selected_files,
             output_filename,
             fmt=chosen_fmt,
             prompt=prompt,
             prompt_to_top=self.prompt_top_checkbox.isChecked(),
             prompt_to_bottom=self.prompt_bottom_checkbox.isChecked()
-        ) > 0:
+        )
+        if files_processed > 0:
             output_path = os.path.join(os.getcwd(), output_filename)
             with open(output_path, "r", encoding="utf-8") as f:
                 content = f.read()
@@ -2451,6 +2956,73 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             # Show share dialog every 6th generate (skip for pro users) but no longer close the app
             if self.generate_count > 0 and self.generate_count % 6 == 0 and not pro.enabled:
                 QtCore.QTimer.singleShot(500, self.show_share_dialog)
+            success_details = dict(metrics_details)
+            success_details["files_processed"] = files_processed
+            self._send_metric_event(
+                "generate_success",
+                token_count=self.total_tokens,
+                details=success_details,
+            )
+        else:
+            self._send_metric_event(
+                "generate_canceled",
+                token_count=self.total_tokens,
+                details=metrics_details,
+            )
+
+    def _toggle_rust_fast_processing(self, enabled):
+        """Toggle Rust processing backend."""
+        try:
+            set_setting("rust_backend", "enabled", bool(enabled))
+            set_setting("pro_options", "rust_fast_processing", bool(enabled))
+        except Exception as e:
+            logging.error(
+                f"Failed to persist rust_fast_processing toggle: {e}")
+
+    def _process_files_with_selected_backend(
+        self,
+        selected_files,
+        output_filename,
+        fmt,
+        prompt,
+        prompt_to_top,
+        prompt_to_bottom,
+    ) -> int:
+        """Process files using selected backend; Rust path auto-falls back to Python."""
+        use_rust = bool(get_setting("rust_backend", "enabled", True)) and bool(
+            get_setting("pro_options", "rust_fast_processing", True))
+
+        if use_rust:
+            rust_result: RustProcessResult = process_with_rust_worker(
+                selected_files,
+                output_filename,
+                fmt,
+                prompt,
+                prompt_to_top,
+                prompt_to_bottom,
+            )
+            if rust_result.ok:
+                if rust_result.secret_map_file:
+                    self.statusBar().showMessage(
+                        self.tr("Rust mode enabled (secret map generated)."), 3500)
+                else:
+                    self.statusBar().showMessage(
+                        self.tr("Rust mode enabled."), 2500)
+                return rust_result.files_processed
+
+            logging.warning(
+                f"Rust backend failed, falling back to Python processing: {rust_result.error}")
+            self.statusBar().showMessage(
+                self.tr("Rust backend unavailable, falling back to Python."), 4500)
+
+        return process_files(
+            selected_files,
+            output_filename,
+            fmt=fmt,
+            prompt=prompt,
+            prompt_to_top=prompt_to_top,
+            prompt_to_bottom=prompt_to_bottom,
+        )
 
     def show_share_dialog(self):
         """Shows the share dialog and keeps the main window open."""
@@ -2508,8 +3080,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             if not has_legacy_prefs and not has_legacy_fullcode:
                 return
 
-            if os.path.exists(os.path.join(".aicp", "preferences.ini")) and \
-               os.path.exists(os.path.join(".aicp", "context_block.md")):
+            prefs_target = os.path.join(
+                self.project_root, ".aicp", "preferences.ini")
+            context_target = os.path.join(
+                self.project_root, ".aicp", "context_block.md")
+            if os.path.exists(prefs_target) and os.path.exists(context_target):
                 # Already migrated both
                 self.preferences_manager.write_legacy_prefs = False
                 return
@@ -2547,7 +3122,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                         splitter_state=self.preferences_manager.splitter_state_from_prefs,
                         output_format=self.preferences_manager.output_format_from_prefs,
                         pro_features=self.preferences_manager.pro_features_from_prefs,
-                        prefs_path=_prefs_path(),
+                        prefs_path=_prefs_path(self.project_root),
+                        project_root=self.project_root,
                     )
                     # Delete legacy prefs file
                     if legacy_path and os.path.exists(legacy_path):
@@ -2560,12 +3136,15 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                                 f"Could not delete legacy prefs file: {e}")
 
                 # Migrate fullcode.txt if it exists
-                if has_legacy_fullcode and os.path.exists("fullcode.txt"):
-                    target = os.path.join(".aicp", "context_block.md")
-                    os.makedirs(".aicp", exist_ok=True)
+                legacy_fullcode = os.path.join(
+                    self.project_root, "fullcode.txt")
+                if has_legacy_fullcode and os.path.exists(legacy_fullcode):
+                    target = os.path.join(
+                        self.project_root, ".aicp", "context_block.md")
+                    os.makedirs(os.path.dirname(target), exist_ok=True)
                     try:
                         import shutil
-                        shutil.move("fullcode.txt", target)
+                        shutil.move(legacy_fullcode, target)
                         logging.info(f"Moved fullcode.txt to {target}")
                     except Exception as e:
                         logging.error(f"Failed to move fullcode.txt: {e}")
@@ -2628,18 +3207,138 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             logging.info(
                 f"Loaded preview window state from preferences: {preview_enabled}")
 
-    def _load_syntax_highlight_state(self):
-        """Load the saved syntax highlighting toggle state from preferences."""
-        if hasattr(self, 'syntax_highlight_toggle') and self.preferences_manager.pro_features_from_prefs:
-            syntax_highlight_enabled = self.preferences_manager.pro_features_from_prefs.get(
-                'syntax_highlight_enabled', True)  # Default to True for pro users
-            # Set the checkbox state without triggering signals to avoid recursion
-            self.syntax_highlight_toggle.blockSignals(True)
-            self.syntax_highlight_toggle.setChecked(syntax_highlight_enabled)
-            self.syntax_highlight_toggle.blockSignals(False)
+    def _load_flow_studio_state(self):
+        """Load the saved Flow Studio visibility state from preferences."""
+        if not hasattr(self, 'flow_studio_toggle'):
+            return
 
+        enabled = bool(self.preferences_manager.pro_features_from_prefs.get(
+            'flow_studio_enabled', False))
+        self.flow_studio_toggle.blockSignals(True)
+        self.flow_studio_toggle.setChecked(enabled)
+        self.flow_studio_toggle.blockSignals(False)
+        if enabled:
+            self.toggle_flow_studio(True)
+
+    def _load_ai_chat_state(self):
+        """Load the saved AI Chat visibility state from preferences."""
+        if not hasattr(self, 'ai_chat_toggle'):
+            return
+
+        enabled = bool(self.preferences_manager.pro_features_from_prefs.get(
+            'ai_chat_enabled', False))
+        self.ai_chat_toggle.blockSignals(True)
+        self.ai_chat_toggle.setChecked(enabled)
+        self.ai_chat_toggle.blockSignals(False)
+        if enabled and self.ai_chat_toggle.isEnabled():
+            self.toggle_ai_chat(True)
+
+    def _sync_generate_ai_button_state(self):
+        """Keep the context-to-AI button aligned with AI Chat availability."""
+        if not hasattr(self, "generate_ai_button"):
+            return
+
+        ai_chat_enabled = bool(
+            hasattr(self, "ai_chat_toggle")
+            and self.ai_chat_toggle.isEnabled()
+            and self.ai_chat_toggle.isChecked()
+        )
+        self.generate_ai_button.setEnabled(ai_chat_enabled)
+
+    def _to_qbytearray(self, data):
+        if data is None:
+            return None
+        if isinstance(data, QtCore.QByteArray):
+            return data
+        if isinstance(data, (bytes, bytearray)):
+            return QtCore.QByteArray(bytes(data))
+        return None
+
+    def _bind_dock_toggle(self, dock, toggle):
+        """Keep a toggle checkbox in sync with a dock widget's visibility."""
+        if not dock or not toggle:
+            return
+        if dock.property("_aicp_toggle_bound"):
+            return
+
+        def sync(visible):
+            toggle.blockSignals(True)
+            toggle.setChecked(bool(visible))
+            toggle.blockSignals(False)
+            if toggle is getattr(self, "ai_chat_toggle", None):
+                self._sync_generate_ai_button_state()
+
+        dock.visibilityChanged.connect(sync)
+        dock.setProperty("_aicp_toggle_bound", True)
+
+    def _restore_project_window_state(self):
+        """Restore splitter and dock layout state from project preferences."""
+        try:
+            splitter_state = self._to_qbytearray(
+                self.preferences_manager.splitter_state_from_prefs)
+            if splitter_state:
+                self.splitter.restoreState(splitter_state)
+
+            dock_state = self._to_qbytearray(
+                self.preferences_manager.dock_state_from_prefs)
+            if dock_state:
+                self.restoreState(dock_state)
+
+            dock_widgets_state = self.preferences_manager.dock_widgets_state_from_prefs or {}
+
+            if getattr(self, 'flow_dock', None):
+                flow_state = dock_widgets_state.get('flow_studio')
+                if flow_state and hasattr(self.flow_dock, 'restore_layout_state'):
+                    self.flow_dock.restore_layout_state(flow_state)
+                self._bind_dock_toggle(self.flow_dock, self.flow_studio_toggle)
+
+            if getattr(self, 'ai_chat_dock', None):
+                ai_chat_state = dock_widgets_state.get('ai_chat')
+                if ai_chat_state and hasattr(self.ai_chat_dock, 'restore_layout_state'):
+                    self.ai_chat_dock.restore_layout_state(ai_chat_state)
+                self._bind_dock_toggle(self.ai_chat_dock, self.ai_chat_toggle)
+
+            if getattr(self, 'preview_window', None):
+                self._bind_dock_toggle(
+                    self.preview_window, self.preview_toggle)
+
+            self._sync_generate_ai_button_state()
+        except Exception as e:
+            logging.error(f"Failed to restore project window state: {e}")
+
+    def _load_syntax_highlight_state(self):
+        """Keep preview syntax highlighting enabled without exposing a UI toggle."""
+        if hasattr(self, 'preview_window') and self.preview_window:
+            self.preview_window.set_syntax_highlighting_enabled(True)
+
+    def _load_ads_disabled_preference(self):
+        """Load the ads disabled preference from user settings.
+
+        If an older project-local ads flag exists in .aicp/preferences.ini, move it
+        into the user-global settings file so the choice persists across projects.
+        """
+        ads_disabled = get_ads_disabled_setting(default=None)
+        if ads_disabled is not None:
+            return bool(ads_disabled)
+
+        project_value = self.preferences_manager.pro_features_from_prefs.get(
+            "ads_disabled"
+        )
+        if isinstance(project_value, str):
+            normalized = project_value.strip().lower()
+            if normalized in {"1", "true", "yes", "on"}:
+                project_value = True
+            elif normalized in {"0", "false", "no", "off"}:
+                project_value = False
+
+        if isinstance(project_value, bool):
+            set_ads_disabled_setting(project_value)
             logging.info(
-                f"Loaded syntax highlighting state from preferences: {syntax_highlight_enabled}")
+                "Migrated ads_disabled from project preferences to user settings"
+            )
+            return project_value
+
+        return True
 
     # def _populate_font_combo(self):
     #     """Populate the font combo box with available fonts."""
@@ -2721,6 +3420,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     if self.flow_dock.parent() is None:
                         self.addDockWidget(
                             QtCore.Qt.RightDockWidgetArea, self.flow_dock)
+                    self._bind_dock_toggle(
+                        self.flow_dock, self.flow_studio_toggle)
                     self.flow_dock.show()
                 else:
                     logging.error("Flow Studio dock is None after creation.")
@@ -2734,6 +3435,178 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     self.flow_dock.hide()
         except Exception as e:
             logging.error(f"toggle_flow_studio failed: {e}")
+
+    def _toggle_ads(self, show_ads):
+        """Toggle ad visibility and persist the inverse disabled preference globally."""
+        try:
+            show_ads = bool(show_ads)
+            disabled = not show_ads
+            self.ads_disabled_preference = disabled
+            set_ads_disabled_setting(disabled)
+            if hasattr(self, "ad_widget") and hasattr(self.ad_widget, "set_ads_disabled"):
+                self.ad_widget.set_ads_disabled(disabled)
+            if disabled:
+                if hasattr(self, "ad_widget"):
+                    self.ad_widget.setVisible(False)
+                if hasattr(self, "ad_manager"):
+                    self.ad_manager.rotation_timer.stop()
+            else:
+                if hasattr(self, "ad_manager"):
+                    rotation_interval = 1500 if os.environ.get(
+                        "AICODEPREP_FASTADS") == "1" else 60000
+                    self.ad_manager.rotation_timer.start(rotation_interval)
+                    self.ad_manager.rotate_ad()
+                if hasattr(self, "ad_widget"):
+                    self.ad_widget.setVisible(True)
+                    self._position_ad_widget_in_tree()
+        except Exception as e:
+            logging.error(f"_toggle_ads failed: {e}")
+
+    def toggle_ai_chat(self, enabled):
+        """Show/hide the AI Chat dock."""
+        try:
+            if enabled:
+                if not hasattr(self, "ai_chat_dock") or self.ai_chat_dock is None:
+                    self.ai_chat_dock = pro.get_ai_chat_dock()
+                if self.ai_chat_dock:
+                    # Add to right dock area if not already added
+                    if self.ai_chat_dock.parent() is None:
+                        self.addDockWidget(
+                            QtCore.Qt.RightDockWidgetArea, self.ai_chat_dock)
+                    self._bind_dock_toggle(
+                        self.ai_chat_dock, self.ai_chat_toggle)
+                    self.ai_chat_dock.show()
+                    self._sync_generate_ai_button_state()
+                else:
+                    logging.error("AI Chat dock is None after creation.")
+                    QtWidgets.QMessageBox.warning(
+                        self,
+                        "AI Chat",
+                        "AI Chat could not be initialized. See logs for details.",
+                    )
+                    # Disable the toggle
+                    self.ai_chat_toggle.setChecked(False)
+                    self._sync_generate_ai_button_state()
+            else:
+                if hasattr(self, "ai_chat_dock") and self.ai_chat_dock:
+                    self.ai_chat_dock.hide()
+                self._sync_generate_ai_button_state()
+        except Exception as e:
+            logging.error(f"toggle_ai_chat failed: {e}")
+
+    def generate_context_to_ai(self):
+        """Generate context and send to selected AI chat tabs."""
+        if not pro.enabled:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Pro Feature",
+                "AI Chat requires a Pro license. Please upgrade to use this feature."
+            )
+            return
+
+        try:
+            if not hasattr(self, "ai_chat_dock") or self.ai_chat_dock is None:
+                self.ai_chat_dock = pro.get_ai_chat_dock()
+            if not self.ai_chat_dock:
+                logging.error("AI Chat dock is None.")
+                return
+
+            self.action = 'process'
+            selected_files = self.get_selected_files()
+            chosen_fmt = self.format_combo.currentData()
+            prompt = self.prompt_textbox.toPlainText().strip()
+            metrics_details = self._build_generation_metrics_details(
+                selected_files,
+                prompt,
+                chosen_fmt,
+                extra={
+                    "destination": "ai_chat",
+                    "selected_models": self._collect_selected_ai_models(),
+                },
+            )
+            self._send_metric_event(
+                "generate_to_ai_start",
+                token_count=self.total_tokens,
+                details=metrics_details,
+            )
+
+            output_filename = os.path.join(".aicp", "context_block.md")
+            files_processed = self._process_files_with_selected_backend(
+                selected_files,
+                output_filename,
+                fmt=chosen_fmt,
+                prompt=prompt,
+                prompt_to_top=self.prompt_top_checkbox.isChecked(),
+                prompt_to_bottom=self.prompt_bottom_checkbox.isChecked()
+            )
+
+            if files_processed <= 0:
+                self._send_metric_event(
+                    "generate_to_ai_canceled",
+                    token_count=self.total_tokens,
+                    details=metrics_details,
+                )
+                return
+
+            # Read the generated context from file
+            try:
+                with open(output_filename, 'r', encoding='utf-8') as f:
+                    context_text = f.read()
+            except Exception as read_err:
+                logging.error(f"Failed to read context file: {read_err}")
+                failure_details = dict(metrics_details)
+                failure_details["error"] = str(read_err)
+                self._send_metric_event(
+                    "generate_to_ai_failed",
+                    token_count=self.total_tokens,
+                    details=failure_details,
+                )
+                return
+
+            # Send to selected AI chat tabs (includes auto-send)
+            tabs_count = self.ai_chat_dock.send_context_to_selected_tabs(
+                context_text, prompt)
+
+            if tabs_count > 0:
+                # Don't show blocking dialog - streaming is visible in AI chat
+                success_details = dict(metrics_details)
+                success_details["selected_tab_count"] = tabs_count
+                success_details["selected_models"] = self._collect_selected_ai_models(
+                )
+                self._send_metric_event(
+                    "generate_to_ai_success",
+                    token_count=self.total_tokens,
+                    details=success_details,
+                )
+            else:
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    "No Tabs Selected",
+                    "Please select at least one AI chat tab by checking its box.\n"
+                    "Open the AI Chat dock to select tabs."
+                )
+                self._send_metric_event(
+                    "generate_to_ai_canceled",
+                    token_count=self.total_tokens,
+                    details=metrics_details,
+                )
+
+        except Exception as e:
+            logging.error(f"generate_context_to_ai failed: {e}")
+            failure_details = {
+                "destination": "ai_chat",
+                "error": str(e),
+            }
+            self._send_metric_event(
+                "generate_to_ai_failed",
+                token_count=self.total_tokens,
+                details=failure_details,
+            )
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error",
+                f"Failed to send context to AI: {e}"
+            )
 
     # ---- Flow menu helpers (Phase 2) ----
     def _ensure_flow_dock(self) -> bool:
@@ -2811,6 +3684,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             item = selected_items[0]
             file_path = item.data(0, QtCore.Qt.UserRole)
             if file_path and os.path.isfile(file_path):
+                self._send_metric_event(
+                    "feature_used",
+                    details={"feature": "file_preview_window"},
+                    once_key="feature_used:file_preview_window",
+                )
                 self.preview_window.preview_file(file_path)
             else:
                 self.preview_window.clear_preview()
@@ -2819,7 +3697,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
     def _is_pro_enabled(self):
         """Check if pro mode is enabled globally."""
-        return pro.enabled
+        return bool(pro.enabled)
 
     # ===== Debug Menu Methods (for i18n/a11y testing) =====
 

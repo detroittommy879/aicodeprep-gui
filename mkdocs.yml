@@ -1,0 +1,66 @@
+site_name: AICodePrep Docs
+site_description: Bundle selected code files into one context block for AI chats
+site_url: https://aicp.wuu73.org
+repo_url: https://github.com/detroittommy879/aicodeprep-gui
+repo_name: detroittommy879/aicodeprep-gui
+
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.tracking
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+  palette:
+    - scheme: slate
+      primary: black
+      accent: lime
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+    - scheme: default
+      primary: white
+      accent: green
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.tabbed:
+      alternate_style: true
+
+nav:
+  - Home: index.md
+  - Start Here:
+      - What It Does: what-it-does.md
+      - Install And Launch: install-and-launch.md
+      - Right-Click Integration: right-click-integration.md
+      - Core Workflow: core-workflow.md
+      - Performance: performance.md
+  - Better Results:
+      - Prompt Strategy: prompt-strategy.md
+      - Why Use This Instead Of Agents: why-not-just-agents.md
+  - Optional Pro:
+      - Pro Features: pro-features.md
+  - Reference:
+      - FAQ: faq.md

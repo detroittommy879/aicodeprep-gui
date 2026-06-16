@@ -31,12 +31,7 @@ class WindowHelpers:
 
     def dropEvent(self, event):
         folder_path = event.mimeData().urls()[0].toLocalFile()
-        os.chdir(folder_path)
-        from aicodeprep_gui.smart_logic import collect_all_files
-        self.main_window.new_gui = self.main_window.__class__(
-            collect_all_files())
-        self.main_window.new_gui.show()
-        self.main_window.close()
+        self.main_window.reload_folder(folder_path)
 
     def showEvent(self, event):
         super(self.main_window.__class__, self.main_window).showEvent(event)

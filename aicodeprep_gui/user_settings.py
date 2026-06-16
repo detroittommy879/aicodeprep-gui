@@ -9,6 +9,25 @@ from aicodeprep_gui.config import get_config_dir
 logger = logging.getLogger(__name__)
 
 SETTINGS_FILENAME = "settings.toml"
+ADS_SECTION = "ads"
+ADS_DISABLED_KEY = "disabled"
+
+
+def _coerce_bool(value: Any, default: Any = None) -> Any:
+    """Best-effort bool coercion for persisted settings values."""
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return bool(value)
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"1", "true", "yes", "on"}:
+            return True
+        if normalized in {"0", "false", "no", "off"}:
+            return False
+    return default
 
 
 def get_settings_file() -> Path:
@@ -68,6 +87,34 @@ def set_setting(section: str, key: str, value: Any) -> None:
     section_data = get_section(section)
     section_data[key] = value
     set_section(section, section_data)
+
+
+def get_ads_disabled_setting(default: Any = False) -> Any:
+    """Return the user-global ads disabled preference.
+
+    Reads the dedicated ads section first, then falls back to the older
+    pro_options.ads_disabled key and migrates it forward into the user
+    settings file.
+    """
+    value = _coerce_bool(get_setting(
+        ADS_SECTION, ADS_DISABLED_KEY, None), None)
+    if value is not None:
+        return value
+
+    legacy_value = _coerce_bool(
+        get_setting("pro_options", "ads_disabled", None),
+        None,
+    )
+    if legacy_value is not None:
+        set_setting(ADS_SECTION, ADS_DISABLED_KEY, legacy_value)
+        return legacy_value
+
+    return default
+
+
+def set_ads_disabled_setting(disabled: bool) -> None:
+    """Persist the user-global ads disabled preference."""
+    set_setting(ADS_SECTION, ADS_DISABLED_KEY, bool(disabled))
 
 
 def delete_settings_file() -> None:
@@ -145,6 +192,7 @@ def load_legacy_qsettings() -> Dict[str, Any]:
         ("install_date", str),
         ("has_voted_on_features_v2", bool),
         ("v1.2.0_update_seen", bool),
+        ("v1.5.0_update_seen", bool),
     ):
         if identity_settings.contains(key):
             identity[key] = identity_settings.value(key, type=cast)

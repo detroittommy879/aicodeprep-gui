@@ -27,8 +27,8 @@ class TestEndpointConfig:
         # Verify default structure
         assert data["active_endpoint"] == "local"
         assert "local" in data["endpoints"]
-        assert data["endpoints"]["local"]["name"] == "Local Server"
-        assert data["endpoints"]["local"]["url"] == "http://localhost:59999/v1"
+        assert data["endpoints"]["local"]["name"] == "Local / Custom Endpoint"
+        assert data["endpoints"]["local"]["url"] == ""
         assert data["endpoints"]["local"]["api_key"] == ""
         assert data["endpoints"]["local"]["selected_model"] == ""
 
@@ -39,6 +39,104 @@ class TestEndpointConfig:
         with open(endpoints_file, "r") as f:
             file_data = toml.load(f)
             assert file_data == data
+
+    @patch("aicodeprep_gui.pro.ai_assist.endpoint_config.get_config_dir")
+    def test_empty_local_endpoint_hydrates_from_custom_provider(self, mock_config_dir, tmp_path):
+        mock_config_dir.return_value = tmp_path
+
+        endpoints_file = tmp_path / "ai-endpoints.toml"
+        endpoints_file.write_text(
+            toml.dumps({
+                "active_endpoint": "local",
+                "endpoints": {
+                    "local": {
+                        "name": "Local / Custom Endpoint",
+                        "url": "",
+                        "api_key": "",
+                        "selected_model": "",
+                    }
+                }
+            }),
+            encoding="utf-8",
+        )
+
+        api_keys_file = tmp_path / "api-keys.toml"
+        api_keys_file.write_text(
+            toml.dumps({
+                "custom": {
+                    "name": "Working Custom Endpoint",
+                    "base_url": "https://real.example/v1",
+                    "api_key": "real-key",
+                }
+            }),
+            encoding="utf-8",
+        )
+
+        data = load_endpoints()
+
+        assert data["endpoints"]["local"]["name"] == "Working Custom Endpoint"
+        assert data["endpoints"]["local"]["url"] == "https://real.example/v1"
+        assert data["endpoints"]["local"]["api_key"] == "real-key"
+        assert data["endpoints"]["local"]["selected_model"] == ""
+
+    @patch("aicodeprep_gui.pro.ai_assist.endpoint_config.get_config_dir")
+    def test_local_endpoint_save_updates_shared_custom_provider(self, mock_config_dir, tmp_path):
+        mock_config_dir.return_value = tmp_path
+
+        data = {
+            "active_endpoint": "local",
+            "endpoints": {
+                "local": {
+                    "name": "Shared Endpoint",
+                    "url": "https://shared.example/v1",
+                    "api_key": "shared-key",
+                    "selected_model": "shared-model",
+                }
+            }
+        }
+
+        save_endpoints(data)
+
+        api_keys_file = tmp_path / "api-keys.toml"
+        api_keys_data = toml.load(api_keys_file)
+        assert api_keys_data["custom"]["name"] == "Shared Endpoint"
+        assert api_keys_data["custom"]["base_url"] == "https://shared.example/v1"
+        assert api_keys_data["custom"]["api_key"] == "shared-key"
+        assert api_keys_data["custom"]["selected_model"] == "shared-model"
+
+    @patch("aicodeprep_gui.pro.ai_assist.endpoint_config.get_config_dir")
+    def test_active_non_local_endpoint_save_does_not_pollute_custom_provider(self, mock_config_dir, tmp_path):
+        """Non-local active endpoints must NOT overwrite api-keys.toml [custom].
+        Only the local endpoint is mirrored to [custom] so that the sync logic
+        on the next load_endpoints() call does not overwrite local with stale data
+        from a different named endpoint."""
+        mock_config_dir.return_value = tmp_path
+
+        data = {
+            "active_endpoint": "extra",
+            "endpoints": {
+                "local": {
+                    "name": "Local / Custom Endpoint",
+                    "url": "",
+                    "api_key": "",
+                    "selected_model": "",
+                },
+                "extra": {
+                    "name": "Extra Endpoint",
+                    "url": "https://extra.example/v1",
+                    "api_key": "extra-key",
+                    "selected_model": "extra-model",
+                },
+            },
+        }
+
+        save_endpoints(data)
+
+        api_keys_file = tmp_path / "api-keys.toml"
+        api_keys_data = toml.load(api_keys_file)
+        # Local endpoint is empty, so [custom] should reflect that (blank)
+        assert api_keys_data["custom"]["base_url"] == ""
+        assert api_keys_data["custom"]["api_key"] == ""
 
     @patch("aicodeprep_gui.pro.ai_assist.endpoint_config.get_config_dir")
     def test_endpoint_load_save_roundtrip(self, mock_config_dir, tmp_path):
@@ -59,7 +157,10 @@ class TestEndpointConfig:
         save_endpoints(custom_data)
         loaded_data = load_endpoints()
 
-        assert loaded_data == custom_data
+        assert loaded_data["active_endpoint"] == custom_data["active_endpoint"]
+        assert loaded_data["endpoints"]["custom"] == custom_data["endpoints"]["custom"]
+        # Should be ensured by load_endpoints
+        assert "local" in loaded_data["endpoints"]
 
     @patch("aicodeprep_gui.pro.ai_assist.endpoint_config.get_config_dir")
     def test_endpoint_add_remove(self, mock_config_dir, tmp_path):

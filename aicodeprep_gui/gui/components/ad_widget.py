@@ -40,7 +40,9 @@ class AdManager(QtCore.QObject):
             self.current_ad_index = random.randint(0, len(self.ads) - 1)
             QtCore.QTimer.singleShot(0, lambda: self.ad_changed.emit(
                 self.ads[self.current_ad_index]))
-            self.rotation_timer.start(60000)  # 1 minute rotation
+            rotation_interval = 1500 if os.environ.get(
+                "AICODEPREP_FASTADS") == "1" else 60000
+            self.rotation_timer.start(rotation_interval)
 
         # Fetch new ads if needed
         self._maybe_fetch_ads()
@@ -71,7 +73,9 @@ class AdManager(QtCore.QObject):
                 # If we didn't have ads before, start now
                 if self.ads and self.current_ad_index == -1:
                     self.rotate_ad()
-                    self.rotation_timer.start(60000)
+                    rotation_interval = 1500 if os.environ.get(
+                        "AICODEPREP_FASTADS") == "1" else 60000
+                    self.rotation_timer.start(rotation_interval)
             except Exception as e:
                 logger.error(f"Error processing fetched ads: {e}")
         else:
@@ -211,8 +215,16 @@ class AdWidget(QtWidgets.QFrame):
 
         self.is_dark = False
         self.base_font_size = None
+        self._ads_disabled = False
         self.setMinimumHeight(60)
         self.setVisible(False)
+
+    def set_ads_disabled(self, disabled: bool):
+        self._ads_disabled = bool(disabled)
+        if self._ads_disabled:
+            self.flash_timer.stop()
+            self.repeat_timer.stop()
+            self.setVisible(False)
 
     def set_ad(self, ad_data):
         self.title_label.setText(ad_data.get('title', ''))
@@ -225,6 +237,12 @@ class AdWidget(QtWidgets.QFrame):
             self.link_button.setVisible(True)
         else:
             self.link_button.setVisible(False)
+
+        if self._ads_disabled:
+            self.flash_timer.stop()
+            self.repeat_timer.stop()
+            self.setVisible(False)
+            return
 
         self.setVisible(True)
         self._start_flash()

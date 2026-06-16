@@ -3,7 +3,7 @@ Pytest configuration for aicodeprep-gui tests.
 
 Handles QApplication lifecycle and cleanup for Qt-based tests.
 """
-from PySide6 import QtWidgets, QtCore
+from PySide6 import QtWidgets
 import pytest
 import os
 import sys
@@ -32,10 +32,10 @@ def qapp_session():
 
     # Cleanup at end of session
     try:
-        # Close all windows
+        # Close all windows. Avoid deleteLater() here; PySide can crash the
+        # interpreter on Windows if Python references outlive the C++ object.
         for widget in app.topLevelWidgets():
             widget.close()
-            widget.deleteLater()
 
         # Process events
         app.processEvents()
@@ -54,16 +54,13 @@ def qapp_cleanup(qapp_session):
 
     # Cleanup after test
     try:
-        # Close any remaining windows
+        # Close any remaining windows without forcibly deleting Qt objects.
         for widget in qapp_session.topLevelWidgets():
             if widget.isVisible():
                 widget.close()
-                widget.deleteLater()
 
-        # Process pending events
-        qapp_session.processEvents()
-        QtCore.QTimer.singleShot(0, lambda: None)
-        qapp_session.processEvents()
+        # Do not force processEvents() here; some PySide builds crash during
+        # teardown while worker threads are still unwinding.
     except Exception:
         pass
 

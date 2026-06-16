@@ -1,0 +1,620 @@
+Building source distribution...
+running egg_info
+creating aicodeprep_gui.egg-info
+writing aicodeprep_gui.egg-info\PKG-INFO
+writing dependency_links to aicodeprep_gui.egg-info\dependency_links.txt
+writing entry points to aicodeprep_gui.egg-info\entry_points.txt
+writing requirements to aicodeprep_gui.egg-info\requires.txt
+writing top-level names to aicodeprep_gui.egg-info\top_level.txt
+writing manifest file 'aicodeprep_gui.egg-info\SOURCES.txt'
+reading manifest file 'aicodeprep_gui.egg-info\SOURCES.txt'
+adding license file 'SUSTAINABLE-LICENSE'
+writing manifest file 'aicodeprep_gui.egg-info\SOURCES.txt'
+running sdist
+running egg_info
+writing aicodeprep_gui.egg-info\PKG-INFO
+writing dependency_links to aicodeprep_gui.egg-info\dependency_links.txt
+writing entry points to aicodeprep_gui.egg-info\entry_points.txt
+writing requirements to aicodeprep_gui.egg-info\requires.txt
+writing top-level names to aicodeprep_gui.egg-info\top_level.txt
+reading manifest file 'aicodeprep_gui.egg-info\SOURCES.txt'
+adding license file 'SUSTAINABLE-LICENSE'
+writing manifest file 'aicodeprep_gui.egg-info\SOURCES.txt'
+running check
+creating aicodeprep_gui-1.4.0
+creating aicodeprep_gui-1.4.0\aicodeprep_gui
+creating aicodeprep_gui-1.4.0\aicodeprep_gui.egg-info
+creating aicodeprep_gui-1.4.0\aicodeprep_gui\data
+creating aicodeprep_gui-1.4.0\aicodeprep_gui\data\fonts
+creating aicodeprep_gui-1.4.0\aicodeprep_gui\gui
+creating aicodeprep_gui-1.4.0\aicodeprep_gui\gui\components
+creating aicodeprep_gui-1.4.0\aicodeprep_gui\gui\handlers
+creating aicodeprep_gui-1.4.0\aicodeprep_gui\gui\settings
+creating aicodeprep_gui-1.4.0\aicodeprep_gui\gui\utils
+creating aicodeprep_gui-1.4.0\aicodeprep_gui\i18n
+creating aicodeprep_gui-1.4.0\aicodeprep_gui\i18n\translations
+creating aicodeprep_gui-1.4.0\aicodeprep_gui\images
+creating aicodeprep_gui-1.4.0\aicodeprep_gui\pro
+creating aicodeprep_gui-1.4.0\aicodeprep_gui\pro\ai_assist
+creating aicodeprep_gui-1.4.0\aicodeprep_gui\pro\ai_chat
+creating aicodeprep_gui-1.4.0\aicodeprep_gui\pro\flow
+creating aicodeprep_gui-1.4.0\aicodeprep_gui\pro\flow\nodes
+creating aicodeprep_gui-1.4.0\aicodeprep_gui\pro\llm
+creating aicodeprep_gui-1.4.0\aicodeprep_gui\utils
+creating aicodeprep_gui-1.4.0\tests
+copying files to aicodeprep_gui-1.4.0...
+copying README.md -> aicodeprep_gui-1.4.0
+copying SUSTAINABLE-LICENSE -> aicodeprep_gui-1.4.0
+copying pyproject.toml -> aicodeprep_gui-1.4.0
+copying aicodeprep_gui\__init__.py -> aicodeprep_gui-1.4.0\aicodeprep_gui
+copying aicodeprep_gui\apptheme.py -> aicodeprep_gui-1.4.0\aicodeprep_gui
+copying aicodeprep_gui\config.py -> aicodeprep_gui-1.4.0\aicodeprep_gui
+copying aicodeprep_gui\file_processor.py -> aicodeprep_gui-1.4.0\aicodeprep_gui
+copying aicodeprep_gui\linux_installer.py -> aicodeprep_gui-1.4.0\aicodeprep_gui
+copying aicodeprep_gui\macos_installer.py -> aicodeprep_gui-1.4.0\aicodeprep_gui
+copying aicodeprep_gui\main.py -> aicodeprep_gui-1.4.0\aicodeprep_gui
+copying aicodeprep_gui\rust_backend.py -> aicodeprep_gui-1.4.0\aicodeprep_gui
+copying aicodeprep_gui\smart_logic.py -> aicodeprep_gui-1.4.0\aicodeprep_gui
+copying aicodeprep_gui\update_checker.py -> aicodeprep_gui-1.4.0\aicodeprep_gui
+copying aicodeprep_gui\user_settings.py -> aicodeprep_gui-1.4.0\aicodeprep_gui
+copying aicodeprep_gui\windows_registry.py -> aicodeprep_gui-1.4.0\aicodeprep_gui
+copying aicodeprep_gui.egg-info\PKG-INFO -> aicodeprep_gui-1.4.0\aicodeprep_gui.egg-info
+copying aicodeprep_gui.egg-info\SOURCES.txt -> aicodeprep_gui-1.4.0\aicodeprep_gui.egg-info
+copying aicodeprep_gui.egg-info\dependency_links.txt -> aicodeprep_gui-1.4.0\aicodeprep_gui.egg-info
+copying aicodeprep_gui.egg-info\entry_points.txt -> aicodeprep_gui-1.4.0\aicodeprep_gui.egg-info
+copying aicodeprep_gui.egg-info\requires.txt -> aicodeprep_gui-1.4.0\aicodeprep_gui.egg-info
+copying aicodeprep_gui.egg-info\top_level.txt -> aicodeprep_gui-1.4.0\aicodeprep_gui.egg-info
+copying aicodeprep_gui\data\AICodePrep.workflow.zip -> aicodeprep_gui-1.4.0\aicodeprep_gui\data
+copying aicodeprep_gui\data\default_config.toml -> aicodeprep_gui-1.4.0\aicodeprep_gui\data
+copying aicodeprep_gui\data\flow.json -> aicodeprep_gui-1.4.0\aicodeprep_gui\data
+copying aicodeprep_gui\data\flow_studio_help.html -> aicodeprep_gui-1.4.0\aicodeprep_gui\data
+copying aicodeprep_gui\data\fonts\FiraCode-VariableFont_wght.ttf -> aicodeprep_gui-1.4.0\aicodeprep_gui\data\fonts
+copying aicodeprep_gui\data\fonts\JetBrainsMono-VariableFont_wght.ttf -> aicodeprep_gui-1.4.0\aicodeprep_gui\data\fonts
+copying aicodeprep_gui\data\fonts\NotoSans-VariableFont_wdth,wght.ttf -> aicodeprep_gui-1.4.0\aicodeprep_gui\data\fonts
+copying aicodeprep_gui\data\fonts\SpaceMono-Regular.ttf -> aicodeprep_gui-1.4.0\aicodeprep_gui\data\fonts
+copying aicodeprep_gui\gui\__init__.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\gui
+copying aicodeprep_gui\gui\main_window.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\gui
+copying aicodeprep_gui\gui\components\__init__.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\gui\components
+copying aicodeprep_gui\gui\components\ad_widget.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\gui\components
+copying aicodeprep_gui\gui\components\ai_settings_dialog.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\gui\components
+copying aicodeprep_gui\gui\components\dialogs.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\gui\components
+copying aicodeprep_gui\gui\components\installer_dialogs.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\gui\components
+copying aicodeprep_gui\gui\components\language_dialog.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\gui\components
+copying aicodeprep_gui\gui\components\layouts.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\gui\components
+copying aicodeprep_gui\gui\components\more_settings_dialog.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\gui\components
+copying aicodeprep_gui\gui\components\multi_state_level_delegate.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\gui\components
+copying aicodeprep_gui\gui\components\preset_buttons.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\gui\components
+copying aicodeprep_gui\gui\components\tree_widget.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\gui\components
+copying aicodeprep_gui\gui\handlers\__init__.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\gui\handlers
+copying aicodeprep_gui\gui\handlers\ai_workers.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\gui\handlers
+copying aicodeprep_gui\gui\handlers\file_events.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\gui\handlers
+copying aicodeprep_gui\gui\handlers\keyboard_handler.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\gui\handlers
+copying aicodeprep_gui\gui\handlers\ui_events.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\gui\handlers
+copying aicodeprep_gui\gui\handlers\update_events.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\gui\handlers
+copying aicodeprep_gui\gui\settings\__init__.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\gui\settings
+copying aicodeprep_gui\gui\settings\preferences.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\gui\settings
+copying aicodeprep_gui\gui\settings\presets.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\gui\settings
+copying aicodeprep_gui\gui\settings\ui_settings.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\gui\settings
+copying aicodeprep_gui\gui\utils\__init__.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\gui\utils
+copying aicodeprep_gui\gui\utils\helpers.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\gui\utils
+copying aicodeprep_gui\gui\utils\metrics.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\gui\utils
+copying aicodeprep_gui\i18n\__init__.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\i18n
+copying aicodeprep_gui\i18n\translator.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\i18n
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_ar.qm -> aicodeprep_gui-1.4.0\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_da.qm -> aicodeprep_gui-1.4.0\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_de.qm -> aicodeprep_gui-1.4.0\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_en.qm -> aicodeprep_gui-1.4.0\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_es.qm -> aicodeprep_gui-1.4.0\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_fi.qm -> aicodeprep_gui-1.4.0\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_fr.qm -> aicodeprep_gui-1.4.0\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_hi.qm -> aicodeprep_gui-1.4.0\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_it.qm -> aicodeprep_gui-1.4.0\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_ja.qm -> aicodeprep_gui-1.4.0\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_ko.qm -> aicodeprep_gui-1.4.0\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_nl.qm -> aicodeprep_gui-1.4.0\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_no.qm -> aicodeprep_gui-1.4.0\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_pl.qm -> aicodeprep_gui-1.4.0\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_pt.qm -> aicodeprep_gui-1.4.0\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_ru.qm -> aicodeprep_gui-1.4.0\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_sv.qm -> aicodeprep_gui-1.4.0\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_tr.qm -> aicodeprep_gui-1.4.0\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_uk.qm -> aicodeprep_gui-1.4.0\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_zh_CN.qm -> aicodeprep_gui-1.4.0\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_zh_TW.qm -> aicodeprep_gui-1.4.0\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\images\__init__.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\images
+copying aicodeprep_gui\images\aicp-transparent-min.png -> aicodeprep_gui-1.4.0\aicodeprep_gui\images
+copying aicodeprep_gui\images\aicp-transparent.png -> aicodeprep_gui-1.4.0\aicodeprep_gui\images
+copying aicodeprep_gui\images\checkbox_checked.png -> aicodeprep_gui-1.4.0\aicodeprep_gui\images
+copying aicodeprep_gui\images\checkbox_checked_dark.png -> aicodeprep_gui-1.4.0\aicodeprep_gui\images
+copying aicodeprep_gui\images\checkbox_sk.png -> aicodeprep_gui-1.4.0\aicodeprep_gui\images
+copying aicodeprep_gui\images\checkbox_unchecked.png -> aicodeprep_gui-1.4.0\aicodeprep_gui\images
+copying aicodeprep_gui\images\checkbox_unchecked_dark.png -> aicodeprep_gui-1.4.0\aicodeprep_gui\images
+copying aicodeprep_gui\images\convert_logo.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\images
+copying aicodeprep_gui\images\favicon.ico -> aicodeprep_gui-1.4.0\aicodeprep_gui\images
+copying aicodeprep_gui\pro\__init__.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\pro
+copying aicodeprep_gui\pro\license_state.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\pro
+copying aicodeprep_gui\pro\multi_state_level_delegate.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\pro
+copying aicodeprep_gui\pro\patches.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\pro
+copying aicodeprep_gui\pro\preview_window.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\pro
+copying aicodeprep_gui\pro\syntax_highlighter.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\pro
+copying aicodeprep_gui\pro\ai_assist\__init__.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\pro\ai_assist
+copying aicodeprep_gui\pro\ai_assist\ai_client.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\pro\ai_assist
+copying aicodeprep_gui\pro\ai_assist\endpoint_config.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\pro\ai_assist
+copying aicodeprep_gui\pro\ai_chat\__init__.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\pro\ai_chat
+copying aicodeprep_gui\pro\ai_chat\chat_dock.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\pro\ai_chat
+copying aicodeprep_gui\pro\ai_chat\chat_tab.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\pro\ai_chat
+copying aicodeprep_gui\pro\ai_chat\markdown_renderer.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\pro\ai_chat
+copying aicodeprep_gui\pro\flow\__init__.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\pro\flow
+copying aicodeprep_gui\pro\flow\api_key_dialog.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\pro\flow
+copying aicodeprep_gui\pro\flow\engine.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\pro\flow
+copying aicodeprep_gui\pro\flow\flow_dock.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\pro\flow
+copying aicodeprep_gui\pro\flow\flow_repair.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\pro\flow
+copying aicodeprep_gui\pro\flow\model_picker.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\pro\flow
+copying aicodeprep_gui\pro\flow\progress_dialog.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\pro\flow
+copying aicodeprep_gui\pro\flow\serializer.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\pro\flow
+copying aicodeprep_gui\pro\flow\nodes\aggregate_nodes.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\pro\flow\nodes
+copying aicodeprep_gui\pro\flow\nodes\base.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\pro\flow\nodes
+copying aicodeprep_gui\pro\flow\nodes\io_nodes.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\pro\flow\nodes
+copying aicodeprep_gui\pro\flow\nodes\llm_nodes.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\pro\flow\nodes
+copying aicodeprep_gui\pro\llm\llm_client.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\pro\llm
+copying aicodeprep_gui\utils\__init__.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\utils
+copying aicodeprep_gui\utils\screenshot_helper.py -> aicodeprep_gui-1.4.0\aicodeprep_gui\utils
+copying tests\test_ad_widget.py -> aicodeprep_gui-1.4.0\tests
+copying tests\test_ads_settings.py -> aicodeprep_gui-1.4.0\tests
+copying tests\test_ai_chat.py -> aicodeprep_gui-1.4.0\tests
+copying tests\test_ai_client.py -> aicodeprep_gui-1.4.0\tests
+copying tests\test_ai_settings_dialog.py -> aicodeprep_gui-1.4.0\tests
+copying tests\test_ai_ui.py -> aicodeprep_gui-1.4.0\tests
+copying tests\test_ai_workers.py -> aicodeprep_gui-1.4.0\tests
+copying tests\test_check_files_by_paths.py -> aicodeprep_gui-1.4.0\tests
+copying tests\test_endpoint_config.py -> aicodeprep_gui-1.4.0\tests
+copying tests\test_flow_compatible_endpoint.py -> aicodeprep_gui-1.4.0\tests
+copying tests\test_flow_io_nodes.py -> aicodeprep_gui-1.4.0\tests
+copying tests\test_flow_model_picker.py -> aicodeprep_gui-1.4.0\tests
+copying tests\test_flow_repair.py -> aicodeprep_gui-1.4.0\tests
+copying tests\test_flow_serializer.py -> aicodeprep_gui-1.4.0\tests
+copying tests\test_i18n.py -> aicodeprep_gui-1.4.0\tests
+copying tests\test_llm_client.py -> aicodeprep_gui-1.4.0\tests
+copying tests\test_mode.py -> aicodeprep_gui-1.4.0\tests
+copying tests\test_preferences.py -> aicodeprep_gui-1.4.0\tests
+copying tests\test_pro_license_state.py -> aicodeprep_gui-1.4.0\tests
+copying tests\test_screenshot_baseline.py -> aicodeprep_gui-1.4.0\tests
+copying tests\test_smart_logic.py -> aicodeprep_gui-1.4.0\tests
+copying aicodeprep_gui.egg-info\SOURCES.txt -> aicodeprep_gui-1.4.0\aicodeprep_gui.egg-info
+Writing aicodeprep_gui-1.4.0\setup.cfg
+Creating tar archive
+removing 'aicodeprep_gui-1.4.0' (and everything under it)
+Building wheel from source distribution...
+running egg_info
+writing aicodeprep_gui.egg-info\PKG-INFO
+writing dependency_links to aicodeprep_gui.egg-info\dependency_links.txt
+writing entry points to aicodeprep_gui.egg-info\entry_points.txt
+writing requirements to aicodeprep_gui.egg-info\requires.txt
+writing top-level names to aicodeprep_gui.egg-info\top_level.txt
+reading manifest file 'aicodeprep_gui.egg-info\SOURCES.txt'
+adding license file 'SUSTAINABLE-LICENSE'
+writing manifest file 'aicodeprep_gui.egg-info\SOURCES.txt'
+running bdist_wheel
+running build
+running build_py
+creating build\lib\aicodeprep_gui
+copying aicodeprep_gui\apptheme.py -> build\lib\aicodeprep_gui
+copying aicodeprep_gui\config.py -> build\lib\aicodeprep_gui
+copying aicodeprep_gui\file_processor.py -> build\lib\aicodeprep_gui
+copying aicodeprep_gui\linux_installer.py -> build\lib\aicodeprep_gui
+copying aicodeprep_gui\macos_installer.py -> build\lib\aicodeprep_gui
+copying aicodeprep_gui\main.py -> build\lib\aicodeprep_gui
+copying aicodeprep_gui\rust_backend.py -> build\lib\aicodeprep_gui
+copying aicodeprep_gui\smart_logic.py -> build\lib\aicodeprep_gui
+copying aicodeprep_gui\update_checker.py -> build\lib\aicodeprep_gui
+copying aicodeprep_gui\user_settings.py -> build\lib\aicodeprep_gui
+copying aicodeprep_gui\windows_registry.py -> build\lib\aicodeprep_gui
+copying aicodeprep_gui\__init__.py -> build\lib\aicodeprep_gui
+creating build\lib\aicodeprep_gui\gui
+copying aicodeprep_gui\gui\main_window.py -> build\lib\aicodeprep_gui\gui
+copying aicodeprep_gui\gui\__init__.py -> build\lib\aicodeprep_gui\gui
+creating build\lib\aicodeprep_gui\i18n
+copying aicodeprep_gui\i18n\translator.py -> build\lib\aicodeprep_gui\i18n
+copying aicodeprep_gui\i18n\__init__.py -> build\lib\aicodeprep_gui\i18n
+creating build\lib\aicodeprep_gui\images
+copying aicodeprep_gui\images\convert_logo.py -> build\lib\aicodeprep_gui\images
+copying aicodeprep_gui\images\__init__.py -> build\lib\aicodeprep_gui\images
+creating build\lib\aicodeprep_gui\pro
+copying aicodeprep_gui\pro\license_state.py -> build\lib\aicodeprep_gui\pro
+copying aicodeprep_gui\pro\multi_state_level_delegate.py -> build\lib\aicodeprep_gui\pro
+copying aicodeprep_gui\pro\patches.py -> build\lib\aicodeprep_gui\pro
+copying aicodeprep_gui\pro\preview_window.py -> build\lib\aicodeprep_gui\pro
+copying aicodeprep_gui\pro\syntax_highlighter.py -> build\lib\aicodeprep_gui\pro
+copying aicodeprep_gui\pro\__init__.py -> build\lib\aicodeprep_gui\pro
+creating build\lib\aicodeprep_gui\utils
+copying aicodeprep_gui\utils\screenshot_helper.py -> build\lib\aicodeprep_gui\utils
+copying aicodeprep_gui\utils\__init__.py -> build\lib\aicodeprep_gui\utils
+creating build\lib\aicodeprep_gui\gui\components
+copying aicodeprep_gui\gui\components\ad_widget.py -> build\lib\aicodeprep_gui\gui\components
+copying aicodeprep_gui\gui\components\ai_settings_dialog.py -> build\lib\aicodeprep_gui\gui\components
+copying aicodeprep_gui\gui\components\dialogs.py -> build\lib\aicodeprep_gui\gui\components
+copying aicodeprep_gui\gui\components\installer_dialogs.py -> build\lib\aicodeprep_gui\gui\components
+copying aicodeprep_gui\gui\components\language_dialog.py -> build\lib\aicodeprep_gui\gui\components
+copying aicodeprep_gui\gui\components\layouts.py -> build\lib\aicodeprep_gui\gui\components
+copying aicodeprep_gui\gui\components\more_settings_dialog.py -> build\lib\aicodeprep_gui\gui\components
+copying aicodeprep_gui\gui\components\multi_state_level_delegate.py -> build\lib\aicodeprep_gui\gui\components
+copying aicodeprep_gui\gui\components\preset_buttons.py -> build\lib\aicodeprep_gui\gui\components
+copying aicodeprep_gui\gui\components\tree_widget.py -> build\lib\aicodeprep_gui\gui\components
+copying aicodeprep_gui\gui\components\__init__.py -> build\lib\aicodeprep_gui\gui\components
+creating build\lib\aicodeprep_gui\gui\handlers
+copying aicodeprep_gui\gui\handlers\ai_workers.py -> build\lib\aicodeprep_gui\gui\handlers
+copying aicodeprep_gui\gui\handlers\file_events.py -> build\lib\aicodeprep_gui\gui\handlers
+copying aicodeprep_gui\gui\handlers\keyboard_handler.py -> build\lib\aicodeprep_gui\gui\handlers
+copying aicodeprep_gui\gui\handlers\ui_events.py -> build\lib\aicodeprep_gui\gui\handlers
+copying aicodeprep_gui\gui\handlers\update_events.py -> build\lib\aicodeprep_gui\gui\handlers
+copying aicodeprep_gui\gui\handlers\__init__.py -> build\lib\aicodeprep_gui\gui\handlers
+creating build\lib\aicodeprep_gui\gui\settings
+copying aicodeprep_gui\gui\settings\preferences.py -> build\lib\aicodeprep_gui\gui\settings
+copying aicodeprep_gui\gui\settings\presets.py -> build\lib\aicodeprep_gui\gui\settings
+copying aicodeprep_gui\gui\settings\ui_settings.py -> build\lib\aicodeprep_gui\gui\settings
+copying aicodeprep_gui\gui\settings\__init__.py -> build\lib\aicodeprep_gui\gui\settings
+creating build\lib\aicodeprep_gui\gui\utils
+copying aicodeprep_gui\gui\utils\helpers.py -> build\lib\aicodeprep_gui\gui\utils
+copying aicodeprep_gui\gui\utils\metrics.py -> build\lib\aicodeprep_gui\gui\utils
+copying aicodeprep_gui\gui\utils\__init__.py -> build\lib\aicodeprep_gui\gui\utils
+creating build\lib\aicodeprep_gui\pro\ai_assist
+copying aicodeprep_gui\pro\ai_assist\ai_client.py -> build\lib\aicodeprep_gui\pro\ai_assist
+copying aicodeprep_gui\pro\ai_assist\endpoint_config.py -> build\lib\aicodeprep_gui\pro\ai_assist
+copying aicodeprep_gui\pro\ai_assist\__init__.py -> build\lib\aicodeprep_gui\pro\ai_assist
+creating build\lib\aicodeprep_gui\pro\ai_chat
+copying aicodeprep_gui\pro\ai_chat\chat_dock.py -> build\lib\aicodeprep_gui\pro\ai_chat
+copying aicodeprep_gui\pro\ai_chat\chat_tab.py -> build\lib\aicodeprep_gui\pro\ai_chat
+copying aicodeprep_gui\pro\ai_chat\markdown_renderer.py -> build\lib\aicodeprep_gui\pro\ai_chat
+copying aicodeprep_gui\pro\ai_chat\__init__.py -> build\lib\aicodeprep_gui\pro\ai_chat
+creating build\lib\aicodeprep_gui\pro\flow
+copying aicodeprep_gui\pro\flow\api_key_dialog.py -> build\lib\aicodeprep_gui\pro\flow
+copying aicodeprep_gui\pro\flow\engine.py -> build\lib\aicodeprep_gui\pro\flow
+copying aicodeprep_gui\pro\flow\flow_dock.py -> build\lib\aicodeprep_gui\pro\flow
+copying aicodeprep_gui\pro\flow\flow_repair.py -> build\lib\aicodeprep_gui\pro\flow
+copying aicodeprep_gui\pro\flow\model_picker.py -> build\lib\aicodeprep_gui\pro\flow
+copying aicodeprep_gui\pro\flow\progress_dialog.py -> build\lib\aicodeprep_gui\pro\flow
+copying aicodeprep_gui\pro\flow\serializer.py -> build\lib\aicodeprep_gui\pro\flow
+copying aicodeprep_gui\pro\flow\__init__.py -> build\lib\aicodeprep_gui\pro\flow
+creating build\lib\aicodeprep_gui\pro\llm
+copying aicodeprep_gui\pro\llm\llm_client.py -> build\lib\aicodeprep_gui\pro\llm
+creating build\lib\aicodeprep_gui\pro\flow\nodes
+copying aicodeprep_gui\pro\flow\nodes\aggregate_nodes.py -> build\lib\aicodeprep_gui\pro\flow\nodes
+copying aicodeprep_gui\pro\flow\nodes\base.py -> build\lib\aicodeprep_gui\pro\flow\nodes
+copying aicodeprep_gui\pro\flow\nodes\io_nodes.py -> build\lib\aicodeprep_gui\pro\flow\nodes
+copying aicodeprep_gui\pro\flow\nodes\llm_nodes.py -> build\lib\aicodeprep_gui\pro\flow\nodes
+running egg_info
+writing aicodeprep_gui.egg-info\PKG-INFO
+writing dependency_links to aicodeprep_gui.egg-info\dependency_links.txt
+writing entry points to aicodeprep_gui.egg-info\entry_points.txt
+writing requirements to aicodeprep_gui.egg-info\requires.txt
+writing top-level names to aicodeprep_gui.egg-info\top_level.txt
+reading manifest file 'aicodeprep_gui.egg-info\SOURCES.txt'
+adding license file 'SUSTAINABLE-LICENSE'
+writing manifest file 'aicodeprep_gui.egg-info\SOURCES.txt'
+creating build\lib\aicodeprep_gui\data
+copying aicodeprep_gui\data\default_config.toml -> build\lib\aicodeprep_gui\data
+copying aicodeprep_gui\data\flow.json -> build\lib\aicodeprep_gui\data
+copying aicodeprep_gui\data\flow_studio_help.html -> build\lib\aicodeprep_gui\data
+copying aicodeprep_gui\images\aicp-transparent-min.png -> build\lib\aicodeprep_gui\images
+copying aicodeprep_gui\images\aicp-transparent.png -> build\lib\aicodeprep_gui\images
+copying aicodeprep_gui\images\checkbox_checked.png -> build\lib\aicodeprep_gui\images
+copying aicodeprep_gui\images\checkbox_checked_dark.png -> build\lib\aicodeprep_gui\images
+copying aicodeprep_gui\images\checkbox_sk.png -> build\lib\aicodeprep_gui\images
+copying aicodeprep_gui\images\checkbox_unchecked.png -> build\lib\aicodeprep_gui\images
+copying aicodeprep_gui\images\checkbox_unchecked_dark.png -> build\lib\aicodeprep_gui\images
+copying aicodeprep_gui\images\favicon.ico -> build\lib\aicodeprep_gui\images
+copying aicodeprep_gui\data\AICodePrep.workflow.zip -> build\lib\aicodeprep_gui\data
+creating build\lib\aicodeprep_gui\data\fonts
+copying aicodeprep_gui\data\fonts\FiraCode-VariableFont_wght.ttf -> build\lib\aicodeprep_gui\data\fonts
+copying aicodeprep_gui\data\fonts\JetBrainsMono-VariableFont_wght.ttf -> build\lib\aicodeprep_gui\data\fonts
+copying aicodeprep_gui\data\fonts\NotoSans-VariableFont_wdth,wght.ttf -> build\lib\aicodeprep_gui\data\fonts
+copying aicodeprep_gui\data\fonts\SpaceMono-Regular.ttf -> build\lib\aicodeprep_gui\data\fonts
+creating build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_ar.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_da.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_de.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_en.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_es.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_fi.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_fr.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_hi.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_it.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_ja.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_ko.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_nl.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_no.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_pl.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_pt.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_ru.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_sv.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_tr.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_uk.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_zh_CN.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_zh_TW.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\data\AICodePrep.workflow.zip -> build\lib\aicodeprep_gui\data
+copying aicodeprep_gui\data\default_config.toml -> build\lib\aicodeprep_gui\data
+copying aicodeprep_gui\data\flow.json -> build\lib\aicodeprep_gui\data
+copying aicodeprep_gui\data\flow_studio_help.html -> build\lib\aicodeprep_gui\data
+copying aicodeprep_gui\images\aicp-transparent-min.png -> build\lib\aicodeprep_gui\images
+copying aicodeprep_gui\images\aicp-transparent.png -> build\lib\aicodeprep_gui\images
+copying aicodeprep_gui\images\checkbox_checked.png -> build\lib\aicodeprep_gui\images
+copying aicodeprep_gui\images\checkbox_checked_dark.png -> build\lib\aicodeprep_gui\images
+copying aicodeprep_gui\images\checkbox_sk.png -> build\lib\aicodeprep_gui\images
+copying aicodeprep_gui\images\checkbox_unchecked.png -> build\lib\aicodeprep_gui\images
+copying aicodeprep_gui\images\checkbox_unchecked_dark.png -> build\lib\aicodeprep_gui\images
+copying aicodeprep_gui\images\favicon.ico -> build\lib\aicodeprep_gui\images
+copying aicodeprep_gui\data\fonts\FiraCode-VariableFont_wght.ttf -> build\lib\aicodeprep_gui\data\fonts
+copying aicodeprep_gui\data\fonts\JetBrainsMono-VariableFont_wght.ttf -> build\lib\aicodeprep_gui\data\fonts
+copying aicodeprep_gui\data\fonts\NotoSans-VariableFont_wdth,wght.ttf -> build\lib\aicodeprep_gui\data\fonts
+copying aicodeprep_gui\data\fonts\SpaceMono-Regular.ttf -> build\lib\aicodeprep_gui\data\fonts
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_ar.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_da.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_de.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_en.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_es.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_fi.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_fr.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_hi.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_it.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_ja.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_ko.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_nl.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_no.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_pl.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_pt.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_ru.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_sv.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_tr.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_uk.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_zh_CN.qm -> build\lib\aicodeprep_gui\i18n\translations
+copying aicodeprep_gui\i18n\translations\aicodeprep_gui_zh_TW.qm -> build\lib\aicodeprep_gui\i18n\translations
+installing to build\bdist.win-amd64\wheel
+running install
+running install_lib
+creating build\bdist.win-amd64\wheel
+creating build\bdist.win-amd64\wheel\aicodeprep_gui
+copying build\lib\aicodeprep_gui\apptheme.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui
+copying build\lib\aicodeprep_gui\config.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui
+creating build\bdist.win-amd64\wheel\aicodeprep_gui\data
+copying build\lib\aicodeprep_gui\data\AICodePrep.workflow.zip -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\data
+copying build\lib\aicodeprep_gui\data\default_config.toml -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\data
+copying build\lib\aicodeprep_gui\data\flow.json -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\data
+copying build\lib\aicodeprep_gui\data\flow_studio_help.html -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\data
+creating build\bdist.win-amd64\wheel\aicodeprep_gui\data\fonts
+copying build\lib\aicodeprep_gui\data\fonts\FiraCode-VariableFont_wght.ttf -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\data\fonts
+copying build\lib\aicodeprep_gui\data\fonts\JetBrainsMono-VariableFont_wght.ttf -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\data\fonts
+copying build\lib\aicodeprep_gui\data\fonts\NotoSans-VariableFont_wdth,wght.ttf -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\data\fonts
+copying build\lib\aicodeprep_gui\data\fonts\SpaceMono-Regular.ttf -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\data\fonts
+copying build\lib\aicodeprep_gui\file_processor.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui
+creating build\bdist.win-amd64\wheel\aicodeprep_gui\gui
+creating build\bdist.win-amd64\wheel\aicodeprep_gui\gui\components
+copying build\lib\aicodeprep_gui\gui\components\ad_widget.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\gui\components
+copying build\lib\aicodeprep_gui\gui\components\ai_settings_dialog.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\gui\components
+copying build\lib\aicodeprep_gui\gui\components\dialogs.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\gui\components
+copying build\lib\aicodeprep_gui\gui\components\installer_dialogs.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\gui\components
+copying build\lib\aicodeprep_gui\gui\components\language_dialog.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\gui\components
+copying build\lib\aicodeprep_gui\gui\components\layouts.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\gui\components
+copying build\lib\aicodeprep_gui\gui\components\more_settings_dialog.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\gui\components
+copying build\lib\aicodeprep_gui\gui\components\multi_state_level_delegate.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\gui\components
+copying build\lib\aicodeprep_gui\gui\components\preset_buttons.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\gui\components
+copying build\lib\aicodeprep_gui\gui\components\tree_widget.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\gui\components
+copying build\lib\aicodeprep_gui\gui\components\__init__.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\gui\components
+creating build\bdist.win-amd64\wheel\aicodeprep_gui\gui\handlers
+copying build\lib\aicodeprep_gui\gui\handlers\ai_workers.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\gui\handlers
+copying build\lib\aicodeprep_gui\gui\handlers\file_events.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\gui\handlers
+copying build\lib\aicodeprep_gui\gui\handlers\keyboard_handler.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\gui\handlers
+copying build\lib\aicodeprep_gui\gui\handlers\ui_events.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\gui\handlers
+copying build\lib\aicodeprep_gui\gui\handlers\update_events.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\gui\handlers
+copying build\lib\aicodeprep_gui\gui\handlers\__init__.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\gui\handlers
+copying build\lib\aicodeprep_gui\gui\main_window.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\gui
+creating build\bdist.win-amd64\wheel\aicodeprep_gui\gui\settings
+copying build\lib\aicodeprep_gui\gui\settings\preferences.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\gui\settings
+copying build\lib\aicodeprep_gui\gui\settings\presets.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\gui\settings
+copying build\lib\aicodeprep_gui\gui\settings\ui_settings.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\gui\settings
+copying build\lib\aicodeprep_gui\gui\settings\__init__.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\gui\settings
+creating build\bdist.win-amd64\wheel\aicodeprep_gui\gui\utils
+copying build\lib\aicodeprep_gui\gui\utils\helpers.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\gui\utils
+copying build\lib\aicodeprep_gui\gui\utils\metrics.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\gui\utils
+copying build\lib\aicodeprep_gui\gui\utils\__init__.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\gui\utils
+copying build\lib\aicodeprep_gui\gui\__init__.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\gui
+creating build\bdist.win-amd64\wheel\aicodeprep_gui\i18n
+creating build\bdist.win-amd64\wheel\aicodeprep_gui\i18n\translations
+copying build\lib\aicodeprep_gui\i18n\translations\aicodeprep_gui_ar.qm -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\i18n\translations
+copying build\lib\aicodeprep_gui\i18n\translations\aicodeprep_gui_da.qm -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\i18n\translations
+copying build\lib\aicodeprep_gui\i18n\translations\aicodeprep_gui_de.qm -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\i18n\translations
+copying build\lib\aicodeprep_gui\i18n\translations\aicodeprep_gui_en.qm -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\i18n\translations
+copying build\lib\aicodeprep_gui\i18n\translations\aicodeprep_gui_es.qm -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\i18n\translations
+copying build\lib\aicodeprep_gui\i18n\translations\aicodeprep_gui_fi.qm -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\i18n\translations
+copying build\lib\aicodeprep_gui\i18n\translations\aicodeprep_gui_fr.qm -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\i18n\translations
+copying build\lib\aicodeprep_gui\i18n\translations\aicodeprep_gui_hi.qm -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\i18n\translations
+copying build\lib\aicodeprep_gui\i18n\translations\aicodeprep_gui_it.qm -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\i18n\translations
+copying build\lib\aicodeprep_gui\i18n\translations\aicodeprep_gui_ja.qm -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\i18n\translations
+copying build\lib\aicodeprep_gui\i18n\translations\aicodeprep_gui_ko.qm -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\i18n\translations
+copying build\lib\aicodeprep_gui\i18n\translations\aicodeprep_gui_nl.qm -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\i18n\translations
+copying build\lib\aicodeprep_gui\i18n\translations\aicodeprep_gui_no.qm -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\i18n\translations
+copying build\lib\aicodeprep_gui\i18n\translations\aicodeprep_gui_pl.qm -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\i18n\translations
+copying build\lib\aicodeprep_gui\i18n\translations\aicodeprep_gui_pt.qm -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\i18n\translations
+copying build\lib\aicodeprep_gui\i18n\translations\aicodeprep_gui_ru.qm -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\i18n\translations
+copying build\lib\aicodeprep_gui\i18n\translations\aicodeprep_gui_sv.qm -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\i18n\translations
+copying build\lib\aicodeprep_gui\i18n\translations\aicodeprep_gui_tr.qm -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\i18n\translations
+copying build\lib\aicodeprep_gui\i18n\translations\aicodeprep_gui_uk.qm -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\i18n\translations
+copying build\lib\aicodeprep_gui\i18n\translations\aicodeprep_gui_zh_CN.qm -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\i18n\translations
+copying build\lib\aicodeprep_gui\i18n\translations\aicodeprep_gui_zh_TW.qm -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\i18n\translations
+copying build\lib\aicodeprep_gui\i18n\translator.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\i18n
+copying build\lib\aicodeprep_gui\i18n\__init__.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\i18n
+creating build\bdist.win-amd64\wheel\aicodeprep_gui\images
+copying build\lib\aicodeprep_gui\images\aicp-transparent-min.png -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\images
+copying build\lib\aicodeprep_gui\images\aicp-transparent.png -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\images
+copying build\lib\aicodeprep_gui\images\checkbox_checked.png -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\images
+copying build\lib\aicodeprep_gui\images\checkbox_checked_dark.png -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\images
+copying build\lib\aicodeprep_gui\images\checkbox_sk.png -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\images
+copying build\lib\aicodeprep_gui\images\checkbox_unchecked.png -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\images
+copying build\lib\aicodeprep_gui\images\checkbox_unchecked_dark.png -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\images
+copying build\lib\aicodeprep_gui\images\convert_logo.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\images
+copying build\lib\aicodeprep_gui\images\favicon.ico -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\images
+copying build\lib\aicodeprep_gui\images\__init__.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\images
+copying build\lib\aicodeprep_gui\linux_installer.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui
+copying build\lib\aicodeprep_gui\macos_installer.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui
+copying build\lib\aicodeprep_gui\main.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui
+creating build\bdist.win-amd64\wheel\aicodeprep_gui\pro
+creating build\bdist.win-amd64\wheel\aicodeprep_gui\pro\ai_assist
+copying build\lib\aicodeprep_gui\pro\ai_assist\ai_client.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\pro\ai_assist
+copying build\lib\aicodeprep_gui\pro\ai_assist\endpoint_config.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\pro\ai_assist
+copying build\lib\aicodeprep_gui\pro\ai_assist\__init__.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\pro\ai_assist
+creating build\bdist.win-amd64\wheel\aicodeprep_gui\pro\ai_chat
+copying build\lib\aicodeprep_gui\pro\ai_chat\chat_dock.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\pro\ai_chat
+copying build\lib\aicodeprep_gui\pro\ai_chat\chat_tab.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\pro\ai_chat
+copying build\lib\aicodeprep_gui\pro\ai_chat\markdown_renderer.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\pro\ai_chat
+copying build\lib\aicodeprep_gui\pro\ai_chat\__init__.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\pro\ai_chat
+creating build\bdist.win-amd64\wheel\aicodeprep_gui\pro\flow
+copying build\lib\aicodeprep_gui\pro\flow\api_key_dialog.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\pro\flow
+copying build\lib\aicodeprep_gui\pro\flow\engine.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\pro\flow
+copying build\lib\aicodeprep_gui\pro\flow\flow_dock.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\pro\flow
+copying build\lib\aicodeprep_gui\pro\flow\flow_repair.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\pro\flow
+copying build\lib\aicodeprep_gui\pro\flow\model_picker.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\pro\flow
+creating build\bdist.win-amd64\wheel\aicodeprep_gui\pro\flow\nodes
+copying build\lib\aicodeprep_gui\pro\flow\nodes\aggregate_nodes.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\pro\flow\nodes
+copying build\lib\aicodeprep_gui\pro\flow\nodes\base.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\pro\flow\nodes
+copying build\lib\aicodeprep_gui\pro\flow\nodes\io_nodes.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\pro\flow\nodes
+copying build\lib\aicodeprep_gui\pro\flow\nodes\llm_nodes.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\pro\flow\nodes
+copying build\lib\aicodeprep_gui\pro\flow\progress_dialog.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\pro\flow
+copying build\lib\aicodeprep_gui\pro\flow\serializer.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\pro\flow
+copying build\lib\aicodeprep_gui\pro\flow\__init__.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\pro\flow
+copying build\lib\aicodeprep_gui\pro\license_state.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\pro
+creating build\bdist.win-amd64\wheel\aicodeprep_gui\pro\llm
+copying build\lib\aicodeprep_gui\pro\llm\llm_client.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\pro\llm
+copying build\lib\aicodeprep_gui\pro\multi_state_level_delegate.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\pro
+copying build\lib\aicodeprep_gui\pro\patches.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\pro
+copying build\lib\aicodeprep_gui\pro\preview_window.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\pro
+copying build\lib\aicodeprep_gui\pro\syntax_highlighter.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\pro
+copying build\lib\aicodeprep_gui\pro\__init__.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\pro
+copying build\lib\aicodeprep_gui\rust_backend.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui
+copying build\lib\aicodeprep_gui\smart_logic.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui
+copying build\lib\aicodeprep_gui\update_checker.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui
+copying build\lib\aicodeprep_gui\user_settings.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui
+creating build\bdist.win-amd64\wheel\aicodeprep_gui\utils
+copying build\lib\aicodeprep_gui\utils\screenshot_helper.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\utils
+copying build\lib\aicodeprep_gui\utils\__init__.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui\utils
+copying build\lib\aicodeprep_gui\windows_registry.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui
+copying build\lib\aicodeprep_gui\__init__.py -> build\bdist.win-amd64\wheel\.\aicodeprep_gui
+running install_egg_info
+Copying aicodeprep_gui.egg-info to build\bdist.win-amd64\wheel\.\aicodeprep_gui-1.4.0-py3.13.egg-info
+running install_scripts
+creating build\bdist.win-amd64\wheel\aicodeprep_gui-1.4.0.dist-info\WHEEL
+creating 'G:\aicodeprep-2026\aicodeprep-gui\dist\.tmp-jeftwim6\aicodeprep_gui-1.4.0-py3-none-any.whl' and adding 'build\bdist.win-amd64\wheel' to it
+adding 'aicodeprep_gui/__init__.py'
+adding 'aicodeprep_gui/apptheme.py'
+adding 'aicodeprep_gui/config.py'
+adding 'aicodeprep_gui/file_processor.py'
+adding 'aicodeprep_gui/linux_installer.py'
+adding 'aicodeprep_gui/macos_installer.py'
+adding 'aicodeprep_gui/main.py'
+adding 'aicodeprep_gui/rust_backend.py'
+adding 'aicodeprep_gui/smart_logic.py'
+adding 'aicodeprep_gui/update_checker.py'
+adding 'aicodeprep_gui/user_settings.py'
+adding 'aicodeprep_gui/windows_registry.py'
+adding 'aicodeprep_gui/data/AICodePrep.workflow.zip'
+adding 'aicodeprep_gui/data/default_config.toml'
+adding 'aicodeprep_gui/data/flow.json'
+adding 'aicodeprep_gui/data/flow_studio_help.html'
+adding 'aicodeprep_gui/data/fonts/FiraCode-VariableFont_wght.ttf'
+adding 'aicodeprep_gui/data/fonts/JetBrainsMono-VariableFont_wght.ttf'
+adding 'aicodeprep_gui/data/fonts/NotoSans-VariableFont_wdth,wght.ttf'
+adding 'aicodeprep_gui/data/fonts/SpaceMono-Regular.ttf'
+adding 'aicodeprep_gui/gui/__init__.py'
+adding 'aicodeprep_gui/gui/main_window.py'
+adding 'aicodeprep_gui/gui/components/__init__.py'
+adding 'aicodeprep_gui/gui/components/ad_widget.py'
+adding 'aicodeprep_gui/gui/components/ai_settings_dialog.py'
+adding 'aicodeprep_gui/gui/components/dialogs.py'
+adding 'aicodeprep_gui/gui/components/installer_dialogs.py'
+adding 'aicodeprep_gui/gui/components/language_dialog.py'
+adding 'aicodeprep_gui/gui/components/layouts.py'
+adding 'aicodeprep_gui/gui/components/more_settings_dialog.py'
+adding 'aicodeprep_gui/gui/components/multi_state_level_delegate.py'
+adding 'aicodeprep_gui/gui/components/preset_buttons.py'
+adding 'aicodeprep_gui/gui/components/tree_widget.py'
+adding 'aicodeprep_gui/gui/handlers/__init__.py'
+adding 'aicodeprep_gui/gui/handlers/ai_workers.py'
+adding 'aicodeprep_gui/gui/handlers/file_events.py'
+adding 'aicodeprep_gui/gui/handlers/keyboard_handler.py'
+adding 'aicodeprep_gui/gui/handlers/ui_events.py'
+adding 'aicodeprep_gui/gui/handlers/update_events.py'
+adding 'aicodeprep_gui/gui/settings/__init__.py'
+adding 'aicodeprep_gui/gui/settings/preferences.py'
+adding 'aicodeprep_gui/gui/settings/presets.py'
+adding 'aicodeprep_gui/gui/settings/ui_settings.py'
+adding 'aicodeprep_gui/gui/utils/__init__.py'
+adding 'aicodeprep_gui/gui/utils/helpers.py'
+adding 'aicodeprep_gui/gui/utils/metrics.py'
+adding 'aicodeprep_gui/i18n/__init__.py'
+adding 'aicodeprep_gui/i18n/translator.py'
+adding 'aicodeprep_gui/i18n/translations/aicodeprep_gui_ar.qm'
+adding 'aicodeprep_gui/i18n/translations/aicodeprep_gui_da.qm'
+adding 'aicodeprep_gui/i18n/translations/aicodeprep_gui_de.qm'
+adding 'aicodeprep_gui/i18n/translations/aicodeprep_gui_en.qm'
+adding 'aicodeprep_gui/i18n/translations/aicodeprep_gui_es.qm'
+adding 'aicodeprep_gui/i18n/translations/aicodeprep_gui_fi.qm'
+adding 'aicodeprep_gui/i18n/translations/aicodeprep_gui_fr.qm'
+adding 'aicodeprep_gui/i18n/translations/aicodeprep_gui_hi.qm'
+adding 'aicodeprep_gui/i18n/translations/aicodeprep_gui_it.qm'
+adding 'aicodeprep_gui/i18n/translations/aicodeprep_gui_ja.qm'
+adding 'aicodeprep_gui/i18n/translations/aicodeprep_gui_ko.qm'
+adding 'aicodeprep_gui/i18n/translations/aicodeprep_gui_nl.qm'
+adding 'aicodeprep_gui/i18n/translations/aicodeprep_gui_no.qm'
+adding 'aicodeprep_gui/i18n/translations/aicodeprep_gui_pl.qm'
+adding 'aicodeprep_gui/i18n/translations/aicodeprep_gui_pt.qm'
+adding 'aicodeprep_gui/i18n/translations/aicodeprep_gui_ru.qm'
+adding 'aicodeprep_gui/i18n/translations/aicodeprep_gui_sv.qm'
+adding 'aicodeprep_gui/i18n/translations/aicodeprep_gui_tr.qm'
+adding 'aicodeprep_gui/i18n/translations/aicodeprep_gui_uk.qm'
+adding 'aicodeprep_gui/i18n/translations/aicodeprep_gui_zh_CN.qm'
+adding 'aicodeprep_gui/i18n/translations/aicodeprep_gui_zh_TW.qm'
+adding 'aicodeprep_gui/images/__init__.py'
+adding 'aicodeprep_gui/images/aicp-transparent-min.png'
+adding 'aicodeprep_gui/images/aicp-transparent.png'
+adding 'aicodeprep_gui/images/checkbox_checked.png'
+adding 'aicodeprep_gui/images/checkbox_checked_dark.png'
+adding 'aicodeprep_gui/images/checkbox_sk.png'
+adding 'aicodeprep_gui/images/checkbox_unchecked.png'
+adding 'aicodeprep_gui/images/checkbox_unchecked_dark.png'
+adding 'aicodeprep_gui/images/convert_logo.py'
+adding 'aicodeprep_gui/images/favicon.ico'
+adding 'aicodeprep_gui/pro/__init__.py'
+adding 'aicodeprep_gui/pro/license_state.py'
+adding 'aicodeprep_gui/pro/multi_state_level_delegate.py'
+adding 'aicodeprep_gui/pro/patches.py'
+adding 'aicodeprep_gui/pro/preview_window.py'
+adding 'aicodeprep_gui/pro/syntax_highlighter.py'
+adding 'aicodeprep_gui/pro/ai_assist/__init__.py'
+adding 'aicodeprep_gui/pro/ai_assist/ai_client.py'
+adding 'aicodeprep_gui/pro/ai_assist/endpoint_config.py'
+adding 'aicodeprep_gui/pro/ai_chat/__init__.py'
+adding 'aicodeprep_gui/pro/ai_chat/chat_dock.py'
+adding 'aicodeprep_gui/pro/ai_chat/chat_tab.py'
+adding 'aicodeprep_gui/pro/ai_chat/markdown_renderer.py'
+adding 'aicodeprep_gui/pro/flow/__init__.py'
+adding 'aicodeprep_gui/pro/flow/api_key_dialog.py'
+adding 'aicodeprep_gui/pro/flow/engine.py'
+adding 'aicodeprep_gui/pro/flow/flow_dock.py'
+adding 'aicodeprep_gui/pro/flow/flow_repair.py'
+adding 'aicodeprep_gui/pro/flow/model_picker.py'
+adding 'aicodeprep_gui/pro/flow/progress_dialog.py'
+adding 'aicodeprep_gui/pro/flow/serializer.py'
+adding 'aicodeprep_gui/pro/flow/nodes/aggregate_nodes.py'
+adding 'aicodeprep_gui/pro/flow/nodes/base.py'
+adding 'aicodeprep_gui/pro/flow/nodes/io_nodes.py'
+adding 'aicodeprep_gui/pro/flow/nodes/llm_nodes.py'
+adding 'aicodeprep_gui/pro/llm/llm_client.py'
+adding 'aicodeprep_gui/utils/__init__.py'
+adding 'aicodeprep_gui/utils/screenshot_helper.py'
+adding 'aicodeprep_gui-1.4.0.dist-info/licenses/SUSTAINABLE-LICENSE'
+adding 'aicodeprep_gui-1.4.0.dist-info/METADATA'
+adding 'aicodeprep_gui-1.4.0.dist-info/WHEEL'
+adding 'aicodeprep_gui-1.4.0.dist-info/entry_points.txt'
+adding 'aicodeprep_gui-1.4.0.dist-info/top_level.txt'
+adding 'aicodeprep_gui-1.4.0.dist-info/RECORD'
+removing build\bdist.win-amd64\wheel
+Successfully built dist\aicodeprep_gui-1.4.0.tar.gz
+Successfully built dist\aicodeprep_gui-1.4.0-py3-none-any.whl

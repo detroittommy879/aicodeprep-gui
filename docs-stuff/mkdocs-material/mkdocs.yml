@@ -1,0 +1,27 @@
+site_name: w111erd
+site_description: Documentation for w111erd, a cross-platform terminal app built to be easier to use than a traditional terminal.
+
+theme:
+  name: material
+  palette:
+    scheme: slate
+  features:
+    - navigation.tabs
+    - navigation.indexes
+
+nav:
+  - Home: index.md
+  - Guide:
+    - What Is w111erd?: guide/what-is-w111erd.md
+    - Getting Started: guide/getting-started.md
+    - Everyday Use: guide/everyday-use.md
+    - Themes and Fonts: guide/themes-and-fonts.md
+    - Terminal Control CLI: guide/terminal-control-cli.md
+    - Effects and Appearance: guide/effects-and-appearance.md
+    - Profiles and Settings: guide/profiles-and-settings.md
+    - Status Bar and Limits: guide/status-bar-and-limits.md
+    - Building This Docs Site: guide/building-this-docs-site.md
+  - Architecture:
+    - Terminal Control CLI: architecture/terminal-control-cli.md
+    - AI Assistant Architecture: architecture/ai-assistant-architecture.md
+    - Effects and Hsync: architecture/effects-and-hsync.md

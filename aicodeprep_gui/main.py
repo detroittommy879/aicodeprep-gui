@@ -5,7 +5,8 @@ import ctypes
 from PySide6 import QtWidgets
 from aicodeprep_gui import pro
 from aicodeprep_gui.file_processor import process_files
-from aicodeprep_gui.gui.settings.preferences import _read_prefs_file
+from aicodeprep_gui.rust_backend import process_with_rust_worker
+from aicodeprep_gui.gui.settings.preferences import _existing_prefs_path, _read_prefs_file
 from aicodeprep_gui.config import get_flows_dir, copy_builtin_flows
 from aicodeprep_gui.user_settings import (
     delete_settings_file,
@@ -22,7 +23,7 @@ if "--delset" in sys.argv:
 import argparse
 import logging
 from typing import List
-from aicodeprep_gui.smart_logic import collect_all_files
+from aicodeprep_gui.smart_logic import collect_all_files, collect_seed_paths
 from aicodeprep_gui.gui import show_file_selection_gui
 from aicodeprep_gui.apptheme import load_custom_fonts
 
@@ -44,6 +45,59 @@ console_handler.setFormatter(formatter)
 # Add handler to root logger
 logger.addHandler(console_handler)
 
+LINUX_DESKTOP_APP_ID = "io.github.detroittommy879.aicodeprep_gui"
+
+
+def process_files_with_fast_backend(
+    selected_files,
+    output_filename,
+    output_format,
+    prompt,
+    prompt_to_top,
+    prompt_to_bottom,
+) -> int:
+    """Use Rust packing when available, with the Python implementation as fallback."""
+    use_rust = bool(get_setting("rust_backend", "enabled", True)) and bool(
+        get_setting("pro_options", "rust_fast_processing", True))
+    if use_rust:
+        rust_result = process_with_rust_worker(
+            selected_files,
+            output_filename,
+            output_format,
+            prompt,
+            prompt_to_top,
+            prompt_to_bottom,
+        )
+        if rust_result.ok:
+            logger.info("Generated context with Rust worker.")
+            return rust_result.files_processed
+        logger.info(
+            "Rust worker unavailable for context generation, falling back to Python: %s",
+            rust_result.error,
+        )
+
+    return process_files(
+        selected_files,
+        output_filename,
+        fmt=output_format,
+        prompt=prompt,
+        prompt_to_top=prompt_to_top,
+        prompt_to_bottom=prompt_to_bottom,
+    )
+
+
+def _configure_application_metadata(app: QtWidgets.QApplication) -> None:
+    """Apply stable application metadata for desktop integration."""
+    app.setApplicationName("aicodeprep-gui")
+    app.setOrganizationName("wuu73")
+    app.setOrganizationDomain("wuu73.org")
+
+    if hasattr(app, "setApplicationDisplayName"):
+        app.setApplicationDisplayName("AICodePrep GUI")
+
+    if platform.system() == "Linux" and hasattr(app, "setDesktopFileName"):
+        app.setDesktopFileName(LINUX_DESKTOP_APP_ID)
+
 
 def main():
     # Ensure configuration directories are created and copy built-in flows
@@ -64,12 +118,16 @@ def main():
                         help="Force update check (ignore 24h limit)")
     parser.add_argument("--notpro", action="store_true",
                         help="Temporarily disable Pro features for this session")
+    parser.add_argument("--262144", action="store_true",
+                        help=argparse.SUPPRESS)
     parser.add_argument("-s", "--skipui", nargs='?', const='', default=None,
                         help="Pro: Skip UI and generate context immediately. Optionally provide a prompt string after the flag.")
     parser.add_argument("--list-languages", action="store_true",
                         help="List all available languages and exit")
     parser.add_argument("--language", type=str, metavar="CODE",
                         help="Set application language (e.g., --language es for Spanish)")
+    parser.add_argument("--fastads", action="store_true",
+                        help="Speed up ad rotation to 1.5 seconds (for testing)")
 
     # --- ADD THESE NEW ARGUMENTS ---
     if platform.system() == "Windows":
@@ -84,11 +142,15 @@ def main():
 
     args = parser.parse_args()
 
+    if args.fastads:
+        os.environ["AICODEPREP_FASTADS"] = "1"
+
     # Handle --list-languages
     if args.list_languages:
         from aicodeprep_gui.i18n.translator import TranslationManager
         # Create minimal app just for TranslationManager
         app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
+        _configure_application_metadata(app)
         tm = TranslationManager(app)
         print("Available languages:")
         for code, name in sorted(tm.get_available_languages()):
@@ -114,30 +176,30 @@ def main():
 
         logger.info("Running in headless (skip-UI) mode...")
 
-        # 1. Collect all potential files
-        all_files_with_flags = collect_all_files()
-        if not all_files_with_flags:
-            logger.warning("No files found to process!")
-            sys.exit(0)
-
-        logger.info(
-            f"Initial scan collected {len(all_files_with_flags)} items.")
-
-        # 2. Load preferences to determine which files to select
-        checked_from_prefs, _, _, output_format, _, prefs_path, _ = _read_prefs_file()
+        selected_files = []
+        output_format = "xml"
+        prefs_path, _ = _existing_prefs_path(target_dir_headless)
         prefs_file_exists = os.path.exists(prefs_path)
 
-        selected_files = []
-        rel_to_abs_map = {rel: abs for abs, rel,
-                          _ in all_files_with_flags if os.path.isfile(abs)}
-
-        if prefs_file_exists and checked_from_prefs:
+        if prefs_file_exists:
+            checked_from_prefs, _, _, output_format, _, _, _, _, _ = _read_prefs_file(
+                target_dir_headless)
             logger.info(
-                f"Loading selection from .aicodeprep-gui file. Found {len(checked_from_prefs)} files.")
+                "Found project preferences at %s. Using saved file selection for headless generation.",
+                prefs_path,
+            )
             for rel_path in checked_from_prefs:
-                if rel_path in rel_to_abs_map:
-                    selected_files.append(rel_to_abs_map[rel_path])
-        else:
+                abs_path = os.path.join(target_dir_headless, rel_path)
+                if os.path.isfile(abs_path):
+                    selected_files.append(abs_path)
+
+        if not selected_files:
+            logger.info(
+                "No usable saved project selection found. Performing a full recursive scan.")
+            all_files_with_flags = collect_all_files(target_dir_headless)
+            if not all_files_with_flags:
+                logger.warning("No files found to process!")
+                sys.exit(0)
             logger.info("Using smart default file selection.")
             for abs_path, _, is_checked in all_files_with_flags:
                 if is_checked and os.path.isfile(abs_path):
@@ -152,6 +214,7 @@ def main():
         # We need a QApplication instance for clipboard access
         try:
             app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
+            _configure_application_metadata(app)
         except Exception as e:
             logger.error(f"Failed to create QApplication instance: {e}")
             sys.exit(1)
@@ -167,10 +230,10 @@ def main():
         logger.info(f"Generating context for {len(selected_files)} files...")
         output_filename = args.output
         try:
-            processed_count = process_files(
+            processed_count = process_files_with_fast_backend(
                 selected_files,
                 output_filename,
-                fmt=output_format,
+                output_format,
                 prompt=prompt,
                 prompt_to_top=prompt_to_top,
                 prompt_to_bottom=prompt_to_bottom
@@ -244,6 +307,7 @@ def main():
     app = QtWidgets.QApplication.instance()
     if app is None:
         app = QtWidgets.QApplication(sys.argv)
+    _configure_application_metadata(app)
     app.setStyle("Fusion")
 
     # Set application icon from package favicon.ico
@@ -310,13 +374,34 @@ def main():
 
     logger.info("Starting code concatenation...")
 
-    all_files_with_flags = collect_all_files()
+    prefs_path, _ = _existing_prefs_path(target_dir)
+    if os.path.exists(prefs_path):
+        checked_from_prefs, _, _, _, _, _, _, _, _ = _read_prefs_file(
+            target_dir)
+        logger.info(
+            "Found project preferences at %s; seeding visible tree without a full recursive scan.",
+            prefs_path,
+        )
+        all_files_with_flags = collect_seed_paths(
+            target_dir, checked_from_prefs)
+        initial_tree_fully_loaded = False
+    else:
+        logger.info(
+            "No project preferences found for %s; performing a full recursive scan.",
+            target_dir,
+        )
+        all_files_with_flags = collect_all_files(target_dir)
+        initial_tree_fully_loaded = True
 
     if not all_files_with_flags:
         logger.warning("No files found to process!")
         return
 
-    action, _ = show_file_selection_gui(all_files_with_flags)
+    action, _ = show_file_selection_gui(
+        all_files_with_flags,
+        project_root=target_dir,
+        initial_tree_fully_loaded=initial_tree_fully_loaded,
+    )
 
     if action != 'quit':
         logger.info(

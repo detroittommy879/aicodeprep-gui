@@ -39,7 +39,6 @@ requirements.txt
 TESTIMONIALS.md
 
 outzzzz.txt
-PYPI_UPLOAD_GUIDE.md
 
 
 # screenshots
@@ -73,6 +72,11 @@ coverage.xml
 # pyenv
 .python-version
 
+docs-flatpak-20260401/
+flatpak/
+flathub.json
+io.github.detroittommy879.aicodeprep_gui.yml
+
 # celery beat schedule file
 celerybeat-schedule
 
@@ -97,6 +101,7 @@ venv.bak/
 
 # mkdocs documentation
 /site
+.wrangler/
 
 # mypy
 .mypy_cache/
@@ -112,4 +117,11 @@ venv.bak/
 .Spotlight-V100
 .Trashes
 ehthumbs.db
-Thumbs.db
+Thumbs.dbnul
+nul
+plans/
+pyside6_docs/
+old_random_scripts
+.local-root-clutter/
+rust_worker/target/
+PYPI_UPLOAD_GUIDE.md
