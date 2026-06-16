@@ -100,7 +100,7 @@ class GitCloneWorker(QtCore.QThread):
 
 class FolderScanWorker(QtCore.QThread):
     """Worker thread for folder scans so large projects do not block the UI."""
-    finished = QtCore.Signal(str, object)
+    finished = QtCore.Signal(str, object, str)
     error = QtCore.Signal(str, str)
 
     def __init__(self, folder_path, parent=None):
@@ -110,7 +110,8 @@ class FolderScanWorker(QtCore.QThread):
     def run(self):
         try:
             new_files = smart_logic.collect_all_files(self.folder_path)
-            self.finished.emit(self.folder_path, new_files)
+            self.finished.emit(
+                self.folder_path, new_files, smart_logic.get_last_scan_backend())
         except Exception as e:
             logging.exception("Failed to scan folder %s", self.folder_path)
             self.error.emit(self.folder_path, str(e))
@@ -2353,7 +2354,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.warning(
                 self, "Error", f"Failed to open folder: {e}")
 
-    def _on_folder_scan_finished(self, folder_path, new_files):
+    def _on_folder_scan_finished(self, folder_path, new_files, scan_backend):
         if hasattr(self, '_folder_scan_progress') and self._folder_scan_progress:
             self._folder_scan_progress.close()
             self._folder_scan_progress = None
@@ -2362,7 +2363,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             folder_path,
             new_files,
             fully_loaded=True,
-            source_label="full recursive scan",
+            source_label=f"full recursive scan ({scan_backend})",
         )
 
     def _on_folder_scan_error(self, folder_path, error_msg):
@@ -2961,8 +2962,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             )
 
     def _toggle_rust_fast_processing(self, enabled):
-        """Toggle experimental Rust processing backend (Pro feature)."""
+        """Toggle Rust processing backend."""
         try:
+            set_setting("rust_backend", "enabled", bool(enabled))
             set_setting("pro_options", "rust_fast_processing", bool(enabled))
         except Exception as e:
             logging.error(
@@ -2978,8 +2980,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         prompt_to_bottom,
     ) -> int:
         """Process files using selected backend; Rust path auto-falls back to Python."""
-        use_rust = bool(get_setting(
-            "pro_options", "rust_fast_processing", False)) and pro.enabled
+        use_rust = bool(get_setting("rust_backend", "enabled", True)) and bool(
+            get_setting("pro_options", "rust_fast_processing", True))
 
         if use_rust:
             rust_result: RustProcessResult = process_with_rust_worker(

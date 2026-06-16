@@ -16,6 +16,19 @@ class FileTreeManager:
     def _project_root(self):
         return getattr(self.main_window, 'project_root', os.getcwd())
 
+    def _safe_relative_path(self, abs_path):
+        if not abs_path:
+            return None
+        try:
+            return os.path.relpath(abs_path, self._project_root())
+        except (OSError, ValueError) as exc:
+            logging.warning(
+                "Skipping tree item with path outside current project root: %s (%s)",
+                abs_path,
+                exc,
+            )
+            return None
+
     def _set_directory_loading_state(self, item, fully_loaded):
         item.setData(0, DIRECTORY_LOADED_ROLE, fully_loaded)
         if fully_loaded:
@@ -330,9 +343,8 @@ class FileTreeManager:
     def select_all(self):
         def check_all(item):
             abs_path = item.data(0, QtCore.Qt.UserRole)
-            rel_path = os.path.relpath(
-                abs_path, self._project_root()) if abs_path else None
-            is_excluded = False
+            rel_path = self._safe_relative_path(abs_path)
+            is_excluded = bool(abs_path and rel_path is None)
             if rel_path:
                 is_excluded = smart_logic.exclude_spec.match_file(
                     rel_path) or smart_logic.exclude_spec.match_file(rel_path + '/')

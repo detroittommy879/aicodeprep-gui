@@ -1,53 +1,38 @@
-# Why Use This Instead Of Agents
+# Why Use This With Agents
 
-Sometimes you should use agents.
+AICodePrep is not an agent replacement.
 
-Sometimes you absolutely should not.
+It is useful because some tasks work better when you give a model a clean bundle of files and ask for analysis before anything edits the project.
 
-## The basic argument
+## Where Agents Are Strong
 
-Agentic tools can be powerful, but they often make two mistakes:
+Agent tools are often the right choice when you want:
 
-1. they do not chew on enough of the right files
-2. they chew on too much of the wrong text
+- file edits
+- terminal commands
+- test runs
+- repeated code changes
+- integration inside your editor
 
-That can make them look busy while still being worse at understanding the actual codebase.
+Use them for that.
 
-## Why direct chat can be stronger
+## Where AICodePrep Helps
 
-Many models are better when you:
+AICodePrep is useful when you want:
 
-- give them the exact files
-- give them a clean prompt
-- do not force them through a tool loop
+- tighter control over which files the model sees
+- the same context sent to several models
+- a clean prompt without tool instructions mixed in
+- a diagnosis or plan before edits begin
+- to use a model that is stronger in direct chat than in an agent loop
 
-This is often true for:
+## A Practical Hybrid Workflow
 
-- o3 and other reasoning-focused models when you want analysis instead of tool use
-- Chinese models that are very smart in direct chat but less impressive when forced into agent pipelines
-- free web chat models where you can test several answers at no extra cost
+One common workflow is:
 
-## When this app is the better choice
+1. Use AICodePrep to package the relevant files.
+2. Paste the context into one or more chat models.
+3. Pick the best diagnosis or plan.
+4. Give that plan to your editor agent for the mechanical changes.
 
-Use AICodePrep first when you want:
-
-- bug investigation
-- architecture review
-- planning or refactoring advice
-- comparing several AI answers quickly
-- a fast way to use web chats with your real project context
-
-## A practical hybrid workflow
-
-The best workflow is often not agents versus direct chat.
-
-It is both.
-
-Example:
-
-1. use AICodePrep to package the right files
-2. ask several web chat models for diagnosis or a plan
-3. choose the best answer
-4. hand that answer to your editor or agent for the mechanical code changes
-
-That lets each tool do what it is actually good at.
+That lets each tool do the part it is good at.

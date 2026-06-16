@@ -40,19 +40,36 @@ def load_config_from_path(path: str) -> dict:
 
 
 def load_configurations(root_dir: Optional[str] = None) -> dict:
-    """Load default config, then load project config from the target root and merge them."""
+    """Load default config, then load project config from the target root and merge them.
+
+    Config is merged in order of priority (last wins):
+    1. Built-in defaults
+    2. Legacy aicodeprep-gui.toml at project root (backward compat)
+    3. New .aicp/config.toml at project root (preferred location)
+    """
     default_config_path = get_config_path()
     config = load_config_from_path(default_config_path)
     if not config:
         logging.critical("Failed to load default configuration. Exiting.")
         sys.exit("Could not load the default configuration file.")
     scan_root = os.path.abspath(root_dir or os.getcwd())
-    user_config_path = os.path.join(scan_root, 'aicodeprep-gui.toml')
-    user_config = load_config_from_path(user_config_path)
-    if user_config:
+
+    # Legacy location - load first so .aicp/config.toml can override it
+    legacy_config_path = os.path.join(scan_root, 'aicodeprep-gui.toml')
+    legacy_config = load_config_from_path(legacy_config_path)
+    if legacy_config:
         logging.info(
-            f"Found user configuration at {user_config_path}. Merging settings.")
-        config.update(user_config)
+            f"Found legacy user configuration at {legacy_config_path}. Merging settings.")
+        config.update(legacy_config)
+
+    # New preferred location - takes priority over legacy
+    aicp_config_path = os.path.join(scan_root, '.aicp', 'config.toml')
+    aicp_config = load_config_from_path(aicp_config_path)
+    if aicp_config:
+        logging.info(
+            f"Found project configuration at {aicp_config_path}. Merging settings.")
+        config.update(aicp_config)
+
     return config
 
 
@@ -218,23 +235,64 @@ EXCLUDE_PATTERNS = []
 INCLUDE_FILES = []
 INCLUDE_DIRS = []
 EXCLUDE_EXTENSIONS = []
+LAST_SCAN_BACKEND = "unknown"
 
 refresh_runtime_config()
 
 # --- REWRITTEN collect_all_files FOR LAZY LOADING ---
 
 
-def collect_all_files(root_dir: Optional[str] = None) -> List[Tuple[str, str, bool]]:
+def get_last_scan_backend() -> str:
+    return LAST_SCAN_BACKEND
+
+
+def _rust_scan_enabled() -> bool:
+    try:
+        from aicodeprep_gui.user_settings import get_setting
+
+        backend_enabled = bool(get_setting("rust_backend", "enabled", True))
+        legacy_toggle_enabled = bool(get_setting(
+            "pro_options", "rust_fast_processing", True))
+        return backend_enabled and legacy_toggle_enabled
+    except Exception as exc:
+        logging.debug("Could not read Rust scan setting: %s", exc)
+        return True
+
+
+def _collect_all_files_rust(root_dir: str, config_dict: dict) -> Optional[List[Tuple[str, str, bool]]]:
+    if not _rust_scan_enabled():
+        logging.info("Rust file scan disabled; using Python scan.")
+        return None
+
+    try:
+        from aicodeprep_gui.rust_backend import scan_with_rust_worker
+
+        result = scan_with_rust_worker(
+            root_dir,
+            config_dict,
+            respect_gitignore=bool(config_dict.get("respect_gitignore", False)),
+        )
+    except Exception as exc:
+        logging.warning("Rust file scan unavailable, falling back to Python: %s", exc)
+        return None
+
+    if not result.ok or result.files is None:
+        logging.info("Rust file scan unavailable, falling back to Python: %s", result.error)
+        return None
+
+    logging.info("Using Rust worker for directory scan: collected %d items.", len(result.files))
+    return result.files
+
+
+def _collect_all_files_python(root_dir: str) -> List[Tuple[str, str, bool]]:
     """
     Collects files and directories. For excluded directories, it returns them as
     a single entry without their contents, allowing the GUI to lazy-load them.
     Returns a list of (absolute_path, relative_path, is_checked_by_default).
     """
     all_paths = []
-    root_dir = os.path.abspath(root_dir or os.getcwd())
-    refresh_runtime_config(root_dir)
     seen_paths = set()
-    logging.info(f"Starting initial fast scan in: {root_dir}")
+    logging.info(f"Starting Python fallback scan in: {root_dir}")
 
     for root, dirs, files in os.walk(root_dir, topdown=True):
         rel_root = os.path.relpath(root, root_dir)
@@ -280,6 +338,21 @@ def collect_all_files(root_dir: Optional[str] = None) -> List[Tuple[str, str, bo
 
     logging.info(f"Initial scan collected {len(all_paths)} items.")
     return all_paths
+
+
+def collect_all_files(root_dir: Optional[str] = None) -> List[Tuple[str, str, bool]]:
+    global LAST_SCAN_BACKEND
+    root_dir = os.path.abspath(root_dir or os.getcwd())
+    config_dict = refresh_runtime_config(root_dir)
+    logging.info("Starting initial scan in: %s", root_dir)
+
+    rust_paths = _collect_all_files_rust(root_dir, config_dict)
+    if rust_paths is not None:
+        LAST_SCAN_BACKEND = "Rust worker"
+        return rust_paths
+
+    LAST_SCAN_BACKEND = "Python fallback"
+    return _collect_all_files_python(root_dir)
 
 
 def is_excluded_directory(path: str) -> bool:

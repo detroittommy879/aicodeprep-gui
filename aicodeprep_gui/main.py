@@ -5,6 +5,7 @@ import ctypes
 from PySide6 import QtWidgets
 from aicodeprep_gui import pro
 from aicodeprep_gui.file_processor import process_files
+from aicodeprep_gui.rust_backend import process_with_rust_worker
 from aicodeprep_gui.gui.settings.preferences import _existing_prefs_path, _read_prefs_file
 from aicodeprep_gui.config import get_flows_dir, copy_builtin_flows
 from aicodeprep_gui.user_settings import (
@@ -45,6 +46,44 @@ console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
 LINUX_DESKTOP_APP_ID = "io.github.detroittommy879.aicodeprep_gui"
+
+
+def process_files_with_fast_backend(
+    selected_files,
+    output_filename,
+    output_format,
+    prompt,
+    prompt_to_top,
+    prompt_to_bottom,
+) -> int:
+    """Use Rust packing when available, with the Python implementation as fallback."""
+    use_rust = bool(get_setting("rust_backend", "enabled", True)) and bool(
+        get_setting("pro_options", "rust_fast_processing", True))
+    if use_rust:
+        rust_result = process_with_rust_worker(
+            selected_files,
+            output_filename,
+            output_format,
+            prompt,
+            prompt_to_top,
+            prompt_to_bottom,
+        )
+        if rust_result.ok:
+            logger.info("Generated context with Rust worker.")
+            return rust_result.files_processed
+        logger.info(
+            "Rust worker unavailable for context generation, falling back to Python: %s",
+            rust_result.error,
+        )
+
+    return process_files(
+        selected_files,
+        output_filename,
+        fmt=output_format,
+        prompt=prompt,
+        prompt_to_top=prompt_to_top,
+        prompt_to_bottom=prompt_to_bottom,
+    )
 
 
 def _configure_application_metadata(app: QtWidgets.QApplication) -> None:
@@ -191,10 +230,10 @@ def main():
         logger.info(f"Generating context for {len(selected_files)} files...")
         output_filename = args.output
         try:
-            processed_count = process_files(
+            processed_count = process_files_with_fast_backend(
                 selected_files,
                 output_filename,
-                fmt=output_format,
+                output_format,
                 prompt=prompt,
                 prompt_to_top=prompt_to_top,
                 prompt_to_bottom=prompt_to_bottom

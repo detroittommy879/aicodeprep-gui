@@ -1,69 +1,48 @@
 # AICodePrep
 
-Fast context prep for AI chats.
+AICodePrep turns a project folder into one clean context block you can paste into an AI chat.
 
-AICodePrep is a desktop app that helps you grab the right code files, bundle them fast, and paste them into AI chats without doing tedious copy-paste by hand.
+That is the main job: choose the files once, generate one bundle, paste once.
 
-That is the main job.
+## The Problem
 
-Not another agent. Not another IDE plugin trying to guess your intent. Just a fast UI for getting your project into AI models quickly and cleanly.
+AI chats are useful for debugging, planning, reviewing, and understanding code, but getting the right files into the chat is tedious. You open a file, copy it, switch tabs, paste it, repeat, and then hope you did not miss something important.
 
-## Why people use it
+AICodePrep removes manual steps. It scans the folder, pre-checks likely code files (skips things like node_modules, python build files, you can control this) lets you check the files you want, and writes the selected code into a single context block with xml tags to separate files.
 
-- You can type `aicp` in a terminal and open it instantly in the current project.
-- You can install OS explorer integration and open it from a folder directly.
-- It is much faster than manually hunting for files and pasting them into web chats.
-- It gives you a cleaner, more focused prompt than many agentic tools do.
-- It works well when you want to try the same problem in several AI chats and compare answers.
-
-## What it is best at
-
-Use AICodePrep when you want to:
-
-- quickly dump the important files into ChatGPT, Claude, Gemini, OpenRouter, DeepSeek, GLM, Qwen, or another web chat
-- compare multiple models side by side with the same context
-- use models that are strong in plain chat but weaker inside agent frameworks
-- control exactly which files are included instead of trusting a tool chain to guess
-- keep using your normal editor while using web chats for the hard reasoning work
-
-## The short version
+## The Short Workflow
 
 1. Open a project with `aicp` or from the folder context menu.
-2. Let the app auto-select the likely files.
-3. Adjust the checked files if needed.
-4. Add a prompt or choose a preset.
-5. Click Generate Context.
-6. Paste into one or more AI chats.
+2. Review the files the app selected.
+3. Check or uncheck anything you want to change.
+4. Add a prompt if you want one.
+5. Click **Generate Context**.
+6. Paste the result into ChatGPT, Claude, Gemini, OpenRouter, or another chat.
 
-## Why this still matters in the age of agents
+The output is copied to your clipboard and also saved at:
 
-Sometimes agentic coding tools are excellent.
+```text
+.aicp/context_block.md
+```
 
-Sometimes they are not.
+## Why People Use It
 
-They often send too much unrelated tool chatter, edit instructions, MCP/server noise, and other junk that is not actually part of your problem. That can make the model worse at the one thing you care about: understanding your code and giving a strong answer.
+- It is faster than attaching or pasting many files by hand.
+- It works with any editor and any AI chat.
+- It keeps you in control of which files are included.
+- It makes it easy to send the same context to several models and compare answers.
+- It is useful alongside agent tools when you want a cleaner, more focused prompt.
+- It allows you to plan or bug fix with expensive frontier models, then implement with cheap models.
 
-Web chats are often cleaner. They are also often free. And some models are simply smarter in plain chat mode than when they are forced through an agent loop.
+## Current Performance Work
 
-That is where AICodePrep shines.
+The current app includes a Rust worker for faster folder scanning and context generation when the bundled worker is available for your platform. If the worker is missing or fails, AICodePrep falls back to the Python path instead of blocking the workflow.
 
-## Keep the docs simple
+The Rust worker is an implementation detail for speed. The product goal is still the same simple workflow: pick files, generate context, paste once.
 
-This docs site is centered on the main workflow first:
+## Where To Start
 
-- select files fast
-- generate context fast
-- paste into AI chats fast
-
-AI Chat and Flow Studio exist, but they are optional and not the main reason most people install the app.
-
-## Screenshot placeholders
-
-Suggested screenshots to add later:
-
-- main app window with auto-selected files and prompt box
-- right-click menu entry in Windows Explorer
-- Quick Action or folder action example on macOS
-- Generate Context result showing clipboard plus `.aicp/context_block.md`
-
-Continue with [What It Does](what-it-does.md).
+- New users: [Install And Launch](install-and-launch.md)
+- Understand the app: [What It Does](what-it-does.md)
+- Daily use: [Core Workflow](core-workflow.md)
+- Speed/fallback details: [Performance](performance.md)

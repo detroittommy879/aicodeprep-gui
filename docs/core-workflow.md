@@ -1,92 +1,55 @@
 # Core Workflow
 
-This is the workflow the app is built around.
+This is the workflow AICodePrep is built around.
 
-## 1. Open the project
+## 1. Open The Project
 
-Either:
+From a terminal inside the project:
 
-- type `aicp` in a terminal inside the project
-- or open it from the folder context menu integration
+```text
+aicp
+```
 
-## 2. Let the app pre-select files
+Or open the folder from the right-click integration after you install it.
 
-The app is meant to save time right away.
+## 2. Review The File Tree
 
-It auto-selects likely files so you do not start from zero every time.
+The app scans the project and checks likely files by default. Review the tree and adjust the selection.
 
-Then you just review the list and make fast corrections.
+Use this step to remove generated files, unrelated directories, logs, large data files, or anything else the model does not need.
 
-## 3. Add your question or prompt
+## 3. Add A Prompt
 
-You can type your own prompt or use a preset for repeated prompts. Presets is just text you type often, you can set that text to a button, and press the button to just paste the text in the prompt box.
+You can type a prompt directly or use a preset.
 
-Typical examples:
+Good prompts usually say:
 
-- Can you figure out why xxxx happens in my web app, and then write the solution/fix in a style for an AI coding agent? Assume the agent is dumb and uses a cheap model but is good and efficient at editing files. Write the solution in one single big code block for easy copy and paste. The agent loves find and replace style instructions.
-- find the bug in this code
-- explain the architecture and weak points
-- plan a refactor with minimal behavioral changes. Write your refactor instructions for my AI coding agent.
-- compare two implementation options
+- what problem you are trying to solve
+- which behavior matters
+- what kind of answer you want
+- whether you want a small fix, a plan, or an explanation
 
-## 4. Generate context
+## 4. Generate Context
 
-Click Generate Context.
+Click **Generate Context**.
 
-The app writes the output to the clipboard and also stores it in:
+AICodePrep copies the generated context to your clipboard and writes it to:
 
 ```text
 .aicp/context_block.md
 ```
 
-That means you can:
+## 5. Paste Once
 
-- paste immediately into an AI chat
-- keep the file around for reuse
-- regenerate quickly after adjusting files or prompt text
+Paste the context into one or more AI chats.
 
-## 5. Paste into one or more AI chats
+This is useful when you want to compare answers from different models, or when you want a strong chat model to diagnose the problem before an editor agent makes the actual code changes.
 
-This is where the app earns its keep.
+## Repeat As Needed
 
-You can paste the same project context into:
+The app remembers project selections, so the next pass is usually faster:
 
-- ChatGPT
-- Claude
-- Gemini
-- GLM
-- Qwen
-- DeepSeek
-- OpenRouter models
-- other web chats or direct chat interfaces
-
-That makes it easy to compare answers instead of trusting the first model or first agent you try. Even in these times where we have coding agents and great models, it is still stuck on one AI model, and sometimes the agent harness does not give the model enough context. Too little context is sometimes not enough to fix a bug. With this tool you can add much more. You can get the full intelligence from the models - since every tool or MCP server that is given to a model the dumber it gets for problem solving.
-
-## Why this beats manual copy-paste
-
-Without the app, getting good context into AI chats is repetitive and annoying.
-
-With the app, it becomes a fast loop:
-
-1. tweak selection
-2. regenerate
-3. paste
-4. compare answers
-5. iterate
-
-## Why this beats some agent flows
-
-Many agentic tools are strongest when you want autonomous edits.
-
-But for hard reasoning, debugging, planning, and architecture work, a clean direct-chat prompt with full context is often better.
-
-That is especially useful when you want to use models that are strong in chat but not especially strong as tool-using agents.
-
-## Screenshot placeholders
-
-Suggested screenshots to add later:
-
-- main file tree with auto-selected files
-- prompt box with a real example prompt
-- Generate Context button and output result
-- `.aicp/context_block.md` opened beside the app
+1. change the file selection
+2. update the prompt
+3. generate again
+4. paste again

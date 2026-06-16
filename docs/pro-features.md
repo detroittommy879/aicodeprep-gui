@@ -1,45 +1,33 @@
 # Pro Features
 
-The free app is fully useful on its own.
+The free app covers the main workflow:
 
-That matters.
+- select files
+- generate context
+- copy to clipboard
+- paste into AI chats
 
-The core value is already there:
+Pro is for people who use AICodePrep often and want extra convenience.
 
-- fast file selection
-- fast context generation
-- fast copy to AI chats
+## Current Pro Features
 
-## What Pro is for
+Depending on the build, Pro may include:
 
-Pro adds convenience and power-user features for people who use the app a lot.
+- prompt placement above and below the generated context
+- syntax highlighting in the preview window
+- additional UI and workflow options
+- Flow Studio and built-in AI chat experiments
 
-The main feature worth highlighting is dual prompt placement, because it can directly improve the quality of answers on large context prompts.
+The exact set of Pro features may change while the app is being simplified for the next major version.
 
-## Key Pro features
+## What To Expect
 
-- dual prompt placement above and below the context block
-- extra UI features around integrated AI usage
-- Flow Studio for multi-model workflows
-- AI Chat integration inside the app
-- other premium enhancements over time
+The most important free workflow should remain simple and useful on its own.
 
-## Keep expectations realistic
+Pro features are optional additions for heavier use, not a requirement for basic context generation.
 
-For most users, Flow Studio and built-in AI Chat are not the first reason to install the app.
+## About The Rust Work
 
-The first reason is still the simple workflow:
+The current Rust worker improves scanning and context generation performance in the existing Python desktop app.
 
-pick files fast, generate context fast, paste into AI chats fast.
-
-That is why these advanced features should be seen as optional extras, not the main story.
-
-## Pricing philosophy
-
-The app is free to use.
-
-Pro is a one-time payment.
-
-That means there is no monthly subscription pressure just to keep using the advanced features.
-
-If someone gets value from the app and wants the extra capabilities, Pro helps support continued development.
+That is separate from any future fully Rust version. The current goal is to make the v1 app faster without changing the main workflow users already know.

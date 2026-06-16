@@ -16,6 +16,7 @@ This file is a durable handoff for any agent working in this repo.
 
 - Run app: `uv run aicodeprep-gui`
 - Run tests: `uv run pytest`
+- Local Rust worker smoke path: run `cargo build` in `rust_worker/`; `uv run aicodeprep-gui` will then use `rust_worker/target/debug/aicp-rust-worker.exe` on Windows before falling back to Python.
 
 ### Licensing / Pro access
 
