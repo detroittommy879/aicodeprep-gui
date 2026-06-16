@@ -2,6 +2,12 @@ name: Build and Package
 
 on:
   workflow_dispatch:
+    inputs:
+      publish_to_pypi:
+        description: "Publish the built package to PyPI. Only works from a v* tag after PyPI Trusted Publishing is configured."
+        required: false
+        default: false
+        type: boolean
   pull_request:
     branches:
       - main
@@ -47,6 +53,9 @@ jobs:
 
       - name: Install stable Rust
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Test worker
+        run: cargo test --manifest-path rust_worker/Cargo.toml
 
       - name: Build worker
         run: cargo build --release --manifest-path rust_worker/Cargo.toml
@@ -102,6 +111,46 @@ jobs:
           python -m pip install build
           python -m build
 
+      - name: Verify package includes worker binaries
+        shell: bash
+        run: |
+          set -eux
+          python - <<'PY'
+          import tarfile
+          import zipfile
+          from pathlib import Path
+
+          expected = {
+              "aicodeprep_gui/rust/bin/windows-x86_64/aicp-rust-worker.exe",
+              "aicodeprep_gui/rust/bin/linux-x86_64/aicp-rust-worker",
+              "aicodeprep_gui/rust/bin/linux-aarch64/aicp-rust-worker",
+              "aicodeprep_gui/rust/bin/darwin-x86_64/aicp-rust-worker",
+              "aicodeprep_gui/rust/bin/darwin-aarch64/aicp-rust-worker",
+          }
+
+          dist = Path("dist")
+          wheels = list(dist.glob("*.whl"))
+          sdists = list(dist.glob("*.tar.gz"))
+          if len(wheels) != 1:
+              raise SystemExit(f"expected exactly one wheel, found {wheels}")
+          if len(sdists) != 1:
+              raise SystemExit(f"expected exactly one sdist, found {sdists}")
+
+          with zipfile.ZipFile(wheels[0]) as wheel:
+              wheel_names = set(wheel.namelist())
+          missing_from_wheel = expected - wheel_names
+          if missing_from_wheel:
+              raise SystemExit(f"wheel missing worker binaries: {sorted(missing_from_wheel)}")
+
+          with tarfile.open(sdists[0], "r:gz") as sdist:
+              sdist_names = {"/".join(Path(name).parts[1:]) for name in sdist.getnames()}
+          missing_from_sdist = expected - sdist_names
+          if missing_from_sdist:
+              raise SystemExit(f"sdist missing worker binaries: {sorted(missing_from_sdist)}")
+
+          print("worker binaries found in wheel and sdist")
+          PY
+
       - name: Upload Python package artifact
         uses: actions/upload-artifact@v4
         with:
@@ -129,3 +178,22 @@ jobs:
           gh release view "${{ github.ref_name }}" >/dev/null 2>&1 || \
             gh release create "${{ github.ref_name }}" --title "${{ github.ref_name }}" --notes "AICodePrep GUI release ${{ github.ref_name }}"
           gh release upload "${{ github.ref_name }}" dist/* --clobber
+
+  pypi-publish:
+    name: Publish to PyPI
+    if: github.event_name == 'workflow_dispatch' && startsWith(github.ref, 'refs/tags/v') && inputs.publish_to_pypi
+    needs: build-python-package
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download Python package artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package
+          path: dist
+
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

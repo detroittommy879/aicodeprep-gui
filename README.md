@@ -11,10 +11,14 @@ It solves a simple annoyance: when a bug or design question spans many files, co
 
 ![Screenshot](scrs/n1.png)
 
+See [Documentation](https://aicp.wuu73.org) (major updates to docs)
+
 ## Why Use It
 
 - Paste one generated context block instead of copying files one by one.
 - Keep control over exactly which files the model sees.
+- Models very often behave smarter and have better responses when they aren't given MCP servers, tools, its the agentic stuff that dumbs them down - using this allows full intelligence
+- Use frontier models on their native web chat interface to save money (many are still free to use, like Gemini 3.5 Flash on aistudio)
 - Use the same context in several AI chats and compare answers.
 - Work beside any editor: VS Code, Cursor, Windsurf, PyCharm, Zed, terminals, or anything else.
 - Use direct chat models for diagnosis, planning, and review before handing changes to an editor or agent.
@@ -33,7 +37,11 @@ uv tool install aicodeprep-gui
 pipx install aicodeprep-gui
 ```
 
+(just make sure you choose one install method and stick to it)
+
 The package supports Python 3.9 through 3.13.
+
+If you are looking for the lazy method where you don't need to worry about python versions, this script should work (it shows you a menu before it does anything, where you can select aicodeprep-gui) [Get computer ready for vibe coding](https://wuu73.org/vibe)
 
 ## Launch
 
@@ -144,7 +152,7 @@ Serve it locally with:
 uv run --with-requirements requirements-docs.txt mkdocs serve
 ```
 
-See [DOCS_DEPLOYMENT.md](DOCS_DEPLOYMENT.md) for Cloudflare Pages deployment.
+See [Documentation](https://aicp.wuu73.org) (major updates to docs)
 
 ## Pro
 
