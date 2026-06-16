@@ -6,11 +6,79 @@ from aicodeprep_gui import smart_logic
 # LEVEL_ROLE is provided dynamically from main_window when Pro Level column is installed
 
 
+DIRECTORY_LOADED_ROLE = QtCore.Qt.UserRole + 1
+
+
 class FileTreeManager:
     def __init__(self, main_window):
         self.main_window = main_window
 
-    def populate_tree(self, files):
+    def _project_root(self):
+        return getattr(self.main_window, 'project_root', os.getcwd())
+
+    def _safe_relative_path(self, abs_path):
+        if not abs_path:
+            return None
+        try:
+            return os.path.relpath(abs_path, self._project_root())
+        except (OSError, ValueError) as exc:
+            logging.warning(
+                "Skipping tree item with path outside current project root: %s (%s)",
+                abs_path,
+                exc,
+            )
+            return None
+
+    def _set_directory_loading_state(self, item, fully_loaded):
+        item.setData(0, DIRECTORY_LOADED_ROLE, fully_loaded)
+        if fully_loaded:
+            item.setChildIndicatorPolicy(
+                QtWidgets.QTreeWidgetItem.DontShowIndicatorWhenChildless)
+        else:
+            item.setChildIndicatorPolicy(
+                QtWidgets.QTreeWidgetItem.ShowIndicator)
+
+    def _update_parent_states_from_checked_items(self):
+        def update_parents(child_item):
+            parent = child_item.parent()
+            while parent:
+                all_children_checked = True
+                all_children_unchecked = True
+                has_checkable_children = False
+                for index in range(parent.childCount()):
+                    child = parent.child(index)
+                    if child.flags() & QtCore.Qt.ItemIsUserCheckable and child.flags() & QtCore.Qt.ItemIsEnabled:
+                        has_checkable_children = True
+                        if child.checkState(0) == QtCore.Qt.Checked:
+                            all_children_unchecked = False
+                        elif child.checkState(0) == QtCore.Qt.Unchecked:
+                            all_children_checked = False
+                        else:
+                            all_children_checked = False
+                            all_children_unchecked = False
+                if has_checkable_children:
+                    if all_children_checked and not parent.data(0, DIRECTORY_LOADED_ROLE):
+                        parent.setCheckState(0, QtCore.Qt.PartiallyChecked)
+                    elif all_children_checked:
+                        parent.setCheckState(0, QtCore.Qt.Checked)
+                    elif all_children_unchecked:
+                        parent.setCheckState(0, QtCore.Qt.Unchecked)
+                    else:
+                        parent.setCheckState(0, QtCore.Qt.PartiallyChecked)
+                else:
+                    parent.setCheckState(0, QtCore.Qt.Unchecked)
+                parent = parent.parent()
+
+        iterator = QtWidgets.QTreeWidgetItemIterator(
+            self.main_window.tree_widget)
+        while iterator.value():
+            item = iterator.value()
+            abs_path = item.data(0, QtCore.Qt.UserRole)
+            if abs_path and os.path.isfile(abs_path) and item.checkState(0) == QtCore.Qt.Checked:
+                update_parents(item)
+            iterator += 1
+
+    def populate_tree(self, files, fully_loaded=True):
         """Populate the tree widget with the given files list."""
         tree_widget = self.main_window.tree_widget
         tree_widget.blockSignals(True)
@@ -38,6 +106,8 @@ class FileTreeManager:
                         new_parent.setFlags(new_parent.flags()
                                             | QtCore.Qt.ItemIsUserCheckable)
                         new_parent.setCheckState(0, QtCore.Qt.Unchecked)
+                        self._set_directory_loading_state(
+                            new_parent, fully_loaded)
                         self.main_window.path_to_item[path_so_far] = new_parent
                         parent_node = new_parent
 
@@ -53,6 +123,7 @@ class FileTreeManager:
                     item.setIcon(0, self.main_window.folder_icon)
                     item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
                     item.setCheckState(0, QtCore.Qt.Unchecked)
+                    self._set_directory_loading_state(item, fully_loaded)
                 else:
                     item.setIcon(0, self.main_window.file_icon)
                     item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
@@ -61,6 +132,8 @@ class FileTreeManager:
 
                 item.setCheckState(
                     0, QtCore.Qt.Checked if is_checked else QtCore.Qt.Unchecked)
+
+            self._update_parent_states_from_checked_items()
         finally:
             tree_widget.setUpdatesEnabled(True)
             tree_widget.blockSignals(False)
@@ -70,14 +143,13 @@ class FileTreeManager:
         dir_path = item.data(0, QtCore.Qt.UserRole)
         if not dir_path or not os.path.isdir(dir_path):
             return
-        if item.childCount() > 0 and item.child(0).data(0, QtCore.Qt.UserRole) is not None:
+        if item.data(0, DIRECTORY_LOADED_ROLE):
             return
         try:
-            item.takeChildren()
             for name in sorted(os.listdir(dir_path)):
                 abs_path = os.path.join(dir_path, name)
                 try:
-                    rel_path = os.path.relpath(abs_path, os.getcwd())
+                    rel_path = os.path.relpath(abs_path, self._project_root())
                 except ValueError:
                     logging.warning(
                         f"Skipping {abs_path}: not on current drive.")
@@ -115,6 +187,7 @@ class FileTreeManager:
                     rel_path) or smart_logic.exclude_spec.match_file(rel_path + '/')
                 if os.path.isdir(abs_path):
                     new_item.setIcon(0, self.main_window.folder_icon)
+                    self._set_directory_loading_state(new_item, False)
                     if is_excluded:
                         new_item.setCheckState(0, QtCore.Qt.Unchecked)
                     else:
@@ -129,6 +202,8 @@ class FileTreeManager:
                         new_item.setCheckState(0, QtCore.Qt.Checked)
                     else:
                         new_item.setCheckState(0, item.checkState(0))
+            self._set_directory_loading_state(item, True)
+            self._update_parent_states_from_checked_items()
         except OSError as e:
             logging.error(f"Error scanning directory {dir_path}: {e}")
         # After populating children, sync Skeleton Level values for this branch
@@ -268,9 +343,8 @@ class FileTreeManager:
     def select_all(self):
         def check_all(item):
             abs_path = item.data(0, QtCore.Qt.UserRole)
-            rel_path = os.path.relpath(
-                abs_path, os.getcwd()) if abs_path else None
-            is_excluded = False
+            rel_path = self._safe_relative_path(abs_path)
+            is_excluded = bool(abs_path and rel_path is None)
             if rel_path:
                 is_excluded = smart_logic.exclude_spec.match_file(
                     rel_path) or smart_logic.exclude_spec.match_file(rel_path + '/')
@@ -409,9 +483,11 @@ class FileTreeManager:
         self.main_window.update_token_counter()
 
     def _expand_folders_for_paths(self, checked_paths):
-        folders_to_expand = set()
+        folders_to_expand = {}
         for checked_path in checked_paths:
-            path_parts = checked_path.split(os.sep)
+            normalized_path = checked_path.replace(
+                "/", os.sep).replace("\\", os.sep)
+            path_parts = normalized_path.split(os.sep)
             current_path = ""
             for i, part in enumerate(path_parts):
                 if i == 0:
@@ -419,10 +495,13 @@ class FileTreeManager:
                 else:
                     current_path = os.path.join(current_path, part)
                 if current_path in self.main_window.path_to_item and os.path.isdir(self.main_window.path_to_item[current_path].data(0, QtCore.Qt.UserRole)):
-                    folders_to_expand.add(
-                        self.main_window.path_to_item[current_path])
-        for item in folders_to_expand:
+                    folders_to_expand[current_path] = self.main_window.path_to_item[current_path]
+        for path, item in sorted(folders_to_expand.items(), key=lambda entry: entry[0].count(os.sep)):
+            if not item.data(0, DIRECTORY_LOADED_ROLE):
+                self.on_item_expanded(item)
             self.main_window.tree_widget.expandItem(item)
+
+        self._update_parent_states_from_checked_items()
 
     def _apply_level_to_children(self, parent_item, level_value):
         """

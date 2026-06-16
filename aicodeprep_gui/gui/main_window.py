@@ -51,7 +51,12 @@ from aicodeprep_gui.user_settings import (
     set_ads_disabled_setting,
 )
 from aicodeprep_gui.pro.license_state import get_remote_access_state, should_show_remote_pro_notice
-from aicodeprep_gui.gui.settings.preferences import _write_prefs_file, _prefs_path
+from aicodeprep_gui.gui.settings.preferences import (
+    _existing_prefs_path,
+    _read_prefs_file,
+    _write_prefs_file,
+    _prefs_path,
+)
 
 
 class GitCloneWorker(QtCore.QThread):
@@ -95,7 +100,7 @@ class GitCloneWorker(QtCore.QThread):
 
 class FolderScanWorker(QtCore.QThread):
     """Worker thread for folder scans so large projects do not block the UI."""
-    finished = QtCore.Signal(str, object)
+    finished = QtCore.Signal(str, object, str)
     error = QtCore.Signal(str, str)
 
     def __init__(self, folder_path, parent=None):
@@ -105,7 +110,8 @@ class FolderScanWorker(QtCore.QThread):
     def run(self):
         try:
             new_files = smart_logic.collect_all_files(self.folder_path)
-            self.finished.emit(self.folder_path, new_files)
+            self.finished.emit(
+                self.folder_path, new_files, smart_logic.get_last_scan_backend())
         except Exception as e:
             logging.exception("Failed to scan folder %s", self.folder_path)
             self.error.emit(self.folder_path, str(e))
@@ -244,8 +250,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
     GUMROAD_PRODUCT_ID = "KpjO4PdY2mQNCZC1k_ZkPQ=="  # set your Gumroad product_id
     GUMROAD_PRODUCT_ID_2 = "O1LkPokDSKDZdhSitEvvrA=="  # set your Gumroad product_id
 
-    def __init__(self, files):
+    def __init__(self, files, project_root=None, initial_tree_fully_loaded=True):
         super().__init__()
+        self.files = files
+        self.project_root = self._resolve_project_root(project_root, files)
+        self.initial_tree_fully_loaded = initial_tree_fully_loaded
         self.dialog_manager = DialogManager(self)
         self.preferences_manager = PreferencesManager(self)
         self.ui_settings_manager = UISettingsManager(self)
@@ -290,7 +299,6 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         self.presets = []
         self.setAcceptDrops(True)
-        self.files = files
         self.latest_pypi_version = None
         self.network_manager = QtNetwork.QNetworkAccessManager(self)
 
@@ -340,7 +348,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             self.app = QtWidgets.QApplication([])
         self.action = 'quit'
 
-        self.prefs_filename = os.path.join(".aicp", "preferences.ini")
+        self.prefs_filename = os.path.join(
+            self.project_root, ".aicp", "preferences.ini")
         self.remember_checkbox = None
         self.preferences_manager.load_prefs_if_exists()
         self._maybe_prompt_project_prefs_migration()
@@ -882,7 +891,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         main_layout.addWidget(self.splitter)
 
         # Build tree from files
-        self.tree_manager.populate_tree(self.files)
+        self.tree_manager.populate_tree(
+            self.files, fully_loaded=self.initial_tree_fully_loaded)
 
         # Do not attach Level delegate by default; installed via Pro toggle
         self.level_delegate = None
@@ -2234,6 +2244,18 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         dialog = LanguageSelectionDialog(self)
         dialog.exec()
 
+    @staticmethod
+    def _resolve_project_root(project_root, files):
+        if project_root:
+            return os.path.abspath(project_root)
+        if files:
+            abs_paths = [os.path.abspath(abs_path) for abs_path, _, _ in files]
+            try:
+                return os.path.commonpath(abs_paths)
+            except ValueError:
+                pass
+        return os.getcwd()
+
     def reload_folder(self, folder_path):
         """Reload the app with a new folder without creating a new window."""
         folder_path = os.path.abspath(folder_path)
@@ -2243,6 +2265,34 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 "Folder scan already in progress; ignoring reload request for %s", folder_path)
             self.statusBar().showMessage(self.tr("Folder scan already in progress"), 3000)
             return
+
+        prefs_path, _ = _existing_prefs_path(folder_path)
+        if os.path.exists(prefs_path):
+            logging.info(
+                "Found project preferences at %s; seeding visible tree for %s without a full recursive scan.",
+                prefs_path,
+                folder_path,
+            )
+            self.statusBar().showMessage(
+                self.tr("Loading saved project view for {}...").format(
+                    os.path.basename(folder_path) or folder_path),
+                0,
+            )
+            checked_files_from_prefs, *_ = _read_prefs_file(folder_path)
+            new_files = smart_logic.collect_seed_paths(
+                folder_path, checked_files_from_prefs)
+            self._apply_loaded_folder(
+                folder_path,
+                new_files,
+                fully_loaded=False,
+                source_label="saved project preferences",
+            )
+            return
+
+        logging.info(
+            "No project preferences found for %s; performing a full recursive scan.",
+            folder_path,
+        )
 
         self._folder_scan_progress = QtWidgets.QProgressDialog(
             self.tr("Scanning folder..."), "", 0, 0, self)
@@ -2262,14 +2312,12 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         self._folder_scan_worker.error.connect(self._on_folder_scan_error)
         self._folder_scan_worker.start()
 
-    def _on_folder_scan_finished(self, folder_path, new_files):
-        if hasattr(self, '_folder_scan_progress') and self._folder_scan_progress:
-            self._folder_scan_progress.close()
-            self._folder_scan_progress = None
-        self._folder_scan_worker = None
-
+    def _apply_loaded_folder(self, folder_path, new_files, fully_loaded, source_label):
         try:
             os.chdir(folder_path)
+            self.project_root = folder_path
+            self.prefs_filename = os.path.join(
+                self.project_root, ".aicp", "preferences.ini")
             self.preferences_manager.prefs_loaded = False
             self.preferences_manager.load_prefs_if_exists()
 
@@ -2278,21 +2326,45 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 new_files = []
 
             self.files = new_files
-            self.tree_manager.populate_tree(self.files)
+            self.tree_manager.populate_tree(
+                self.files, fully_loaded=fully_loaded)
+            if self.preferences_manager.prefs_loaded and self.preferences_manager.checked_files_from_prefs:
+                self._expand_folders_for_paths(
+                    self.preferences_manager.checked_files_from_prefs)
+
             self.setWindowTitle(
                 f"aicodeprep-gui - {os.path.basename(folder_path)}")
             self.text_label.setText("")
             self.update_token_counter()
             self.statusBar().showMessage(
-                self.tr("Loaded {} items from {}").format(
-                    len(new_files), os.path.basename(folder_path) or folder_path),
+                self.tr("Loaded {} items from {} using {}").format(
+                    len(new_files),
+                    os.path.basename(folder_path) or folder_path,
+                    source_label,
+                ),
                 4000,
             )
-            logging.info(f"Reloaded folder: {folder_path}")
+            logging.info(
+                "Reloaded folder: %s using %s",
+                folder_path,
+                source_label,
+            )
         except Exception as e:
             logging.error(f"Failed to apply scanned folder: {e}")
             QtWidgets.QMessageBox.warning(
                 self, "Error", f"Failed to open folder: {e}")
+
+    def _on_folder_scan_finished(self, folder_path, new_files, scan_backend):
+        if hasattr(self, '_folder_scan_progress') and self._folder_scan_progress:
+            self._folder_scan_progress.close()
+            self._folder_scan_progress = None
+        self._folder_scan_worker = None
+        self._apply_loaded_folder(
+            folder_path,
+            new_files,
+            fully_loaded=True,
+            source_label=f"full recursive scan ({scan_backend})",
+        )
 
     def _on_folder_scan_error(self, folder_path, error_msg):
         if hasattr(self, '_folder_scan_progress') and self._folder_scan_progress:
@@ -2400,7 +2472,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             _prefs_path, _legacy_prefs_paths, PREFS_DIR_NAME,
         )
         # Delete new-style prefs file
-        new_prefs = _prefs_path()
+        new_prefs = _prefs_path(self.project_root)
         if os.path.exists(new_prefs):
             try:
                 os.remove(new_prefs)
@@ -2410,7 +2482,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
 
         # Delete context_block.md if present in .aicp/
         context_block = os.path.join(
-            os.getcwd(), PREFS_DIR_NAME, "context_block.md")
+            self.project_root, PREFS_DIR_NAME, "context_block.md")
         if os.path.exists(context_block):
             try:
                 os.remove(context_block)
@@ -2419,7 +2491,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                 logging.warning(f"Could not delete {context_block}: {e}")
 
         # Delete legacy prefs files (.aicodeprep-gui, .auicp)
-        for legacy_path in _legacy_prefs_paths():
+        for legacy_path in _legacy_prefs_paths(self.project_root):
             if os.path.exists(legacy_path):
                 try:
                     os.remove(legacy_path)
@@ -2428,7 +2500,7 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                     logging.warning(f"Could not delete {legacy_path}: {e}")
 
         # Delete legacy fullcode.txt
-        fullcode = os.path.join(os.getcwd(), "fullcode.txt")
+        fullcode = os.path.join(self.project_root, "fullcode.txt")
         if os.path.exists(fullcode):
             try:
                 os.remove(fullcode)
@@ -2890,8 +2962,9 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             )
 
     def _toggle_rust_fast_processing(self, enabled):
-        """Toggle experimental Rust processing backend (Pro feature)."""
+        """Toggle Rust processing backend."""
         try:
+            set_setting("rust_backend", "enabled", bool(enabled))
             set_setting("pro_options", "rust_fast_processing", bool(enabled))
         except Exception as e:
             logging.error(
@@ -2907,8 +2980,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
         prompt_to_bottom,
     ) -> int:
         """Process files using selected backend; Rust path auto-falls back to Python."""
-        use_rust = bool(get_setting(
-            "pro_options", "rust_fast_processing", False)) and pro.enabled
+        use_rust = bool(get_setting("rust_backend", "enabled", True)) and bool(
+            get_setting("pro_options", "rust_fast_processing", True))
 
         if use_rust:
             rust_result: RustProcessResult = process_with_rust_worker(
@@ -2998,8 +3071,11 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
             if not has_legacy_prefs and not has_legacy_fullcode:
                 return
 
-            if os.path.exists(os.path.join(".aicp", "preferences.ini")) and \
-               os.path.exists(os.path.join(".aicp", "context_block.md")):
+            prefs_target = os.path.join(
+                self.project_root, ".aicp", "preferences.ini")
+            context_target = os.path.join(
+                self.project_root, ".aicp", "context_block.md")
+            if os.path.exists(prefs_target) and os.path.exists(context_target):
                 # Already migrated both
                 self.preferences_manager.write_legacy_prefs = False
                 return
@@ -3037,7 +3113,8 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                         splitter_state=self.preferences_manager.splitter_state_from_prefs,
                         output_format=self.preferences_manager.output_format_from_prefs,
                         pro_features=self.preferences_manager.pro_features_from_prefs,
-                        prefs_path=_prefs_path(),
+                        prefs_path=_prefs_path(self.project_root),
+                        project_root=self.project_root,
                     )
                     # Delete legacy prefs file
                     if legacy_path and os.path.exists(legacy_path):
@@ -3050,12 +3127,15 @@ class FileSelectionGUI(QtWidgets.QMainWindow):
                                 f"Could not delete legacy prefs file: {e}")
 
                 # Migrate fullcode.txt if it exists
-                if has_legacy_fullcode and os.path.exists("fullcode.txt"):
-                    target = os.path.join(".aicp", "context_block.md")
-                    os.makedirs(".aicp", exist_ok=True)
+                legacy_fullcode = os.path.join(
+                    self.project_root, "fullcode.txt")
+                if has_legacy_fullcode and os.path.exists(legacy_fullcode):
+                    target = os.path.join(
+                        self.project_root, ".aicp", "context_block.md")
+                    os.makedirs(os.path.dirname(target), exist_ok=True)
                     try:
                         import shutil
-                        shutil.move("fullcode.txt", target)
+                        shutil.move(legacy_fullcode, target)
                         logging.info(f"Moved fullcode.txt to {target}")
                     except Exception as e:
                         logging.error(f"Failed to move fullcode.txt: {e}")

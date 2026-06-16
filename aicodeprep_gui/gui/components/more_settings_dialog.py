@@ -1,7 +1,7 @@
 from PySide6 import QtWidgets
 
-from aicodeprep_gui.rust_backend import download_worker_binary
-from aicodeprep_gui.user_settings import get_section, set_section
+from aicodeprep_gui.rust_backend import download_worker_binary, get_worker_path
+from aicodeprep_gui.user_settings import get_section, get_setting, set_section, set_setting
 
 
 class MoreSettingsDialog(QtWidgets.QDialog):
@@ -12,13 +12,35 @@ class MoreSettingsDialog(QtWidgets.QDialog):
 
         root = QtWidgets.QVBoxLayout(self)
 
-        experimental_group = QtWidgets.QGroupBox(
-            "Experimental Rust Fast Processing")
-        exp_layout = QtWidgets.QFormLayout(experimental_group)
-
         rust_cfg = get_section("rust_backend")
         secret_cfg = rust_cfg.get("secret_guard", {}) if isinstance(
             rust_cfg.get("secret_guard", {}), dict) else {}
+
+        performance_group = QtWidgets.QGroupBox("Performance Engine")
+        performance_layout = QtWidgets.QFormLayout(performance_group)
+
+        self.rust_enabled = QtWidgets.QCheckBox(
+            "Use Rust acceleration for folder scans and context generation")
+        self.rust_enabled.setChecked(
+            bool(rust_cfg.get("enabled", True))
+            and bool(get_setting("pro_options", "rust_fast_processing", True))
+        )
+
+        worker = get_worker_path()
+        status_text = (
+            f"Ready: {worker}"
+            if worker.exists()
+            else f"Not installed: {worker}"
+        )
+        self.worker_status = QtWidgets.QLabel(status_text)
+        self.worker_status.setWordWrap(True)
+
+        performance_layout.addRow(self.rust_enabled)
+        performance_layout.addRow("Worker status", self.worker_status)
+        root.addWidget(performance_group)
+
+        advanced_group = QtWidgets.QGroupBox("Advanced Worker Setup")
+        exp_layout = QtWidgets.QFormLayout(advanced_group)
 
         self.auto_download = QtWidgets.QCheckBox(
             "Auto-download worker if missing")
@@ -45,7 +67,7 @@ class MoreSettingsDialog(QtWidgets.QDialog):
         self.sha256.setPlaceholderText("Optional SHA256")
 
         self.secret_guard = QtWidgets.QCheckBox(
-            "Enable secret placeholder replacement (experimental)")
+            "Replace detected secrets with placeholders")
         self.secret_guard.setChecked(bool(secret_cfg.get("enabled", False)))
 
         self.placeholder_prefix = QtWidgets.QLineEdit(
@@ -58,14 +80,18 @@ class MoreSettingsDialog(QtWidgets.QDialog):
         exp_layout.addRow("Worker binary path", path_widget)
         exp_layout.addRow("Download URL", self.download_url)
         exp_layout.addRow("Checksum (SHA256)", self.sha256)
-        exp_layout.addRow(self.secret_guard)
-        exp_layout.addRow("Placeholder prefix", self.placeholder_prefix)
         exp_layout.addRow(download_btn)
 
-        root.addWidget(experimental_group)
+        root.addWidget(advanced_group)
+
+        secret_group = QtWidgets.QGroupBox("Secret Handling")
+        secret_layout = QtWidgets.QFormLayout(secret_group)
+        secret_layout.addRow(self.secret_guard)
+        secret_layout.addRow("Placeholder prefix", self.placeholder_prefix)
+        root.addWidget(secret_group)
 
         help_label = QtWidgets.QLabel(
-            "Rust mode remains optional. If Rust processing fails, the app automatically falls back to Python."
+            "If the Rust worker is missing or fails, aicodeprep-gui automatically uses the Python fallback."
         )
         help_label.setWordWrap(True)
         root.addWidget(help_label)
@@ -94,6 +120,7 @@ class MoreSettingsDialog(QtWidgets.QDialog):
         )
         if ok:
             self.worker_path.setText(message)
+            self.worker_status.setText(f"Ready: {message}")
             QtWidgets.QMessageBox.information(
                 self, "Rust Worker", f"Downloaded worker:\n{message}")
         else:
@@ -107,6 +134,7 @@ class MoreSettingsDialog(QtWidgets.QDialog):
 
         rust_cfg.update(
             {
+                "enabled": bool(self.rust_enabled.isChecked()),
                 "auto_download": bool(self.auto_download.isChecked()),
                 "worker_path": self.worker_path.text().strip(),
                 "download_url": self.download_url.text().strip(),
@@ -118,4 +146,6 @@ class MoreSettingsDialog(QtWidgets.QDialog):
             }
         )
         set_section("rust_backend", rust_cfg)
+        set_setting("pro_options", "rust_fast_processing",
+                    bool(self.rust_enabled.isChecked()))
         super().accept()

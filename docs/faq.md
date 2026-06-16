@@ -1,62 +1,57 @@
 # FAQ
 
-## What is the main point of this app?
+## What is the main point of AICodePrep?
 
-To help you quickly bundle the right code files and paste them into AI chats without doing manual copy-paste work.
+It helps you bundle selected code files into one context block so you can paste them into an AI chat without copying files one by one.
 
-## Is this mainly an AI chat app?
+## Is this an IDE plugin?
 
-No. The main job is still fast context prep.
+No. It is a standalone desktop app. You can use it beside VS Code, Cursor, Windsurf, PyCharm, Zed, a terminal, or any other editor.
 
-AI Chat and Flow Studio exist, but they are secondary compared to the core generate-and-paste workflow.
+## Is this an AI agent?
 
-## Do I have to use an IDE plugin?
+No. The main workflow is context preparation. You choose files, generate the context, and paste it where you want.
 
-No. That is one of the main benefits.
+## What happens when I click Generate Context?
 
-It works beside your editor, not inside one specific editor.
-
-## How do I open it quickly?
-
-Type `aicp` in a terminal inside your project.
-
-Or install the file explorer / finder integration and open it from a folder directly (either right clicking in the empty space or right on a folder ---> aicodeprep-gui).
-
-## What happens when I generate context?
-
-The app copies all your files with everything organized with XML tags (or whatever option is selected) to your clipboard and also writes it to:
+AICodePrep combines the selected files and optional prompt text, copies the result to your clipboard, and writes it to:
 
 ```text
 .aicp/context_block.md
 ```
 
-## Why not just use Cursor, Windsurf, or another agent tool?
+## Why would I use this if I already use Cursor, Windsurf, or another agent?
 
-Sometimes those are great.
+Agents are useful for editing and running tools. AICodePrep is useful when you want to control the exact context and ask one or more chat models for a diagnosis, review, or plan.
 
-But they often include too much unrelated context or do not send enough of the right files. AICodePrep is useful when you want tighter control and better problem solving. Also, its free to paste your context into a lot of the web chat interfaces: try googling "z.ai glm chat", "kimi ai chat", "gemini ai studio", most still free today!
+Many people use both: AICodePrep for clean analysis, then an editor agent for code changes.
 
-## Is this good for web chats?
+## Does it work with web chats?
 
-Yes. That is one of the best uses for it.
+Yes. That is one of the main use cases.
 
-You can paste the same context into multiple web chats and compare answers.
+You can paste the generated context into ChatGPT, Claude, Gemini, OpenRouter, or another chat interface.
 
-## Does this help with models that are bad at agent loops?
+## Does it use Rust now?
 
-Yes. Some models are much stronger when they are allowed to just read the full context and answer directly without any tool usage, without MCP servers, etc.
+The current app can use a bundled Rust worker for faster folder scanning and context generation. If the Rust worker is unavailable, it falls back to Python.
+
+See [Performance](performance.md).
+
+## How do I know whether Rust was used?
+
+Launch from a terminal and check the log output. Rust usage and Python fallback are both logged.
+
+The settings window also shows whether the worker is available.
 
 ## Is the app free?
 
-Yes. The app is free to use.
+The core app is free to use. Pro features are optional.
 
-Pro features are optional and use a one-time payment model.
+## Where is the generated file?
 
-## What screenshots should the docs add later?
+The generated context file is saved inside the project:
 
-Good first screenshots would be:
-
-- the main UI with selected files
-- a right-click folder launch example
-- the prompt box and Generate Context button
-- the generated `.aicp/context_block.md` file
+```text
+.aicp/context_block.md
+```

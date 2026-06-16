@@ -47,11 +47,8 @@ That matters because the whole value of AICodePrep is speed and convenience:
 
 open folder -> generate context -> paste into AI chat
 
-## Screenshot placeholders
+## If The Menu Does Not Appear
 
-Suggested screenshots to add later:
+Try closing and reopening the file manager first.
 
-- Windows Explorer right-click menu
-- macOS Finder action or Quick Action example
-- Linux file manager action example
-- app File menu showing the installer option
+On Windows, you may also need to restart Explorer or open a fresh Explorer window. On macOS and Linux, the exact behavior depends on the file manager integration installed by the app.

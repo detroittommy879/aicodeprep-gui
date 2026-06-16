@@ -39,7 +39,6 @@ requirements.txt
 TESTIMONIALS.md
 
 outzzzz.txt
-PYPI_UPLOAD_GUIDE.md
 
 
 # screenshots
@@ -102,6 +101,7 @@ venv.bak/
 
 # mkdocs documentation
 /site
+.wrangler/
 
 # mypy
 .mypy_cache/
@@ -123,3 +123,5 @@ plans/
 pyside6_docs/
 old_random_scripts
 .local-root-clutter/
+rust_worker/target/
+PYPI_UPLOAD_GUIDE.md

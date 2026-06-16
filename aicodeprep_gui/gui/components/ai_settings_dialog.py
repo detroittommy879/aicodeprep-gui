@@ -1,3 +1,4 @@
+import os
 import re
 
 from PySide6 import QtWidgets, QtCore, QtGui
@@ -9,6 +10,12 @@ from aicodeprep_gui.pro.ai_assist.ai_client import AIClient
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def _process_events_for_ui_feedback():
+    if os.environ.get("AICODEPREP_TEST_MODE") == "1":
+        return
+    QtWidgets.QApplication.processEvents()
 
 
 class AIEndpointSettingsDialog(QtWidgets.QDialog):
@@ -391,7 +398,7 @@ class AIEndpointSettingsDialog(QtWidgets.QDialog):
         self.status_label.setStyleSheet("")
         self.test_btn.setEnabled(False)
         self.setCursor(QtCore.Qt.WaitCursor)
-        QtWidgets.QApplication.processEvents()
+        _process_events_for_ui_feedback()
 
         try:
             client = AIClient()
@@ -426,7 +433,7 @@ class AIEndpointSettingsDialog(QtWidgets.QDialog):
 
         self.refresh_btn.setEnabled(False)
         self.setCursor(QtCore.Qt.WaitCursor)
-        QtWidgets.QApplication.processEvents()
+        _process_events_for_ui_feedback()
 
         try:
             client = AIClient()

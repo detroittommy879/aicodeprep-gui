@@ -1,65 +1,60 @@
 # Prompt Strategy
 
-The app is not just about file selection.
+AICodePrep gives the model two things:
 
-It is also about giving the model a cleaner, better-shaped request.
+- the files you selected
+- the prompt you wrote
 
-## Keep the prompt specific
+The files matter, but the prompt still decides what kind of answer you get.
 
-A good prompt for pasted project context usually includes:
+## Write The Task Clearly
 
-- the concrete problem
-- what you want back
-- any constraints
-- the style of answer you want
+A good prompt usually includes:
+
+- the bug, question, or goal
+- the part of the project to focus on
+- constraints the model should respect
+- the format you want back
 
 Example:
 
 ```text
-Find the bug causing duplicate saves in this app.
+Find why duplicate saves happen in this app.
 Focus on the endpoint settings dialog and persistence flow.
-Do not rewrite everything. Suggest the smallest safe fix first.
+Do not rewrite the whole feature.
+Suggest the smallest fix first, then mention any follow-up cleanup.
 ```
 
-## Dual prompt placement
+## Ask For The Right Output
 
-One of the best Pro features is dual prompt placement.
+Different tasks need different answers.
 
-That means your prompt can be placed above and below the code context instead of only once.
+For debugging:
 
-Why this helps:
+```text
+Find the most likely bug and explain the exact code path.
+```
 
-- some models lose focus after reading a large block of code
-- repeating the task framing at the end helps pull attention back to the actual question
-- it often improves answer quality on harder debugging or planning tasks
+For planning:
 
-This is one of the simplest quality boosts in the app.
+```text
+Write a step-by-step implementation plan for an AI coding agent.
+Keep the plan scoped to the files included here.
+```
 
-## Why clean chat prompts matter
+For review:
 
-A lot of agent systems wrap the real task in too much extra material:
+```text
+Review this code for correctness risks and missing tests.
+Prioritize concrete bugs over style feedback.
+```
 
-- tool instructions
-- edit policies
-- MCP/server chatter
-- internal loop scaffolding
+## Prompt Presets
 
-That extra text is not your code problem.
+Presets are saved prompt snippets. They are useful for prompts you use repeatedly, such as debugging, review, refactor planning, or writing instructions for another coding tool.
 
-When you paste a clean prompt and a carefully selected context block into a web chat, the model can spend more of its attention on your actual task.
+## Dual Prompt Placement
 
-## Best model usage pattern
+Pro can place the prompt both before and after the context block.
 
-A practical pattern many people use:
-
-1. use AICodePrep to generate the context block
-2. paste it into multiple web chats
-3. compare the best answers
-4. bring the winning plan back into your editor or agent tool
-
-This works well when:
-
-- one model is better at planning
-- another is better at debugging
-- another is cheaper or free
-- you want a second opinion before changing code
+This can help large-context prompts because the model sees the task again after reading the files. It is a practical quality-of-life feature, not a requirement for using the app.

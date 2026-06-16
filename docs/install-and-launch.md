@@ -1,14 +1,46 @@
 # Install And Launch
 
-The fastest mental model is:
+The usual install command is:
 
-install it once, then type `aicp` whenever you want it.
+```text
+uv tool install aicodeprep-gui
+```
 
-## Launch methods
+Then open a project with:
 
-There are two main ways to open the app.
+```text
+aicp
+```
 
-### 1. Terminal
+## Install With uv
+
+If you already use `uv`, install AICodePrep as a tool:
+
+```text
+uv tool install aicodeprep-gui
+```
+
+Upgrade later with:
+
+```text
+uv tool upgrade aicodeprep-gui
+```
+
+## Install With pipx
+
+`pipx` also works:
+
+```text
+pipx install aicodeprep-gui
+```
+
+Upgrade later with:
+
+```text
+pipx upgrade aicodeprep-gui
+```
+
+## Launch
 
 Run it in the current folder:
 
@@ -28,39 +60,18 @@ The longer command also works:
 aicodeprep-gui
 ```
 
-### 2. File explorer integration
+## File Explorer Launch
 
-After installing the OS integration from inside the app, you can open it directly from a folder in your file explorer.
+After installing the right-click integration from inside the app, you can open AICodePrep from a folder in your file manager.
 
-- Windows: right-click in a folder or right-click the folder itself in Explorer
-- macOS: use the installed Finder action on a folder
-- Linux: use the installed file manager integration on a folder
+- Windows: File Explorer
+- macOS: Finder action
+- Linux: supported file manager integration
 
-See [Right-Click Integration](right-click-integration.md) for the practical details.
+See [Right-Click Integration](right-click-integration.md).
 
-## Installation notes
+## Python Requirement
 
-The app is designed to be easy to install and easy to launch.
+AICodePrep is a Python desktop app. Install a supported Python version first if your system does not already have one.
 
-The simple pattern is:
-
-1. Install Python if you do not already have it.
-2. Install `pipx`.
-3. Install AICodePrep once.
-4. Use `aicp` from then on.
-
-## Why `aicp` matters
-
-This app works best when it is frictionless.
-
-If you are in VS Code, Cursor, Windsurf, or a terminal already sitting in the project, typing `aicp` is usually the fastest way to switch into “prepare context for AI” mode.
-
-That is part of the point.
-
-## Screenshot placeholders
-
-Suggested screenshots to add later:
-
-- terminal showing `aicp`
-- app opening inside the current project folder
-- a short install success example on Windows PowerShell
+The PyPI package currently supports Python 3.9 through 3.13.
