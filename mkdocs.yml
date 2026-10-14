@@ -3,33 +3,54 @@ site_description: Bundle selected code files into one context block for AI chats
 site_url: https://aicp.wuu73.org
 repo_url: https://github.com/detroittommy879/aicodeprep-gui
 repo_name: detroittommy879/aicodeprep-gui
+edit_uri: edit/main/docs/
 
 theme:
   name: material
   language: en
+  favicon: assets/favicon.ico
+  icon:
+    logo: material/code-braces-box
+    repo: fontawesome/brands/github
+  font:
+    text: Inter
+    code: JetBrains Mono
   features:
+    - navigation.instant
     - navigation.sections
     - navigation.expand
     - navigation.top
     - navigation.tracking
+    - navigation.footer
     - toc.follow
     - search.suggest
     - search.highlight
     - content.code.copy
     - content.action.edit
   palette:
-    - scheme: slate
-      primary: black
-      accent: lime
+    - media: "(prefers-color-scheme)"
+      primary: custom
+      accent: custom
       toggle:
-        icon: material/weather-sunny
+        icon: material/brightness-auto
         name: Switch to light mode
-    - scheme: default
-      primary: white
-      accent: green
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
       toggle:
         icon: material/weather-night
         name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Use system theme
+
+extra_css:
+  - stylesheets/extra.css
 
 markdown_extensions:
   - admonition
@@ -48,6 +69,9 @@ markdown_extensions:
   - pymdownx.keys
   - pymdownx.tabbed:
       alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
 nav:
   - Home: index.md
@@ -57,6 +81,7 @@ nav:
       - Right-Click Integration: right-click-integration.md
       - Core Workflow: core-workflow.md
       - Performance: performance.md
+      - Keyboard Shortcuts: keyboard-shortcuts.md
   - Better Results:
       - Prompt Strategy: prompt-strategy.md
       - Why Use This Instead Of Agents: why-not-just-agents.md

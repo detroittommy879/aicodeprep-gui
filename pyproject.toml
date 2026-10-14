@@ -48,8 +48,6 @@ Homepage = "https://github.com/detroittommy879/aicodeprep-gui"
 where = ["."]
 exclude = [
     "parallel-MCP*",
-    "old_random_scripts*",
-    "pyside6_docs*",
     "scripts*",
     "tests*",
 ] 

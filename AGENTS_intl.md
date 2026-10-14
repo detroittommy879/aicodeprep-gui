@@ -65,7 +65,6 @@ To complete translations for a language (e.g., Spanish):
   - `_retranslate_ui()` method handles live language switching
 - `aicodeprep_gui/i18n/translator.py` - TranslationManager class
 - `aicodeprep_gui/i18n/translations/` - All .ts and .qm files
-- `INTL_A11Y_PROGRESS.md` - Progress tracking for i18n/a11y work
 
 ---
 
@@ -207,10 +206,8 @@ Use this when you want the _actual GUI_ to run, switch language, capture screens
 
 ## Accessibility (a11y) Work
 
-- See `INTL_A11Y_PROGRESS.md` for current status
-- See `KEYBOARD_ACCESSIBILITY_CHECKLIST.md` for keyboard navigation requirements
-- See `KEYBOARD_SHORTCUTS.md` for documented shortcuts
-- See `I18N_ACCESSIBILITY_GUIDE.md` for implementation guide
+- See `docs/keyboard-shortcuts.md` for documented shortcuts
+- See `dev-docs/I18N_ACCESSIBILITY_GUIDE.md` for implementation guide
 
 ---
 

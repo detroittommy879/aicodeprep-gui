@@ -1,0 +1,236 @@
+/* AICodePrep docs theme: rainbow accents that match the app logo. */
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap");
+
+:root {
+  --aicp-red: #ef4444;
+  --aicp-orange: #f97316;
+  --aicp-yellow: #eab308;
+  --aicp-green: #22c55e;
+  --aicp-blue: #3b82f6;
+  --aicp-purple: #a855f7;
+  --aicp-rainbow: linear-gradient(90deg, var(--aicp-red), var(--aicp-orange), var(--aicp-yellow), var(--aicp-green), var(--aicp-blue), var(--aicp-purple));
+  --aicp-heading-font: "Bricolage Grotesque", "Inter", system-ui, sans-serif;
+}
+
+/* Light scheme */
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: #6d28d9;
+  --md-primary-fg-color--light: #8b5cf6;
+  --md-primary-fg-color--dark: #5b21b6;
+  --md-primary-bg-color: #ffffff;
+  --md-accent-fg-color: #db2777;
+  --md-default-bg-color: #fcfbff;
+  --md-typeset-a-color: #6d28d9;
+  --md-code-bg-color: #f4f1fb;
+  --aicp-card-bg: #ffffff;
+  --aicp-card-border: #e9e3f7;
+  --aicp-soft: #f3eefe;
+}
+
+/* Dark scheme */
+[data-md-color-scheme="slate"] {
+  --md-hue: 260;
+  --md-primary-fg-color: #8b5cf6;
+  --md-primary-fg-color--light: #a78bfa;
+  --md-primary-fg-color--dark: #6d28d9;
+  --md-primary-bg-color: #ffffff;
+  --md-accent-fg-color: #f472b6;
+  --md-default-bg-color: #0f0d17;
+  --md-typeset-a-color: #c4b5fd;
+  --md-code-bg-color: #1a1625;
+  --aicp-card-bg: #17141f;
+  --aicp-card-border: #2a2438;
+  --aicp-soft: #1d1829;
+}
+
+/* Header: deep gradient with a thin rainbow line underneath */
+.md-header {
+  background: linear-gradient(120deg, #4c1d95 0%, #6d28d9 45%, #be185d 100%);
+  box-shadow: none;
+}
+.md-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--aicp-rainbow);
+}
+.md-tabs {
+  background: transparent;
+}
+.md-header__title {
+  font-family: var(--aicp-heading-font);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+/* Headings */
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3 {
+  font-family: var(--aicp-heading-font);
+  letter-spacing: -0.02em;
+}
+.md-typeset h1 {
+  font-weight: 800;
+  display: inline-block;
+  background: linear-gradient(90deg, var(--aicp-purple), var(--aicp-blue) 55%, var(--aicp-green));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.md-typeset h2 {
+  font-weight: 700;
+  padding-bottom: 0.3em;
+  border-bottom: 2px solid transparent;
+  border-image: linear-gradient(90deg, var(--md-primary-fg-color), transparent 70%) 1;
+}
+
+/* Links */
+.md-typeset a {
+  text-underline-offset: 3px;
+}
+.md-typeset a:hover {
+  text-decoration: underline;
+}
+
+/* Sidebar: active page gets a colored pill */
+.md-nav__link--active {
+  font-weight: 600;
+}
+.md-nav--primary .md-nav__item .md-nav__link--active {
+  background: var(--aicp-soft);
+  border-radius: 6px;
+  padding: 0.15em 0.5em;
+  margin-left: -0.5em;
+}
+
+/* Code blocks */
+.md-typeset pre > code {
+  border-radius: 10px;
+}
+.md-typeset .highlight {
+  border-radius: 10px;
+  border: 1px solid var(--aicp-card-border);
+}
+
+/* Tables */
+.md-typeset table:not([class]) {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--aicp-card-border);
+  box-shadow: none;
+}
+.md-typeset table:not([class]) th {
+  background: var(--aicp-soft);
+}
+
+/* Admonitions */
+.md-typeset .admonition,
+.md-typeset details {
+  border-radius: 10px;
+  border-width: 1px;
+  box-shadow: none;
+}
+
+/* Keep a page title for search/screen readers without showing it */
+.md-typeset .aicp-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Home page hero */
+.aicp-hero {
+  text-align: center;
+  padding: 1.5rem 0 1rem;
+}
+.aicp-hero img {
+  max-width: min(520px, 100%);
+  height: auto;
+}
+.aicp-hero .aicp-tagline {
+  font-family: var(--aicp-heading-font);
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin: 0.8rem auto 1.2rem;
+  max-width: 34rem;
+}
+.aicp-hero .md-button {
+  margin: 0.25rem;
+  border-radius: 999px;
+}
+.aicp-hero .md-button--primary {
+  background: linear-gradient(90deg, #7c3aed, #db2777);
+  border: none;
+  color: #fff;
+}
+
+/* Feature cards (Material "grid cards") */
+.md-typeset .grid.cards > ul > li,
+.md-typeset .grid > .card {
+  border: 1px solid var(--aicp-card-border);
+  border-radius: 14px;
+  background: var(--aicp-card-bg);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.md-typeset .grid.cards > ul > li::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--aicp-rainbow);
+}
+.md-typeset .grid.cards > ul > li:hover {
+  transform: translateY(-2px);
+  border-color: var(--md-primary-fg-color--light);
+  box-shadow: 0 8px 24px rgba(109, 40, 217, 0.12);
+}
+.md-typeset .grid.cards .twemoji {
+  color: var(--md-primary-fg-color);
+}
+
+/* Steps list on the home page */
+.md-typeset ol.aicp-steps,
+.aicp-steps ol {
+  counter-reset: step;
+  list-style: none;
+  padding-left: 0;
+  margin-left: 0;
+}
+.aicp-steps ol > li {
+  counter-increment: step;
+  position: relative;
+  padding-left: 2.6em;
+  margin-left: 0;
+  margin-bottom: 0.8em;
+}
+.aicp-steps ol > li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: -0.05em;
+  width: 1.8em;
+  height: 1.8em;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 0.85em;
+  color: #fff;
+  background: linear-gradient(135deg, #7c3aed, #db2777);
+}
+
+/* Footer */
+.md-footer {
+  background: linear-gradient(120deg, #1e1033, #2e1065);
+}
