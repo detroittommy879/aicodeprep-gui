@@ -1,48 +1,115 @@
-# AICodePrep
+---
+hide:
+  - navigation
+  - toc
+---
 
-AICodePrep turns a project folder into one clean context block you can paste into an AI chat.
+# AICodePrep { .aicp-sr-only }
 
-That is the main job: choose the files once, generate one bundle, paste once.
+<div class="aicp-hero" markdown>
 
-## The Problem
+![AICodePrep](assets/logo-wide.webp)
 
-AI chats are useful for debugging, planning, reviewing, and understanding code, but getting the right files into the chat is tedious. You open a file, copy it, switch tabs, paste it, repeat, and then hope you did not miss something important.
+<p class="aicp-tagline">Turn a project folder into one clean context block you can paste into any AI chat.</p>
 
-AICodePrep removes manual steps. It scans the folder, pre-checks likely code files (skips things like node_modules, python build files, you can control this) lets you check the files you want, and writes the selected code into a single context block with xml tags to separate files.
+[Get started](install-and-launch.md){ .md-button .md-button--primary }
+[See the workflow](core-workflow.md){ .md-button }
 
-## The Short Workflow
+</div>
 
-1. Open a project with `aicp` or from the folder context menu.
+## Why it exists
+
+When a bug or design question spans many files, copying them into an AI chat one by one is slow and easy to get wrong. AICodePrep scans the folder, pre-checks the files that matter, and writes everything into one organized block with XML tags between files. Choose once, paste once.
+
+<div class="grid cards" markdown>
+
+-   :material-cursor-default-click:{ .lg .middle } **You pick the files**
+
+    ---
+
+    Smart defaults skip `node_modules`, build output and other noise. You check or uncheck the rest.
+
+-   :material-chat-processing:{ .lg .middle } **Works with any chat**
+
+    ---
+
+    ChatGPT, Claude, Gemini, AI Studio, OpenRouter. Use free web chats instead of paying per token.
+
+-   :material-brain:{ .lg .middle } **Smarter answers**
+
+    ---
+
+    Models often reason better without tools and agent scaffolding. Give them clean context and let them think.
+
+-   :material-lightning-bolt:{ .lg .middle } **Fast**
+
+    ---
+
+    A bundled Rust worker scans and builds context quickly, with an automatic Python fallback.
+
+-   :material-monitor:{ .lg .middle } **Any editor, any OS**
+
+    ---
+
+    A standalone desktop app for Windows, macOS and Linux. Use it beside VS Code, Cursor, Zed or a terminal.
+
+-   :material-compare-horizontal:{ .lg .middle } **Plan with big models**
+
+    ---
+
+    Plan or debug with a frontier model, then hand the fix to a cheaper model or your editor's agent.
+
+</div>
+
+## The short workflow
+
+<div class="aicp-steps" markdown>
+
+1. Open a project with `aicp` or from the folder right-click menu.
 2. Review the files the app selected.
 3. Check or uncheck anything you want to change.
-4. Add a prompt if you want one.
+4. Add a prompt, or use a saved preset.
 5. Click **Generate Context**.
-6. Paste the result into ChatGPT, Claude, Gemini, OpenRouter, or another chat.
+6. Paste the result into your AI chat.
 
-The output is copied to your clipboard and also saved at:
+</div>
 
-```text
-.aicp/context_block.md
-```
+The output is copied to your clipboard and saved at `.aicp/context_block.md`.
 
-## Why People Use It
+## Install in one line
 
-- It is faster than attaching or pasting many files by hand.
-- It works with any editor and any AI chat.
-- It keeps you in control of which files are included.
-- It makes it easy to send the same context to several models and compare answers.
-- It is useful alongside agent tools when you want a cleaner, more focused prompt.
-- It allows you to plan or bug fix with expensive frontier models, then implement with cheap models.
+=== "uv"
 
-## Current Performance Work
+    ```bash
+    uv tool install aicodeprep-gui
+    ```
 
-The current app includes a Rust worker for faster folder scanning and context generation when the bundled worker is available for your platform. If the worker is missing or fails, AICodePrep falls back to the Python path instead of blocking the workflow.
+=== "pipx"
 
-The Rust worker is an implementation detail for speed. The product goal is still the same simple workflow: pick files, generate context, paste once.
+    ```bash
+    pipx install aicodeprep-gui
+    ```
 
-## Where To Start
+Then run `aicp` inside any project folder. More options are in [Install And Launch](install-and-launch.md).
 
-- New users: [Install And Launch](install-and-launch.md)
-- Understand the app: [What It Does](what-it-does.md)
-- Daily use: [Core Workflow](core-workflow.md)
-- Speed/fallback details: [Performance](performance.md)
+## Where to go next
+
+<div class="grid cards" markdown>
+
+-   [:material-download: **Install And Launch**](install-and-launch.md)
+
+    New here? Start with this.
+
+-   [:material-information-outline: **What It Does**](what-it-does.md)
+
+    The app in a bit more detail.
+
+-   [:material-lightbulb-on-outline: **Prompt Strategy**](prompt-strategy.md)
+
+    Get better answers out of the context.
+
+-   [:material-help-circle-outline: **FAQ**](faq.md)
+
+    Common questions.
+
+</div>

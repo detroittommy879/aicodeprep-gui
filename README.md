@@ -1,185 +1,120 @@
-![AICodePrep logo](aicodeprep_gui/images/aicp-transparent-min.png)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/detroittommy879/aicodeprep-gui/main/aicodeprep_gui/images/aicp-transparent-min.png" alt="AICodePrep GUI" width="520">
+</p>
 
-# AICodePrep GUI
+<p align="center">
+  <b>Pick your files. Generate one clean context block. Paste it into any AI chat.</b>
+</p>
 
-AICodePrep GUI turns selected project files into one clean context block you can paste into an AI chat.
+<p align="center">
+  <a href="https://pypi.org/project/aicodeprep-gui/"><img src="https://img.shields.io/pypi/v/aicodeprep-gui?color=7c3aed&label=PyPI" alt="PyPI version"></a>
+  <a href="https://pypi.org/project/aicodeprep-gui/"><img src="https://img.shields.io/pypi/pyversions/aicodeprep-gui?color=3b82f6" alt="Python versions"></a>
+  <a href="https://github.com/detroittommy879/aicodeprep-gui/stargazers"><img src="https://img.shields.io/github/stars/detroittommy879/aicodeprep-gui?style=flat&color=eab308" alt="GitHub stars"></a>
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-22c55e" alt="Platforms">
+  <a href="https://aicp.wuu73.org"><img src="https://img.shields.io/badge/docs-aicp.wuu73.org-db2777" alt="Docs"></a>
+</p>
 
-It solves a simple annoyance: when a bug or design question spans many files, copying those files into ChatGPT, Claude, Gemini, OpenRouter, or another chat by hand is slow. AICodePrep scans the folder, lets you choose the files, generates one organized bundle, copies it to your clipboard, and saves it as `.aicp/context_block.md`.
+<p align="center">
+  <a href="https://aicp.wuu73.org">Documentation</a> ·
+  <a href="#install">Install</a> ·
+  <a href="CHANGELOG.md">Changelog</a> ·
+  <a href="https://wuu73.org/hello.html">Website</a>
+</p>
 
-[![PyPI version](https://badge.fury.io/py/aicodeprep-gui.svg)](https://badge.fury.io/py/aicodeprep-gui)
-[![GitHub stars](https://img.shields.io/github/stars/detroittommy879/aicodeprep-gui.svg?style=social&label=Stars)](https://github.com/detroittommy879/aicodeprep-gui/stargazers)
+---
 
-![Screenshot](scrs/n1.png)
+AICodePrep is a small desktop app for anyone who codes with AI chat. When a bug or design question spans many files, you open the folder, check the files you want, and click **Generate Context**. You get one organized block (files separated by XML tags) on your clipboard, ready to paste into ChatGPT, Claude, Gemini, AI Studio, OpenRouter or anything else.
 
-See [Documentation](https://aicp.wuu73.org) (major updates to docs)
+<!-- TODO(Tom): add the Hacker News link, e.g. "Featured on Hacker News: <link>" -->
+Used daily by its author and a growing community of developers.
 
-## Why Use It
+![AICodePrep main window](https://raw.githubusercontent.com/detroittommy879/aicodeprep-gui/main/scrs/n1.png)
 
-- Paste one generated context block instead of copying files one by one.
-- Keep control over exactly which files the model sees.
-- Models very often behave smarter and have better responses when they aren't given MCP servers, tools, its the agentic stuff that dumbs them down - using this allows full intelligence
-- Use frontier models on their native web chat interface to save money (many are still free to use, like Gemini 3.5 Flash on aistudio)
-- Use the same context in several AI chats and compare answers.
-- Work beside any editor: VS Code, Cursor, Windsurf, PyCharm, Zed, terminals, or anything else.
-- Use direct chat models for diagnosis, planning, and review before handing changes to an editor or agent.
+## Why use it
+
+- **You control the context.** Smart defaults skip `node_modules`, build output and other noise. You decide the rest.
+- **Smarter answers.** Models often reason better without tools and agent scaffolding. Give them clean context and let them think.
+- **Save money.** Use frontier models in their free or flat-rate web chats instead of paying per token.
+- **Compare models.** Paste the same context into several chats and pick the best answer.
+- **Works beside any editor.** VS Code, Cursor, Windsurf, PyCharm, Zed, a terminal. It is a standalone app, not a plugin.
+- **Fast.** A bundled Rust worker handles scanning and context generation, with an automatic Python fallback.
 
 ## Install
-
-The usual install command is:
 
 ```bash
 uv tool install aicodeprep-gui
 ```
 
-`pipx` also works:
+or
 
 ```bash
 pipx install aicodeprep-gui
 ```
 
-(just make sure you choose one install method and stick to it)
+Pick one method and stick with it. Python 3.9 to 3.13 is supported.
 
-The package supports Python 3.9 through 3.13.
+Don't want to deal with Python? [This setup script](https://wuu73.org/vibe) gets a computer ready for AI coding and can install AICodePrep for you.
 
-If you are looking for the lazy method where you don't need to worry about python versions, this script should work (it shows you a menu before it does anything, where you can select aicodeprep-gui) [Get computer ready for vibe coding](https://wuu73.org/vibe)
-
-## Launch
-
-Open the current folder:
+## Use it
 
 ```bash
-aicp
+aicp                    # open the current folder
+aicp path/to/project    # open another folder
+aicp --skipui           # generate context without the GUI
+aicp --help             # all options
 ```
 
-Open another folder:
+1. Open a project with `aicp`, or right-click a folder (the app can add this to Explorer, Finder or your Linux file manager).
+2. Review the pre-checked files and adjust.
+3. Add a prompt or pick a saved preset.
+4. Click **Generate Context** and paste into your AI chat.
 
-```bash
-aicp path/to/project
-```
-
-The longer command also works:
-
-```bash
-aicodeprep-gui
-```
-
-## Core Workflow
-
-1. Open a project with `aicp` or the right-click folder integration.
-2. Review the selected files.
-3. Check or uncheck anything you want to change.
-4. Add a prompt or use a saved preset.
-5. Click **Generate Context**.
-6. Paste the generated context into your AI chat.
-
-The generated file is also saved here:
-
-```text
-.aicp/context_block.md
-```
-
-## Performance
-
-Recent builds can use a bundled Rust worker for faster folder scanning and context generation. If the worker is unavailable for any reason, the app falls back to the Python implementation.
-
-When launched from a terminal, the app logs whether it used Rust acceleration or Python fallback.
-
-## Right-Click Integration
-
-The app can install file explorer integration from its menu.
-
-- Windows: open from File Explorer
-- macOS: open from Finder
-- Linux: open from supported file managers
-
-This is optional, but it makes the app feel more like a normal desktop tool: right-click a folder, open AICodePrep, generate context.
+The output is also saved to `.aicp/context_block.md`.
 
 ## Configuration
 
-You can customize scanning with an `aicodeprep-gui.toml` file in your project root.
-
-Example:
+Drop an `aicodeprep-gui.toml` in your project root to tune scanning:
 
 ```toml
 max_file_size = 2000000
-
 code_extensions = [".py", ".js", ".ts", ".html", ".css", ".rs"]
-
-exclude_patterns = [
-    "build/",
-    "dist/",
-    "*.log",
-    "node_modules/",
-    ".venv/"
-]
-
-default_include_patterns = [
-    "README.md",
-    "main.py",
-    "src/**/*.py"
-]
+exclude_patterns = ["build/", "dist/", "*.log", "node_modules/", ".venv/"]
+default_include_patterns = ["README.md", "main.py", "src/**/*.py"]
 ```
 
-## Command-Line Options
+## Free and Pro
+
+The free app covers the whole core workflow. Optional Pro features add extras for heavy use, such as prompts above and below the context, syntax highlighting in the preview, Flow Studio and built-in AI chat. See [Pro Features](https://aicp.wuu73.org/pro-features/).
+
+## Development
 
 ```bash
-# Run in the current directory
-aicp
-
-# Run in a specific directory
-aicp /path/to/project
-
-# Generate context without opening the GUI
-aicp --skipui
-
-# See all options
-aicp --help
+git clone https://github.com/detroittommy879/aicodeprep-gui
+cd aicodeprep-gui
+uv run aicodeprep-gui   # run from source
+uv run pytest           # run the tests
 ```
 
-## Docs
+| Path | What's there |
+| --- | --- |
+| `aicodeprep_gui/` | The app (PySide6) |
+| `rust_worker/` | Rust worker for fast scanning and context building |
+| `tests/` | Pytest suite, including GUI screenshot tests |
+| `docs/` | Documentation site source ([MkDocs Material](https://squidfunk.github.io/mkdocs-material/)) |
+| `dev-docs/` | Maintainer notes: releases, Rust builds, metrics, docs deployment |
 
-The MkDocs documentation is in `docs/`.
-
-Build it locally with:
-
-```bash
-uv run --with-requirements requirements-docs.txt mkdocs build --strict
-```
-
-Serve it locally with:
+Preview the docs locally:
 
 ```bash
 uv run --with-requirements requirements-docs.txt mkdocs serve
 ```
 
-See [Documentation](https://aicp.wuu73.org) (major updates to docs)
-
-## Pro
-
-The free app covers the main workflow: select files, generate context, copy to clipboard, and paste into AI chats.
-
-Pro features are optional extras for heavier use, such as dual prompt placement, syntax highlighting in the preview window, and additional workflow tools.
-
-## Contributing
-
-Bug reports, feature requests, and pull requests are welcome.
-
-GitHub: https://github.com/detroittommy879/aicodeprep-gui
+Bug reports, feature ideas and pull requests are welcome.
 
 ## Support
 
-If the app saves you time, Pro activation and sponsorships help keep development going.
-
-Website: https://wuu73.org/hello.html
+If AICodePrep saves you time, a Pro license or a [sponsorship](https://wuu73.org/hello.html) helps keep it going.
 
 ## License
 
-This software uses the Sustainable License.
-
-- Free for personal and commercial use
-- You may use app output commercially
-- You may keep and modify source code
-- You may not sell or redistribute this software
-- You may not offer this as a hosted service
-
-See [SUSTAINABLE-LICENSE](SUSTAINABLE-LICENSE).
+[Sustainable License](SUSTAINABLE-LICENSE): free for personal and commercial use, you may use the output commercially, and you may keep and modify the source. You may not sell, redistribute or host the software as a service.

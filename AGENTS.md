@@ -393,6 +393,8 @@ appsnap -o screenshot.png "aicodeprep-gui"
 - `CHANGELOG.md` - Version history and features
 - `INSTRUCTIONS.md` - Detailed installation instructions
 - `SUSTAINABLE-LICENSE` - License terms
+- `dev-docs/` - Maintainer notes (release runbook, manual Rust builds, metrics, docs deployment, i18n guide)
+- `docs/` - Public docs site (MkDocs Material). Custom look lives in `docs/stylesheets/extra.css`; check with `uv run --no-project --with-requirements requirements-docs.txt mkdocs build --strict`. Keep `mkdocs<2` pinned (MkDocs 2.0 breaks Material).
 
 ### Flow Studio Documentation
 

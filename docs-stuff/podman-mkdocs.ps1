@@ -1,1 +1,0 @@
-podman run --rm -it -p 18000:8000 -v "$PWD/mkdocs-material:/docs" docker.io/squidfunk/mkdocs-material
